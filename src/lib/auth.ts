@@ -2,9 +2,8 @@ import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import type { Role, User } from "@prisma/client";
-
-import { prisma } from "./prisma";
+import type { Role } from "@/types/database";
+import { runSingle } from "./db";
 
 const SESSION_COOKIE = "asistencia_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 días
@@ -66,13 +65,22 @@ export async function getSession(
   return decodeSession(token);
 }
 
+type DbUser = {
+  id: string;
+  email: string;
+  passwordHash: string;
+  role: Role;
+  companyId: string | null;
+};
+
 export async function authenticateUser(
   email: string,
   password: string,
-): Promise<User | null> {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+): Promise<DbUser | null> {
+  const user = await runSingle<DbUser>(
+    'SELECT "id","email","passwordHash","role","companyId" FROM "User" WHERE "email" = $1',
+    [email],
+  );
 
   if (!user) return null;
 

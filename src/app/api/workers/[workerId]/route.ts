@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { assertRole, getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import {
+  getEmployeeById,
+  getEmployeeWithUser,
+  updateEmployee,
+} from "@/lib/repos/employees";
 import { updateWorkerSchema } from "@/lib/validation";
 
 const paramsSchema = z.object({
@@ -16,12 +20,7 @@ export async function GET(
   const session = await getSession();
   const { workerId } = paramsSchema.parse(await context.params);
 
-  const employee = await prisma.employee.findUnique({
-    where: { id: workerId },
-    include: {
-      user: { select: { email: true } },
-    },
-  });
+  const employee = await getEmployeeWithUser(workerId);
 
   if (!employee) {
     return NextResponse.json(
@@ -63,15 +62,19 @@ export async function PATCH(
   const payload = await request.json();
   const data = updateWorkerSchema.parse(payload);
 
-  const employee = await prisma.employee.update({
-    where: { id: workerId, companyId: session.companyId! },
-    data: {
-      nombreCompleto: data.nombreCompleto,
-      rut: data.rut,
-      valorHoraBase: undefined,
-      sueldoMensual: data.sueldoMensual ?? undefined,
-      isActive: data.isActive ?? undefined,
-    },
+  const existing = await getEmployeeById(workerId);
+  if (!existing || existing.companyId !== session.companyId) {
+    return NextResponse.json(
+      { error: "Trabajador no encontrado" },
+      { status: 404 },
+    );
+  }
+
+  const employee = await updateEmployee(workerId, {
+    nombreCompleto: data.nombreCompleto,
+    rut: data.rut ?? null,
+    sueldoMensual: data.sueldoMensual ?? null,
+    isActive: data.isActive ?? existing.isActive,
   });
 
   return NextResponse.json({ employee });

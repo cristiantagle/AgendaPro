@@ -10,13 +10,14 @@ import { CompanyLogoUploader } from "@/components/forms/CompanyLogoUploader";
 import { ScheduleForm } from "@/components/forms/ScheduleForm";
 import { DashboardTopBar } from "@/components/navigation/DashboardTopBar";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-
-const currencyFormatter = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
+import {
+  getCompanyById,
+  getCompanyPaySettings,
+  listSchedules,
+} from "@/lib/repos/companies";
+import { listEmployeesByCompany } from "@/lib/repos/employees";
+import { listDevices } from "@/lib/repos/kiosk-devices";
+import { listRecentRecordsByCompany } from "@/lib/repos/time-records";
 
 export default async function EmpresaPage() {
   const session = await getSession();
@@ -24,48 +25,26 @@ export default async function EmpresaPage() {
     redirect("/");
   }
 
-  const company = await prisma.company.findUnique({
-    where: { id: session.companyId! },
-    include: {
-      paySettings: true,
-      schedules: {
-        orderBy: { diaSemana: "asc" },
-      },
-      employees: {
-        include: {
-          user: { select: { email: true } },
-        },
-        orderBy: { createdAt: "desc" },
-      },
-      kioskDevices: {
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
+  const company = await getCompanyById(session.companyId!);
 
   if (!company) {
     redirect("/login");
   }
 
-  const paySettingsForForm = company.paySettings
+  const paySettings = await getCompanyPaySettings(company.id);
+  const schedules = await listSchedules(company.id);
+  const employees = await listEmployeesByCompany(company.id);
+  const kioskDevices = await listDevices(company.id);
+  const records = await listRecentRecordsByCompany(company.id, 15);
+
+  const paySettingsForForm = paySettings
     ? {
-        sueldoMensualBase:
-          company.paySettings.sueldoMensualBase.toNumber(),
-        factorExtraSemana: company.paySettings.factorExtraSemana,
-        weekendDayRate: company.paySettings.weekendDayRate.toNumber(),
-        weekendExtraHourRate:
-          company.paySettings.weekendExtraHourRate.toNumber(),
+        sueldoMensualBase: paySettings.sueldoMensualBase,
+        factorExtraSemana: paySettings.factorExtraSemana,
+        weekendDayRate: paySettings.weekendDayRate,
+        weekendExtraHourRate: paySettings.weekendExtraHourRate,
       }
     : null;
-
-  const records = await prisma.timeRecord.findMany({
-    where: { companyId: company.id },
-    include: {
-      employee: { select: { nombreCompleto: true } },
-    },
-    orderBy: { fecha: "desc" },
-    take: 15,
-  });
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
@@ -106,13 +85,13 @@ export default async function EmpresaPage() {
         <CompanyLogoUploader initialLogo={company.logoUrl} />
 
         <section>
-          <ScheduleForm schedules={company.schedules} />
+          <ScheduleForm schedules={schedules} />
         </section>
 
         <KioskPanel
           slug={company.kioskSlug}
           pin={company.kioskPin}
-          devices={company.kioskDevices.map((device) => ({
+          devices={kioskDevices.map((device) => ({
             id: device.id,
             name: device.name,
             createdAt: device.createdAt.toISOString(),
@@ -121,15 +100,13 @@ export default async function EmpresaPage() {
         />
 
         <WorkersTable
-          sueldoBase={company.paySettings?.sueldoMensualBase?.toNumber() ?? 0}
-          workers={company.employees.map((employee) => ({
+          sueldoBase={paySettings?.sueldoMensualBase ?? 0}
+          workers={employees.map((employee) => ({
             id: employee.id,
             nombre: employee.nombreCompleto,
             email: employee.user.email,
             isActive: employee.isActive,
-            sueldoMensual: employee.sueldoMensual
-              ? employee.sueldoMensual.toNumber()
-              : null,
+            sueldoMensual: employee.sueldoMensual,
           }))}
         />
 
@@ -148,11 +125,11 @@ export default async function EmpresaPage() {
         />
 
         <AdminReportPanel
-          workers={company.employees.map((employee) => ({
+          workers={employees.map((employee) => ({
             id: employee.id,
             nombre: employee.nombreCompleto,
           }))}
-          initialWorkerId={company.employees[0]?.id}
+          initialWorkerId={employees[0]?.id}
         />
       </div>
     </main>

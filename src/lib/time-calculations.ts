@@ -4,7 +4,7 @@ import type {
   CompanyWorkSchedule,
   Employee,
   TimeRecord,
-} from "@prisma/client";
+} from "@/types/database";
 import { toZonedTime } from "date-fns-tz";
 
 import { findScheduleForDay, getScheduleBoundaries } from "./schedules";

@@ -1,9 +1,14 @@
 import { endOfMonth, startOfMonth } from "date-fns";
-import type { Role } from "@prisma/client";
 
 import type { SessionPayload } from "./auth";
-import { prisma } from "./prisma";
+import { runQuery } from "./db";
+import {
+  getCompanyWithSettings,
+  listSchedules,
+} from "./repos/companies";
+import { getEmployeeById } from "./repos/employees";
 import { buildMonthlySummary } from "./time-calculations";
+import type { Role } from "@/types/database";
 
 export const getMonthlySummaryForEmployee = async (
   employeeId: string,
@@ -15,16 +20,8 @@ export const getMonthlySummaryForEmployee = async (
     throw new Error("No autorizado");
   }
 
-  const employee = await prisma.employee.findUnique({
-    where: { id: employeeId },
-    include: {
-      company: {
-        include: { paySettings: true, schedules: true },
-      },
-    },
-  });
-
-  if (!employee || !employee.company || !employee.company.paySettings) {
+  const employee = await getEmployeeById(employeeId);
+  if (!employee) {
     const error = new Error("Empleado o empresa no encontrada");
     (error as Error & { status?: number }).status = 404;
     throw error;
@@ -52,22 +49,43 @@ export const getMonthlySummaryForEmployee = async (
   const start = startOfMonth(new Date(year, month - 1));
   const end = endOfMonth(start);
 
-  const records = await prisma.timeRecord.findMany({
-    where: {
-      employeeId: employee.id,
-      fecha: {
-        gte: start,
-        lte: end,
-      },
-    },
-    orderBy: { fecha: "asc" },
-  });
+  const companyData = await getCompanyWithSettings(employee.companyId);
+  if (!companyData || !companyData.paySettings) {
+    const error = new Error("Empresa sin configuración de pago");
+    (error as Error & { status?: number }).status = 404;
+    throw error;
+  }
+
+  const schedules = await listSchedules(employee.companyId);
+
+  const records = await runQuery(
+    'SELECT * FROM "TimeRecord" WHERE "employeeId" = $1 AND "fecha" BETWEEN $2 AND $3 ORDER BY "fecha" ASC',
+    [employee.id, start, end],
+  );
 
   return buildMonthlySummary(
-    records,
+    records.map((row) => ({
+      id: row.id,
+      employeeId: row.employeeId,
+      companyId: row.companyId,
+      fecha: new Date(row.fecha),
+      horaEntrada: row.horaEntrada ? new Date(row.horaEntrada) : null,
+      horaInicioAlmuerzo: row.horaInicioAlmuerzo
+        ? new Date(row.horaInicioAlmuerzo)
+        : null,
+      horaFinAlmuerzo: row.horaFinAlmuerzo
+        ? new Date(row.horaFinAlmuerzo)
+        : null,
+      horaSalida: row.horaSalida ? new Date(row.horaSalida) : null,
+      esManual: row.esManual,
+      notas: row.notas,
+    })),
     employee,
-    employee.company,
-    employee.company.paySettings,
+    {
+      ...companyData.company,
+      schedules,
+    },
+    companyData.paySettings,
     month,
     year,
   );

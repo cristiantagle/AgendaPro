@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { assertRole, getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { deleteDevice, getDeviceById } from "@/lib/repos/kiosk-devices";
 
 type Params = {
   deviceId: string;
@@ -15,9 +15,7 @@ export async function DELETE(
   assertRole(session, ["company_admin"]);
   const params = await context.params;
 
-  const device = await prisma.kioskDevice.findUnique({
-    where: { id: params.deviceId },
-  });
+  const device = await getDeviceById(params.deviceId);
 
   if (!device || device.companyId !== session.companyId) {
     return NextResponse.json(
@@ -26,9 +24,7 @@ export async function DELETE(
     );
   }
 
-  await prisma.kioskDevice.delete({
-    where: { id: params.deviceId },
-  });
+  await deleteDevice(params.deviceId);
 
   return NextResponse.json({ success: true });
 }

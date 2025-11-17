@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { WorkerSelfSignupForm } from "@/components/forms/WorkerSelfSignupForm";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { listCompanies } from "@/lib/repos/companies";
 
 export default async function WorkerSignupPage() {
   const session = await getSession();
@@ -12,11 +12,10 @@ export default async function WorkerSignupPage() {
     redirect("/");
   }
 
-  const companies = await prisma.company.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const companies = (await listCompanies())
+    .filter((company) => company.isActive)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((company) => ({ id: company.id, name: company.name }));
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-200 p-6 text-slate-900">

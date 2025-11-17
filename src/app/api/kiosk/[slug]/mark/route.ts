@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 import { kioskCookieName } from "@/lib/kiosk";
-import { prisma } from "@/lib/prisma";
+import { getCompanyBySlug } from "@/lib/repos/companies";
+import { getEmployeeById } from "@/lib/repos/employees";
+import {
+  getDeviceByToken,
+  updateDevice,
+} from "@/lib/repos/kiosk-devices";
 import { markEmployeeAttendance } from "@/lib/time-records-service";
 import { kioskMarkSchema } from "@/lib/validation";
 
@@ -26,9 +31,7 @@ export async function POST(
     );
   }
 
-  const device = await prisma.kioskDevice.findUnique({
-    where: { token },
-  });
+  const device = await getDeviceByToken(token);
 
   if (!device) {
     return NextResponse.json(
@@ -37,9 +40,7 @@ export async function POST(
     );
   }
 
-  const company = await prisma.company.findFirst({
-    where: { kioskSlug: params.slug },
-  });
+  const company = await getCompanyBySlug(params.slug);
 
   if (!company || company.id !== device.companyId) {
     return NextResponse.json(
@@ -50,9 +51,7 @@ export async function POST(
 
   const payload = kioskMarkSchema.parse(await request.json());
 
-  const employee = await prisma.employee.findUnique({
-    where: { id: payload.employeeId },
-  });
+  const employee = await getEmployeeById(payload.employeeId);
 
   if (!employee || employee.companyId !== company.id) {
     return NextResponse.json(
@@ -67,10 +66,7 @@ export async function POST(
       payload.action,
       { enforceStartCutoff: true },
     );
-    await prisma.kioskDevice.update({
-      where: { id: device.id },
-      data: { lastUsedAt: new Date() },
-    });
+    await updateDevice(device.id, { lastUsedAt: new Date() });
     return NextResponse.json({ record: result.record });
   } catch (error) {
     const status = (error as Error & { status?: number }).status ?? 500;

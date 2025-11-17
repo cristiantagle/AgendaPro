@@ -69,22 +69,20 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
    npm install
    ```
 
-4. Genera el cliente de Prisma y aplica las migraciones:
+4. Aplica las migraciones SQL directamente en tu base (local o Supabase). Un ejemplo rápido:
 
    ```bash
-   npm run db:generate
-   npm run db:migrate
+   set -a && source .env && set +a
+   for file in prisma/migrations/*/migration.sql; do
+     echo "Aplicando $file"
+     psql "$DATABASE_URL" -f "$file"
+   done
    ```
 
-5. Ejecuta los seeds (crea superadmin, empresas, trabajadores y marcaciones) y aplica las migraciones adicionales (kioscos, sueldos mensuales, logos). Si estás en PostgreSQL local, asegúrate de que el servicio esté levantado; si estás en Supabase, verifica que `DATABASE_URL` apunte al host correcto antes de ejecutar:
+5. Ejecuta el seed (crea superadmin, empresas, trabajadores demo):
 
    ```bash
    npm run db:seed
-   npx prisma migrate resolve --applied 20251219120000_kiosk_terminals
-   npx prisma migrate resolve --applied 20251220110000_salary_based_pay
-   npx prisma migrate resolve --applied 20251221100000_company_logo
-   npx prisma migrate resolve --applied 20251222123000_remove_company_timezone
-   npx prisma migrate resolve --applied 20251222130000_weekend_fixed_rates
    ```
 
    - Usuario superadmin: `superadmin@demo.com`
@@ -131,6 +129,25 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 6. **Offline-first en kioscos:** almacenar temporalmente marcaciones si el kiosco pierde conexión y sincronizarlas cuando vuelva a estar en línea.
 
 Con esto tendrás una plataforma sólida para operar hoy y con una hoja de ruta clara hacia funcionalidades más avanzadas.
+
+## Migración a Supabase nativo (sin Prisma)
+
+Actualmente el proyecto está en una transición para dejar de usar Prisma y operar directo contra Supabase (REST + consultas SQL). El avance va así:
+
+### Implementado
+
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_DB_URL` están configurados y se exponen en `.env` / `.env.example`.
+- Se añadieron utilidades para conectarse tanto por REST (`@supabase/supabase-js`) como por SQL (`pg` via pooler) en `src/lib/supabase.ts` y `src/lib/db.ts`.
+- Existen repositorios base (`src/lib/repos`) para usuarios, empleados, empresas y marcaciones; el login (`lib/auth.ts` / `api/auth/login`) y el endpoint/página de trabajador ya funcionan sin Prisma.
+- Las migraciones SQL originales se aplicaron manualmente con `psql` sobre Supabase y el seed (`npm run db:seed`) opera directamente contra esa instancia.
+
+### Próximos pasos
+
+1. **Automatizar las migraciones SQL:** hoy se aplican con el loop de `psql`. Puedes convertirlo en un script (`npm run db:migrate`) que ejecute los archivos en orden o usar la UI de Supabase.
+2. **Prepara datasets adicionales:** el nuevo `npm run db:seed` carga datos demo mínimos. Si necesitas más escenarios (por ejemplo, históricos mensuales), crea scripts en `scripts/` que reutilicen los repositorios.
+3. **Optimización/pooling:** algunas consultas complejas (reportes grandes) podrían moverse a RPCs o vistas materializadas en Supabase para aliviar carga futura.
+
+Si necesitas continuar con la migración, sigue el plan de “Próximos pasos” usando los repositorios existentes como plantilla.
 
 ## Autoría y branding
 
