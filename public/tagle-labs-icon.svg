@@ -1,0 +1,14 @@
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Tagle Labs isotipo</title>
+  <desc id="desc">Hexágono oscuro con inicial T naranja.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1D2A4A"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <path d="M48 4l36 20v48L48 92 12 72V24z" fill="url(#bg)"/>
+    <path d="M28 28h40v12H52v28H44V40H28z" fill="#F97316" stroke="#F97316" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>

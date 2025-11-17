@@ -1,0 +1,13 @@
+<svg width="320" height="96" viewBox="0 0 320 96" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Tagle Labs logotipo</title>
+  <desc id="desc">Inicial T formada por dos bloques y texto Tagle Labs.</desc>
+  <g fill="none" fill-rule="evenodd">
+    <rect width="320" height="96" rx="16" fill="#0F172A"/>
+    <g transform="translate(28 20)">
+      <path d="M0 0h80v16H48v40H32V16H0z" fill="#F97316"/>
+      <path d="M96 0h16v56H96z" fill="#F97316"/>
+      <text x="128" y="33" font-family="Inter, 'Segoe UI', sans-serif" font-size="32" fill="#E2E8F0" font-weight="600">Tagle</text>
+      <text x="128" y="60" font-family="Inter, 'Segoe UI', sans-serif" font-size="24" fill="#CBD5F5" font-weight="400">Labs</text>
+    </g>
+  </g>
+</svg>

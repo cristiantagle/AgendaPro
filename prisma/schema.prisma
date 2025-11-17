@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  superadmin
+  company_admin
+  worker
+}
+
+enum ScheduleType {
+  normal
+  viernes
+  finde
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         Role
+  companyId    String?
+  company      Company?  @relation(fields: [companyId], references: [id])
+  employee     Employee?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Company {
+  id                String                 @id @default(uuid())
+  name              String
+  rut               String?
+  emailContacto     String?
+  telefonoContacto  String?
+  isActive          Boolean                @default(true)
+  logoUrl           String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  users             User[]
+  employees         Employee[]
+  paySettings       CompanyPaySetting?
+  schedules         CompanyWorkSchedule[]
+  timeRecords       TimeRecord[]
+  monthlyReports    MonthlyReport[]
+  kioskSlug         String                 @unique @default(uuid())
+  kioskPin          String                 @default("000000")
+  kioskDevices      KioskDevice[]
+}
+
+model Employee {
+  id             String          @id @default(uuid())
+  companyId      String
+  userId         String          @unique
+  nombreCompleto String
+  rut            String?
+  valorHoraBase  Decimal?        @db.Decimal(10, 2)
+  sueldoMensual  Decimal?        @db.Decimal(12, 2)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  company        Company         @relation(fields: [companyId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  timeRecords    TimeRecord[]
+  monthlyReports MonthlyReport[]
+
+  @@index([companyId])
+}
+
+model CompanyPaySetting {
+  id                  String   @id @default(uuid())
+  companyId           String   @unique
+  valorHoraBaseGlobal Decimal  @db.Decimal(10, 2)
+  sueldoMensualBase   Decimal  @db.Decimal(12, 2)
+  factorExtraSemana   Float    @default(1.5)
+  weekendDayRate      Decimal  @db.Decimal(12, 2)
+  weekendExtraHourRate Decimal @db.Decimal(10, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  company             Company  @relation(fields: [companyId], references: [id])
+}
+
+model CompanyWorkSchedule {
+  id         String       @id @default(uuid())
+  companyId  String
+  diaSemana  Int
+  horaInicio String
+  horaFin    String
+  tipo       ScheduleType @default(normal)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  company    Company      @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, diaSemana])
+}
+
+model TimeRecord {
+  id                 String    @id @default(uuid())
+  employeeId         String
+  companyId          String
+  fecha              DateTime
+  horaEntrada        DateTime?
+  horaInicioAlmuerzo DateTime?
+  horaFinAlmuerzo    DateTime?
+  horaSalida         DateTime?
+  esManual           Boolean   @default(false)
+  notas              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  employee           Employee  @relation(fields: [employeeId], references: [id])
+  company            Company   @relation(fields: [companyId], references: [id])
+
+  @@unique([employeeId, fecha])
+  @@index([companyId, fecha])
+}
+
+model MonthlyReport {
+  id                 String   @id @default(uuid())
+  employeeId         String
+  companyId          String
+  anio               Int
+  mes                Int
+  horasNormales      Float    @default(0)
+  horasExtraSemana   Float    @default(0)
+  horasFindeNormales Float    @default(0)
+  horasFindeExtra    Float    @default(0)
+  montoTotal         Decimal  @db.Decimal(12, 2)
+  generadoEl         DateTime @default(now())
+  employee           Employee @relation(fields: [employeeId], references: [id])
+  company            Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([employeeId, anio, mes])
+  @@index([companyId, anio, mes])
+}
+
+model KioskDevice {
+  id         String   @id @default(uuid())
+  companyId  String
+  name       String?
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime?
+  company    Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+}

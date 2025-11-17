@@ -1,0 +1,5 @@
+ALTER TABLE "CompanyPaySetting"
+ADD COLUMN "sueldoMensualBase" DECIMAL(12,2) NOT NULL DEFAULT 500000;
+
+ALTER TABLE "Employee"
+ADD COLUMN "sueldoMensual" DECIMAL(12,2);
