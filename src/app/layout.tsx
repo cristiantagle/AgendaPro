@@ -68,16 +68,6 @@ function TagleBrandBar() {
               cristian.gonzalez.gt@gmail.com
             </Link>
           </span>
-          <span>
-            <strong>Más soluciones:</strong>{" "}
-            <Link
-              href="https://github.com/"
-              target="_blank"
-              className="font-semibold text-emerald-300 underline-offset-2 hover:underline"
-            >
-              taglelabs.com
-            </Link>
-          </span>
         </div>
       </div>
     </div>
