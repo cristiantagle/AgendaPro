@@ -35,8 +35,15 @@ export function LoginForm() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error ?? "Error al iniciar sesión");
+        let message = "Error al iniciar sesión";
+        try {
+          const data = await response.json();
+          message = data.error ?? message;
+        } catch {
+          const text = await response.text();
+          if (text) message = text;
+        }
+        throw new Error(message);
       }
 
       router.replace("/");
