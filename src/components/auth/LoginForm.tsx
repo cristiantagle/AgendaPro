@@ -35,13 +35,15 @@ export function LoginForm() {
       });
 
       if (!response.ok) {
+        const raw = await response.text();
         let message = "Error al iniciar sesión";
-        try {
-          const data = await response.json();
-          message = data.error ?? message;
-        } catch {
-          const text = await response.text();
-          if (text) message = text;
+        if (raw) {
+          try {
+            const data = JSON.parse(raw);
+            message = data.error ?? raw;
+          } catch {
+            message = raw;
+          }
         }
         throw new Error(message);
       }
