@@ -57,6 +57,15 @@ export function KioskTerminal({
     Record<string, WorkerStatus>
   >({});
   const [tick, setTick] = useState(0);
+  const [showSelectionHint, setShowSelectionHint] = useState(false);
+
+  const formatTime = (iso?: string) =>
+    iso
+      ? new Date(iso).toLocaleTimeString("es-CL", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "--:--";
 
   const formatDuration = (employeeId: string) => {
     const status = workerStatus[employeeId];
@@ -70,14 +79,6 @@ export function KioskTerminal({
     const minutes = totalMinutes % 60;
     return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
   };
-
-  const formatTime = (iso?: string) =>
-    iso
-      ? new Date(iso).toLocaleTimeString("es-CL", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "--:--";
 
   const filteredEmployees = useMemo(
     () =>
@@ -104,6 +105,18 @@ export function KioskTerminal({
           const data = await res.json();
           setAuthorizedName(data.device.name ?? "Terminal");
           setDeviceToken(stored);
+          if (Array.isArray(data.workers)) {
+            const statusMap: Record<string, WorkerStatus> = {};
+            data.workers.forEach((worker: WorkerStatus & { id: string }) => {
+              statusMap[worker.id] = {
+                runningSince: worker.runningSince,
+                workedMs: worker.workedMs,
+                lastAction: worker.lastAction,
+                lastTime: worker.lastTime,
+              };
+            });
+            setWorkerStatus(statusMap);
+          }
         } else if (res.status === 401) {
           window.localStorage.removeItem(storageKey);
         }
@@ -115,18 +128,18 @@ export function KioskTerminal({
     void verify();
   }, [slug, storageKey]);
 
-  useEffect(() => {
-    return () => {
-      if (lockTimeoutRef.current) {
-        clearTimeout(lockTimeoutRef.current);
-      }
-    };
-  }, []);
+useEffect(() => {
+  return () => {
+    if (lockTimeoutRef.current) {
+      clearTimeout(lockTimeoutRef.current);
+    }
+  };
+}, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => setTick((value) => value + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
+useEffect(() => {
+  const interval = setInterval(() => setTick((value) => value + 1), 1000);
+  return () => clearInterval(interval);
+}, []);
 
   const authorizeDevice = async () => {
     if (!pin.trim()) {

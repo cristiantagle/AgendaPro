@@ -137,3 +137,15 @@ export const listRecentRecordsByCompany = async (
     employee: { nombreCompleto: row.nombreCompleto as string },
   }));
 };
+
+export const getTodayRecordForEmployee = async (
+  employeeId: string,
+  companyId: string,
+  date: Date,
+) => {
+  const row = await runSingle<Record<string, unknown>>(
+    'SELECT * FROM "TimeRecord" WHERE "employeeId" = $1 AND "companyId" = $2 AND DATE("fecha") = DATE($3)',
+    [employeeId, companyId, date],
+  );
+  return row ? mapTimeRecord(row) : null;
+};
