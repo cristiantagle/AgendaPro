@@ -27,6 +27,7 @@ export function WorkersTable({ workers, sueldoBase }: Props) {
   const [formValue, setFormValue] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const currentWorker = useMemo(
     () => rows.find((worker) => worker.id === editingId),
@@ -82,6 +83,33 @@ export function WorkersTable({ workers, sueldoBase }: Props) {
     }
   };
 
+  const toggleStatus = async (worker: WorkerRow) => {
+    setMessage(null);
+    setTogglingId(worker.id);
+    try {
+      const res = await fetch(`/api/workers/${worker.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !worker.isActive }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(
+          data.error ?? "No se pudo actualizar el estado del trabajador",
+        );
+      }
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === worker.id ? { ...row, isActive: !row.isActive } : row,
+        ),
+      );
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
     <>
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -96,7 +124,7 @@ export function WorkersTable({ workers, sueldoBase }: Props) {
                 <th className="p-2">Correo</th>
                 <th className="p-2">Estado</th>
                 <th className="p-2">Sueldo mensual</th>
-                <th className="p-2"></th>
+                <th className="p-2 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -120,11 +148,19 @@ export function WorkersTable({ workers, sueldoBase }: Props) {
                       worker.sueldoMensual ?? sueldoBase ?? 0,
                     )}
                   </td>
-                  <td className="p-2 text-right">
+                  <td className="p-2 text-right space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleStatus(worker)}
+                      disabled={togglingId === worker.id}
+                      className="block w-full text-sm font-semibold text-slate-600 underline disabled:opacity-50"
+                    >
+                      {worker.isActive ? "Desactivar" : "Activar"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => openModal(worker)}
-                      className="text-sm font-semibold text-blue-600 underline"
+                      className="block w-full text-sm font-semibold text-blue-600 underline"
                     >
                       Editar
                     </button>
