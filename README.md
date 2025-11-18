@@ -6,6 +6,20 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
 
 [![Tagle Labs](./public/tagle-labs-logo.svg)](https://github.com/)
 
+## Estado actual
+
+- Migración completa a Supabase (DB, Realtime y seed scripts) con despliegue en Vercel funcionando.
+- Kiosco PWA con autorización persistente, bloqueo de botones, contadores en vivo y bitácora de marcaciones recientes.
+- Panel de empresa con creación/edición de trabajadores, actualización de sueldos y ahora activación/desactivación sin eliminar registros.
+
+## Release estable 1.0
+
+Esta versión en producción queda marcada como **release 1.0** y se considera estable. Incluye:
+
+- Kioscos sincronizados en tiempo real (Supabase Realtime + service worker optimizado).
+- Control completo de horarios, sueldos y pay settings desde el dashboard (sin tocar código).
+- Branding, PWA y despliegue productivo listo para clientes finales bajo la marca Tagle Labs.
+
 ## Características
 
 - **Roles separados**: superadmin, administrador de empresa y trabajador.
@@ -130,14 +144,14 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 - `src/lib/report-service.ts`: Generación de resúmenes y exportes (PDF/CSV).
 - `public/manifest.json`, `public/sw.js`, `public/icons/*`: Configuración PWA.
 
-## Próximas mejoras sugeridas
+## Próximos pasos sugeridos
 
-1. **Recuperación de contraseñas y 2FA:** flujo completo para restablecer contraseñas y reforzar la seguridad con segundo factor.
-2. **Alertas y notificaciones:** enviar correos o mensajes push cuando un trabajador no marca entrada/salida o acumula horas extra.
-3. **Firmas y comprobantes:** permitir que los trabajadores firmen su resumen mensual o lo descarguen con firma electrónica.
-4. **Sincronización contable:** exportar automáticamente los datos a ERP/contabilidad (SII, sueldo líquido, imposiciones).
-5. **Reportes custom por empresa:** configurar campos adicionales por compañía (centros de costo, turnos especiales u otras etiquetas internas).
-6. **Offline-first en kioscos:** almacenar temporalmente marcaciones si el kiosco pierde conexión y sincronizarlas cuando vuelva a estar en línea.
+1. **Recuperación de contraseñas y 2FA:** flujo completo para restablecer claves y agregar segundo factor a admins/trabajadores.
+2. **Alertas proactivas:** correo o push cuando un trabajador no marca entrada/salida o supera las horas configuradas.
+3. **Historial avanzado en kioscos:** filtros por día/turno y exportar las últimas marcaciones directamente desde la tablet.
+4. **Integraciones contables:** exportar automáticamente datos a ERP/contabilidad (SII, libro de remuneraciones, imposiciones).
+5. **Campos custom por empresa:** permitir turnos especiales, ubicaciones o centros de costo definidos por cada cliente.
+6. **Modo offline en kioscos:** cachear marcaciones cuando no haya red y sincronizarlas al recuperar conexión.
 
 Con esto tendrás una plataforma sólida para operar hoy y con una hoja de ruta clara hacia funcionalidades más avanzadas.
 
