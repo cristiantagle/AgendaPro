@@ -5,7 +5,7 @@ import { CreateCompanyForm } from "@/components/forms/CreateCompanyForm";
 import { PromoteWorkerToAdminForm } from "@/components/forms/PromoteWorkerToAdminForm";
 import { DashboardTopBar } from "@/components/navigation/DashboardTopBar";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { listCompaniesWithEmployees } from "@/lib/repos/companies";
 
 export default async function SuperadminPage() {
   const session = await getSession();
@@ -13,20 +13,7 @@ export default async function SuperadminPage() {
     redirect("/");
   }
 
-  const companies = await prisma.company.findMany({
-    include: {
-      _count: { select: { employees: true } },
-      employees: {
-        include: {
-          user: {
-            select: { email: true, role: true },
-          },
-        },
-        orderBy: { nombreCompleto: "asc" },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const companies = await listCompaniesWithEmployees();
 
   const companiesForAdminForm = companies.map((company) => ({
     id: company.id,
@@ -93,7 +80,9 @@ export default async function SuperadminPage() {
                         {company.telefonoContacto ?? ""}
                       </p>
                     </td>
-                    <td className="p-2">{company._count.employees}</td>
+                    <td className="p-2">
+                      {company.employees?.length ?? 0}
+                    </td>
                     <td className="p-2">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 import { generateDeviceToken, kioskCookieName } from "@/lib/kiosk";
-import { prisma } from "@/lib/prisma";
+import { createDevice } from "@/lib/repos/kiosk-devices";
+import { getCompanyBySlug } from "@/lib/repos/companies";
 import { kioskAuthorizeSchema } from "@/lib/validation";
 
 type Params = {
@@ -15,9 +15,7 @@ export async function POST(
 ) {
   const params = await context.params;
   const data = kioskAuthorizeSchema.parse(await request.json());
-  const company = await prisma.company.findFirst({
-    where: { kioskSlug: params.slug },
-  });
+  const company = await getCompanyBySlug(params.slug);
 
   if (!company) {
     return NextResponse.json(
@@ -34,16 +32,15 @@ export async function POST(
   }
 
   const token = generateDeviceToken();
-  const device = await prisma.kioskDevice.create({
-    data: {
-      companyId: company.id,
-      token,
-      name: data.deviceName ?? `Terminal ${new Date().toLocaleDateString()}`,
-    },
-    select: { id: true, name: true },
+  const device = await createDevice({
+    companyId: company.id,
+    token,
+    name: data.deviceName ?? `Terminal ${new Date().toLocaleDateString()}`,
   });
 
-  const response = NextResponse.json({ device });
+  const response = NextResponse.json({
+    device: device ? { id: device.id, name: device.name } : null,
+  });
   response.cookies.set({
     name: kioskCookieName(company.kioskSlug),
     value: token,

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 
 import { assertRole, getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getCompanyById } from "@/lib/repos/companies";
+import { createUser, getUserByEmail } from "@/lib/repos/users";
 import { createAdminSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -11,9 +12,7 @@ export async function POST(request: Request) {
 
   const data = createAdminSchema.parse(await request.json());
 
-  const company = await prisma.company.findUnique({
-    where: { id: data.companyId },
-  });
+  const company = await getCompanyById(data.companyId);
 
   if (!company) {
     return NextResponse.json(
@@ -22,9 +21,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
+  const existingUser = await getUserByEmail(data.email);
 
   if (existingUser) {
     return NextResponse.json(
@@ -38,13 +35,11 @@ export async function POST(request: Request) {
 
   const passwordHash = await hash(data.password, 10);
 
-  const admin = await prisma.user.create({
-    data: {
-      email: data.email,
-      passwordHash,
-      role: "company_admin",
-      companyId: company.id,
-    },
+  const admin = await createUser({
+    email: data.email,
+    passwordHash,
+    role: "company_admin",
+    companyId: company.id,
   });
 
   return NextResponse.json({ admin });

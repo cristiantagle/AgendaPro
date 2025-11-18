@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { assertRole, getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getEmployeeByUserId } from "@/lib/repos/employees";
+import { listTimeRecords } from "@/lib/repos/time-records";
 import { markEmployeeAttendance } from "@/lib/time-records-service";
 import { markActionSchema } from "@/lib/validation";
 
@@ -24,9 +25,7 @@ export async function GET(request: Request) {
 
   let employeeId = query.employeeId;
   if (session.role === "worker") {
-    const employee = await prisma.employee.findFirst({
-      where: { userId: session.userId },
-    });
+    const employee = await getEmployeeByUserId(session.userId);
     if (!employee) {
       return NextResponse.json(
         { error: "Empleado no encontrado" },
@@ -54,14 +53,9 @@ export async function GET(request: Request) {
     };
   }
 
-  const records = await prisma.timeRecord.findMany({
+  const records = await listTimeRecords({
     where,
-    orderBy: { fecha: "desc" },
-    include: {
-      employee: {
-        select: { nombreCompleto: true },
-      },
-    },
+    order: { field: "fecha", direction: "desc" },
   });
 
   return NextResponse.json({ records });
@@ -73,9 +67,7 @@ export async function POST(request: Request) {
 
   const action = markActionSchema.parse(await request.json());
 
-  const employee = await prisma.employee.findFirst({
-    where: { userId: session.userId },
-  });
+  const employee = await getEmployeeByUserId(session.userId);
 
   if (!employee) {
     return NextResponse.json(

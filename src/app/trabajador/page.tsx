@@ -6,7 +6,9 @@ import { WorkerMonthlySummary } from "@/components/worker/MonthlySummary";
 import { getSession } from "@/lib/auth";
 import { startOfDayUtc } from "@/lib/datetime";
 import { getMonthlySummaryForEmployee } from "@/lib/report-service";
-import { prisma } from "@/lib/prisma";
+import { getCompanyById } from "@/lib/repos/companies";
+import { getEmployeeByUserId } from "@/lib/repos/employees";
+import { findTimeRecord } from "@/lib/repos/time-records";
 
 export default async function TrabajadorPage() {
   const session = await getSession();
@@ -14,25 +16,23 @@ export default async function TrabajadorPage() {
     redirect("/");
   }
 
-  const employee = await prisma.employee.findFirst({
-    where: { userId: session.userId },
-    include: {
-      company: true,
-    },
-  });
+  const employee = await getEmployeeByUserId(session.userId);
 
-  if (!employee || !employee.company) {
+  if (!employee) {
+    redirect("/login");
+  }
+
+  const company = await getCompanyById(employee.companyId);
+  if (!company) {
     redirect("/login");
   }
 
   const today = new Date();
   const todayStart = startOfDayUtc(today);
 
-  const todayRecord = await prisma.timeRecord.findFirst({
-    where: {
-      employeeId: employee.id,
-      fecha: todayStart,
-    },
+  const todayRecord = await findTimeRecord({
+    employeeId: employee.id,
+    fecha: todayStart,
   });
 
   const summary = await getMonthlySummaryForEmployee(
@@ -48,7 +48,7 @@ export default async function TrabajadorPage() {
         <DashboardTopBar role="worker" />
         <header className="rounded-3xl bg-white p-6 shadow-md">
           <p className="text-sm uppercase tracking-wide text-slate-500">
-            {employee.company.name}
+            {company.name}
           </p>
           <h1 className="text-3xl font-semibold text-slate-900">
             {employee.nombreCompleto}

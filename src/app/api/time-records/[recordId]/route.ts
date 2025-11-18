@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { assertRole, getSession } from "@/lib/auth";
 import { startOfDayUtc } from "@/lib/datetime";
-import { prisma } from "@/lib/prisma";
+import { getTimeRecordById, updateTimeRecord } from "@/lib/repos/time-records";
 import { timeRecordCorrectionSchema } from "@/lib/validation";
 
 const paramsSchema = z.object({
@@ -18,11 +18,9 @@ export async function PATCH(
   assertRole(session, ["company_admin"]);
 
   const { recordId } = paramsSchema.parse(await context.params);
-  const record = await prisma.timeRecord.findUnique({
-    where: { id: recordId, companyId: session.companyId! },
-  });
+  const record = await getTimeRecordById(recordId);
 
-  if (!record) {
+  if (!record || record.companyId !== session.companyId) {
     return NextResponse.json(
       { error: "Marcación no encontrada" },
       { status: 404 },
@@ -37,18 +35,15 @@ export async function PATCH(
   const parseTime = (value: string | null | undefined) =>
     value ? new Date(value) : null;
 
-  const updated = await prisma.timeRecord.update({
-    where: { id: record.id },
-    data: {
-      fecha,
-      horaEntrada: parseTime(data.horaEntrada),
-      horaInicioAlmuerzo: parseTime(data.horaInicioAlmuerzo),
-      horaFinAlmuerzo: parseTime(data.horaFinAlmuerzo),
-      horaSalida: parseTime(data.horaSalida),
-      esManual: true,
-      notas: data.notas,
-    },
+  const updated = await updateTimeRecord(record.id, {
+    fecha,
+    horaEntrada: parseTime(data.horaEntrada),
+    horaInicioAlmuerzo: parseTime(data.horaInicioAlmuerzo),
+    horaFinAlmuerzo: parseTime(data.horaFinAlmuerzo),
+    horaSalida: parseTime(data.horaSalida),
+    esManual: true,
+    notas: data.notas ?? null,
   });
 
-  return NextResponse.json({ record: updated });
+  return NextResponse.json({ record: updated ?? record });
 }

@@ -2,7 +2,12 @@ import { toZonedTime } from "date-fns-tz";
 import type { z } from "zod";
 
 import { startOfDayUtc } from "./datetime";
-import { prisma } from "./prisma";
+import {
+  createTimeRecord,
+  findTimeRecord,
+  updateTimeRecord,
+} from "./repos/time-records";
+import { getEmployeeCompanyWithSchedules } from "./repos/employees";
 import { findScheduleForDay, getScheduleBoundaries } from "./schedules";
 import { CHILE_TIMEZONE } from "./timezone";
 import { markActionSchema } from "./validation";
@@ -13,30 +18,21 @@ export async function markEmployeeAttendance(
   employeeId: string,
   action: MarkAction,
   options?: { enforceStartCutoff?: boolean },
-): Promise<{
-  record: Awaited<ReturnType<typeof prisma.timeRecord.findUnique>>;
-}> {
-  const employee = await prisma.employee.findUnique({
-    where: { id: employeeId },
-    include: {
-      company: {
-        include: { schedules: true },
-      },
-    },
-  });
-
-  if (!employee || !employee.company) {
+) {
+  const data = await getEmployeeCompanyWithSchedules(employeeId);
+  if (!data || !data.company) {
     throw Object.assign(new Error("Empleado no encontrado"), {
       status: 404,
     });
   }
+  const { employee, company, schedules } = data;
 
   const timezone = CHILE_TIMEZONE;
   const now = new Date();
   const nowLocal = toZonedTime(now, timezone);
 
   const todaysSchedule = findScheduleForDay(
-    employee.company.schedules ?? [],
+    schedules ?? [],
     nowLocal.getDay(),
   );
 
@@ -66,19 +62,18 @@ export async function markEmployeeAttendance(
 
   const today = startOfDayUtc(now, timezone);
 
-  let record = await prisma.timeRecord.findFirst({
-    where: { employeeId: employee.id, fecha: today },
-  });
+  let record = await findTimeRecord({ employeeId: employee.id, fecha: today });
+  if (!record) {
+    record = await createTimeRecord({
+      employeeId: employee.id,
+      companyId: company.id,
+      fecha: today,
+      esManual: false,
+    });
+  }
 
   if (!record) {
-    record = await prisma.timeRecord.create({
-      data: {
-        employeeId: employee.id,
-        companyId: employee.company.id,
-        fecha: today,
-        esManual: false,
-      },
-    });
+    throw new Error("No se pudo crear la marcación");
   }
 
   const updates: Record<string, Date> = {};
@@ -138,10 +133,6 @@ export async function markEmployeeAttendance(
     updates.horaSalida = now;
   }
 
-  const updated = await prisma.timeRecord.update({
-    where: { id: record.id },
-    data: updates,
-  });
-
-  return { record: updated };
+  const updated = await updateTimeRecord(record.id, updates);
+  return { record: updated ?? record };
 }

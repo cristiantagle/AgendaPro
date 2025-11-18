@@ -3,7 +3,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 
 import { assertRole, getSession, requireSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { updateCompany } from "@/lib/repos/companies";
 
 const ALLOWED_TYPES = new Map([
   ["image/png", "png"],
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   let formData: FormData;
   try {
     formData = await request.formData();
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "No se pudo procesar el formulario" },
       { status: 400 },
@@ -62,11 +62,9 @@ export async function POST(request: Request) {
 
   const relativePath = `/uploads/${filename}`;
 
-  const company = await prisma.company.update({
-    where: { id: session.companyId! },
-    data: { logoUrl: relativePath },
-    select: { logoUrl: true },
+  const company = await updateCompany(session.companyId!, {
+    logoUrl: relativePath,
   });
 
-  return NextResponse.json({ logoUrl: company.logoUrl });
+  return NextResponse.json({ logoUrl: company?.logoUrl ?? relativePath });
 }

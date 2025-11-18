@@ -1,4 +1,4 @@
-import type { CompanyWorkSchedule } from "@prisma/client";
+import type { CompanyWorkSchedule } from "@/types/database";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 
 import { CHILE_TIMEZONE } from "./timezone";
