@@ -10,7 +10,6 @@ export type Company = {
   telefonoContacto: string | null;
   isActive: boolean;
   logoUrl: string | null;
-  timezone?: string | null;
   kioskSlug: string;
   kioskPin: string;
 };

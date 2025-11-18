@@ -28,7 +28,6 @@ const mapCompany = (row: Record<string, unknown>): Company => ({
   telefonoContacto: (row.telefonoContacto as string) ?? null,
   isActive: Boolean(row.isActive),
   logoUrl: (row.logoUrl as string) ?? null,
-  timezone: (row.timezone as string) ?? null,
   kioskSlug: row.kioskSlug as string,
   kioskPin: row.kioskPin as string,
 });
@@ -106,7 +105,7 @@ export const getEmployeeByUserId = async (userId: string) => {
 
 export const getEmployeeWithCompany = async (id: string) => {
   const row = await runSingle<Record<string, unknown>>(
-    'SELECT e.*, c."name" as "companyName", c."rut" as "companyRut", c."emailContacto" as "companyEmail", c."telefonoContacto" as "companyPhone", c."isActive" as "companyActive", c."logoUrl" as "companyLogo", c."timezone" as "companyTimezone", c."kioskSlug", c."kioskPin" FROM "Employee" e JOIN "Company" c ON c."id" = e."companyId" WHERE e."id" = $1',
+    'SELECT e.*, c."name" as "companyName", c."rut" as "companyRut", c."emailContacto" as "companyEmail", c."telefonoContacto" as "companyPhone", c."isActive" as "companyActive", c."logoUrl" as "companyLogo", c."kioskSlug", c."kioskPin" FROM "Employee" e JOIN "Company" c ON c."id" = e."companyId" WHERE e."id" = $1',
     [id],
   );
   if (!row) return null;
@@ -119,7 +118,6 @@ export const getEmployeeWithCompany = async (id: string) => {
     telefonoContacto: (row.companyPhone as string) ?? null,
     isActive: Boolean(row.companyActive),
     logoUrl: (row.companyLogo as string) ?? null,
-    timezone: (row.companyTimezone as string) ?? null,
     kioskSlug: row.kioskSlug as string,
     kioskPin: row.kioskPin as string,
   };

@@ -16,7 +16,6 @@ const mapCompany = (row: Record<string, unknown>): Company => ({
   telefonoContacto: (row.telefonoContacto as string) ?? null,
   isActive: Boolean(row.isActive),
   logoUrl: (row.logoUrl as string) ?? null,
-  timezone: (row.timezone as string) ?? null,
   kioskSlug: row.kioskSlug as string,
   kioskPin: row.kioskPin as string,
 });
