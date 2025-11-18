@@ -25,6 +25,7 @@ const actions: Array<{ key: "entrada" | "inicio_almuerzo" | "fin_almuerzo" | "sa
   { key: "fin_almuerzo", label: "Fin almuerzo" },
   { key: "salida", label: "Salida" },
 ];
+type ActionKey = (typeof actions)[number]["key"];
 
 export function KioskTerminal({
   companyId,
@@ -56,6 +57,7 @@ export function KioskTerminal({
     workedMs: number;
     lastAction?: string;
     lastTime?: string;
+    marks: Partial<Record<ActionKey, string>>;
   };
   const [workerStatus, setWorkerStatus] = useState<
     Record<string, WorkerStatus>
@@ -99,6 +101,7 @@ export function KioskTerminal({
         workedMs: worker.workedMs,
         lastAction: worker.lastAction,
         lastTime: worker.lastTime,
+        marks: worker.marks ?? {},
       };
     });
     setWorkerStatus(statusMap);
@@ -241,6 +244,7 @@ useEffect(() => {
       const current = prev[employeeId] ?? {
         runningSince: null,
         workedMs: 0,
+        marks: {},
       };
       const currentRunning = current.runningSince
         ? new Date(current.runningSince).getTime()
@@ -264,6 +268,11 @@ useEffect(() => {
         workedMs = current.workedMs;
       }
 
+      const marks = {
+        ...(current.marks ?? {}),
+        [action]: isoTime,
+      };
+
       return {
         ...prev,
         [employeeId]: {
@@ -271,6 +280,7 @@ useEffect(() => {
           workedMs,
           lastAction: actions.find((item) => item.key === action)?.label,
           lastTime: isoTime,
+          marks,
         },
       };
     });
@@ -481,22 +491,32 @@ useEffect(() => {
         </div>
 
         <div className="grid gap-3 md:grid-cols-4">
-          {actions.map((action) => (
-            <button
-              key={action.key}
-              type="button"
-              onClick={() => markAction(action.key)}
-              disabled={
-                !authorizedName ||
-                !selectedEmployee ||
-                loadingAction === action.key ||
-                buttonsLocked
-              }
-              className="rounded-xl bg-emerald-600 px-4 py-5 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
-            >
-              {loadingAction === action.key ? "Enviando..." : action.label}
-            </button>
-          ))}
+          {actions.map((action) => {
+            const markTime =
+              selectedStatus?.marks?.[action.key] ?? null;
+            return (
+              <div key={action.key} className="space-y-1">
+                <p className="text-xs text-slate-500">
+                  {markTime
+                    ? `${action.label}: ${formatTime(markTime)}`
+                    : `${action.label}: sin registrar`}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => markAction(action.key)}
+                  disabled={
+                    !authorizedName ||
+                    !selectedEmployee ||
+                    loadingAction === action.key ||
+                    buttonsLocked
+                  }
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-5 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+                >
+                  {loadingAction === action.key ? "Enviando..." : action.label}
+                </button>
+              </div>
+            );
+          })}
         </div>
         {statusMessage ? (
           <p className="text-sm text-emerald-600">{statusMessage}</p>

@@ -144,6 +144,7 @@ export type WorkerDayStatus = {
   runningSince: string | null;
   lastAction?: string;
   lastTime?: string;
+  marks: Partial<Record<"entrada" | "inicio_almuerzo" | "fin_almuerzo" | "salida", string>>;
 };
 
 export const listTodayStatusesForCompany = async (
@@ -183,7 +184,11 @@ export const listTodayStatusesForCompany = async (
           tr."horaFinAlmuerzo",
           tr."horaInicioAlmuerzo",
           tr."horaEntrada"
-        ) AS "lastTime"
+        ) AS "lastTime",
+        tr."horaEntrada",
+        tr."horaInicioAlmuerzo",
+        tr."horaFinAlmuerzo",
+        tr."horaSalida"
       FROM "Employee" e
       LEFT JOIN "TimeRecord" tr
         ON tr."employeeId" = e."id"
@@ -204,5 +209,19 @@ export const listTodayStatusesForCompany = async (
     lastTime: row.lastTime
       ? new Date(row.lastTime as string).toISOString()
       : undefined,
+    marks: {
+      entrada: row.horaEntrada
+        ? new Date(row.horaEntrada as string).toISOString()
+        : undefined,
+      inicio_almuerzo: row.horaInicioAlmuerzo
+        ? new Date(row.horaInicioAlmuerzo as string).toISOString()
+        : undefined,
+      fin_almuerzo: row.horaFinAlmuerzo
+        ? new Date(row.horaFinAlmuerzo as string).toISOString()
+        : undefined,
+      salida: row.horaSalida
+        ? new Date(row.horaSalida as string).toISOString()
+        : undefined,
+    },
   })) as WorkerDayStatus[];
 };
