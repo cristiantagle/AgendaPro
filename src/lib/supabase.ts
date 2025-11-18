@@ -33,7 +33,6 @@ export const supabasePool = supabaseDbUrl
       connectionString: supabaseDbUrl,
       max: 10,
       ssl: {
-        require: true,
         rejectUnauthorized: false,
       },
     })

@@ -60,6 +60,22 @@ export const getCompanyBySlug = async (slug: string) => {
   return row ? mapCompany(row) : null;
 };
 
+export const getCompanyWithSettings = async (companyId: string) => {
+  const companyRow = await runSingle<Record<string, unknown>>(
+    'SELECT * FROM "Company" WHERE "id" = $1',
+    [companyId],
+  );
+  if (!companyRow) return null;
+  const settingsRow = await runSingle<Record<string, unknown>>(
+    'SELECT * FROM "CompanyPaySetting" WHERE "companyId" = $1',
+    [companyId],
+  );
+  return {
+    company: mapCompany(companyRow),
+    paySettings: settingsRow ? mapPaySettings(settingsRow) : null,
+  };
+};
+
 export const listCompanies = async () => {
   const rows = await runQuery<Record<string, unknown>>(
     'SELECT * FROM "Company" ORDER BY "createdAt" DESC',

@@ -71,7 +71,7 @@ export default async function EmpresaPage() {
             <div>
               <p className="text-emerald-200">Trabajadores activos</p>
               <p className="text-2xl font-bold">
-                {company.employees.filter((emp) => emp.isActive).length}
+                {employees.filter((emp) => emp.isActive).length}
               </p>
             </div>
           </div>

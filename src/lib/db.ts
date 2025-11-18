@@ -1,8 +1,10 @@
-import type { PoolClient, QueryResult } from "pg";
+import type { PoolClient, QueryResult, QueryResultRow } from "pg";
 
 import { supabasePool } from "./supabase";
 
-if (!supabasePool) {
+const pool = supabasePool;
+
+if (!pool) {
   throw new Error(
     "SUPABASE_DB_URL (or DATABASE_URL) must be configured to run queries.",
   );
@@ -13,23 +15,23 @@ export type QueryConfig = {
   values?: unknown[];
 };
 
-export const runQuery = async <T = unknown>(
+export const runQuery = async <T extends QueryResultRow = QueryResultRow>(
   textOrConfig: string | QueryConfig,
   values?: unknown[],
 ): Promise<T[]> => {
-  const client = await supabasePool.connect();
+  const client = await pool.connect();
   try {
-    const result: QueryResult<T> =
+    const result =
       typeof textOrConfig === "string"
         ? await client.query(textOrConfig, values)
         : await client.query(textOrConfig);
-    return result.rows;
+    return (result as QueryResult<T>).rows;
   } finally {
     client.release();
   }
 };
 
-export const runSingle = async <T = unknown>(
+export const runSingle = async <T extends QueryResultRow = QueryResultRow>(
   text: string,
   values?: unknown[],
 ): Promise<T | null> => {
@@ -40,7 +42,7 @@ export const runSingle = async <T = unknown>(
 export const withTransaction = async <T>(
   handler: (client: PoolClient) => Promise<T>,
 ) => {
-  const client = await supabasePool.connect();
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const result = await handler(client);
