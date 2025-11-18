@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type Employee = {
   id: string;
@@ -9,6 +11,7 @@ type Employee = {
 };
 
 type Props = {
+  companyId: string;
   slug: string;
   companyName: string;
   employees: Employee[];
@@ -24,6 +27,7 @@ const actions: Array<{ key: "entrada" | "inicio_almuerzo" | "fin_almuerzo" | "sa
 ];
 
 export function KioskTerminal({
+  companyId,
   slug,
   companyName,
   employees,
@@ -57,7 +61,6 @@ export function KioskTerminal({
     Record<string, WorkerStatus>
   >({});
   const [tick, setTick] = useState(0);
-  const [showSelectionHint, setShowSelectionHint] = useState(false);
 
   const formatTime = (iso?: string) =>
     iso
@@ -88,45 +91,64 @@ export function KioskTerminal({
     [employees, filter],
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(storageKey);
-    if (!stored) return;
+  const mapWorkers = useCallback((workers: Array<WorkerStatus & { id: string }>) => {
+    const statusMap: Record<string, WorkerStatus> = {};
+    workers.forEach((worker) => {
+      statusMap[worker.id] = {
+        runningSince: worker.runningSince,
+        workedMs: worker.workedMs,
+        lastAction: worker.lastAction,
+        lastTime: worker.lastTime,
+      };
+    });
+    setWorkerStatus(statusMap);
+  }, []);
 
-    const verify = async () => {
-      setAuthorizing(true);
+  const refreshWorkerStatus = useCallback(
+    async (explicitToken?: string) => {
+      const token = explicitToken ?? deviceToken;
+      if (!token) return;
       try {
         const res = await fetch(`/api/kiosk/${slug}/authorize`, {
           method: "GET",
           credentials: "include",
-          headers: { Authorization: `Bearer ${stored}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok) {
-          const data = await res.json();
-          setAuthorizedName(data.device.name ?? "Terminal");
-          setDeviceToken(stored);
-          if (Array.isArray(data.workers)) {
-            const statusMap: Record<string, WorkerStatus> = {};
-            data.workers.forEach((worker: WorkerStatus & { id: string }) => {
-              statusMap[worker.id] = {
-                runningSince: worker.runningSince,
-                workedMs: worker.workedMs,
-                lastAction: worker.lastAction,
-                lastTime: worker.lastTime,
-              };
-            });
-            setWorkerStatus(statusMap);
+        if (!res.ok) {
+          if (res.status === 401) {
+            if (typeof window !== "undefined") {
+              window.localStorage.removeItem(storageKey);
+            }
+            setDeviceToken(null);
+            setAuthorizedName(null);
           }
-        } else if (res.status === 401) {
-          window.localStorage.removeItem(storageKey);
+          return;
         }
-      } finally {
-        setAuthorizing(false);
+        const data = await res.json();
+        setAuthorizedName(data.device?.name ?? "Terminal");
+        if (!deviceToken) {
+          setDeviceToken(token);
+        }
+        if (explicitToken && typeof window !== "undefined") {
+          window.localStorage.setItem(storageKey, explicitToken);
+        }
+        if (Array.isArray(data.workers)) {
+          mapWorkers(data.workers as Array<WorkerStatus & { id: string }>);
+        }
+      } catch {
+        // ignore
       }
-    };
+    },
+    [deviceToken, mapWorkers, slug, storageKey],
+  );
 
-    void verify();
-  }, [slug, storageKey]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(storageKey);
+    if (!stored) return;
+    setAuthorizing(true);
+    refreshWorkerStatus(stored).finally(() => setAuthorizing(false));
+  }, [refreshWorkerStatus, storageKey]);
 
 useEffect(() => {
   return () => {
@@ -140,6 +162,34 @@ useEffect(() => {
   const interval = setInterval(() => setTick((value) => value + 1), 1000);
   return () => clearInterval(interval);
 }, []);
+
+useEffect(() => {
+  if (!deviceToken) return undefined;
+  let activeChannel: { unsubscribe: () => void } | null = null;
+  try {
+    const client = getSupabaseBrowserClient();
+    activeChannel = client
+      .channel(`time-records:${companyId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "TimeRecord",
+          filter: `companyId=eq.${companyId}`,
+        },
+        () => {
+          void refreshWorkerStatus();
+        },
+      )
+      .subscribe();
+  } catch {
+    return undefined;
+  }
+  return () => {
+    activeChannel?.unsubscribe();
+  };
+}, [companyId, deviceToken, refreshWorkerStatus]);
 
   const authorizeDevice = async () => {
     if (!pin.trim()) {
@@ -169,6 +219,9 @@ useEffect(() => {
         if (typeof window !== "undefined") {
           window.localStorage.setItem(storageKey, data.token);
         }
+        await refreshWorkerStatus(data.token);
+      } else {
+        await refreshWorkerStatus();
       }
       setAuthMessage("Dispositivo autorizado correctamente.");
     } catch (error) {
@@ -305,6 +358,7 @@ useEffect(() => {
         setButtonsLocked(false);
       }, 4000);
       updateWorkerTracking(selectedEmployee, action, timeValue ?? null);
+      void refreshWorkerStatus();
       setStatusMessage("Marcación registrada con éxito.");
     } catch (error) {
       setStatusMessage((error as Error).message);

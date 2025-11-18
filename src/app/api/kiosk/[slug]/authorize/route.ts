@@ -7,8 +7,7 @@ import {
   getDeviceByToken,
 } from "@/lib/repos/kiosk-devices";
 import { getCompanyBySlug } from "@/lib/repos/companies";
-import { listActiveEmployeesForCompany } from "@/lib/repos/employees";
-import { getTodayRecordForEmployee } from "@/lib/repos/time-records";
+import { listTodayStatusesForCompany } from "@/lib/repos/time-records";
 import { kioskAuthorizeSchema } from "@/lib/validation";
 
 type Params = {
@@ -105,72 +104,10 @@ export async function GET(
     );
   }
 
-  const today = new Date();
-  const employees = await listActiveEmployeesForCompany(company.id);
-  const workers: Array<{
-    id: string;
-    runningSince: string | null;
-    workedMs: number;
-    lastAction?: string;
-    lastTime?: string;
-  }> = [];
-
-  for (const employee of employees) {
-    const record = await getTodayRecordForEmployee(
-      employee.id,
-      company.id,
-      today,
-    );
-    if (!record) {
-      workers.push({
-        id: employee.id,
-        runningSince: null,
-        workedMs: 0,
-      });
-      continue;
-    }
-    let workedMs = 0;
-    if (record.horaEntrada && record.horaInicioAlmuerzo) {
-      workedMs +=
-        record.horaInicioAlmuerzo.getTime() -
-        record.horaEntrada.getTime();
-    }
-    if (record.horaFinAlmuerzo && record.horaSalida) {
-      workedMs +=
-        record.horaSalida.getTime() -
-        record.horaFinAlmuerzo.getTime();
-    }
-    const runningSince =
-      record.horaFinAlmuerzo && !record.horaSalida
-        ? record.horaFinAlmuerzo.toISOString()
-        : record.horaEntrada &&
-            !record.horaInicioAlmuerzo
-          ? record.horaEntrada.toISOString()
-          : null;
-    const lastAction =
-      record.horaSalida
-        ? "Salida"
-        : record.horaFinAlmuerzo
-          ? "Fin almuerzo"
-          : record.horaInicioAlmuerzo
-            ? "Inicio almuerzo"
-            : record.horaEntrada
-              ? "Entrada"
-              : undefined;
-    const lastTime =
-      record.horaSalida ??
-      record.horaFinAlmuerzo ??
-      record.horaInicioAlmuerzo ??
-      record.horaEntrada;
-
-    workers.push({
-      id: employee.id,
-      runningSince,
-      workedMs,
-      lastAction,
-      lastTime: lastTime ? lastTime.toISOString() : undefined,
-    });
-  }
+  const workers = await listTodayStatusesForCompany(
+    company.id,
+    new Date(),
+  );
 
   return NextResponse.json({
     device: { id: device.id, name: device.name },

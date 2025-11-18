@@ -69,11 +69,16 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
    npm install
    ```
 
-<<<<<<< HEAD
-4. Aplica las migraciones SQL directamente contra tu base (local o Supabase):
-=======
-4. Aplica las migraciones SQL directamente en tu base (local o Supabase). Un ejemplo rápido:
->>>>>>> feature/supabase-migration
+4. Configura también las variables públicas que consumirá el kiosco para el cliente Realtime:
+
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL="https://tu-proyecto.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="tu-clave-anon"
+   ```
+
+   > En Supabase habilita **Database → Replication → Realtime** para la tabla `TimeRecord`, así los kioscos reciben las marcaciones al instante.
+
+5. Aplica las migraciones SQL directamente en tu base (local o Supabase). Un ejemplo rápido:
 
    ```bash
    set -a && source .env && set +a
@@ -83,11 +88,7 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
    done
    ```
 
-<<<<<<< HEAD
-5. Ejecuta el seed (crea superadmin, empresas y trabajadores demo):
-=======
-5. Ejecuta el seed (crea superadmin, empresas, trabajadores demo):
->>>>>>> feature/supabase-migration
+6. Ejecuta el seed (crea superadmin, empresas y trabajadores demo):
 
    ```bash
    npm run db:seed
@@ -98,7 +99,7 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
    - Usuario superadmin: `superadmin@demo.com`
    - Contraseña de ejemplo (para todos los usuarios seed): `CambioSeguro123!`
 
-5. Levanta la aplicación:
+7. Levanta la aplicación:
 
    ```bash
    npm run dev

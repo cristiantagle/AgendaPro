@@ -39,6 +39,7 @@ export default async function KioskPage({
   return (
     <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-slate-50 p-6 text-slate-900">
       <KioskTerminal
+        companyId={company.id}
         slug={company.kioskSlug}
         companyName={company.name}
         logoUrl={company.logoUrl ?? undefined}

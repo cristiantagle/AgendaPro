@@ -138,14 +138,71 @@ export const listRecentRecordsByCompany = async (
   }));
 };
 
-export const getTodayRecordForEmployee = async (
-  employeeId: string,
+export type WorkerDayStatus = {
+  id: string;
+  workedMs: number;
+  runningSince: string | null;
+  lastAction?: string;
+  lastTime?: string;
+};
+
+export const listTodayStatusesForCompany = async (
   companyId: string,
   date: Date,
 ) => {
-  const row = await runSingle<Record<string, unknown>>(
-    'SELECT * FROM "TimeRecord" WHERE "employeeId" = $1 AND "companyId" = $2 AND DATE("fecha") = DATE($3)',
-    [employeeId, companyId, date],
+  const rows = await runQuery<Record<string, unknown>>(
+    `SELECT
+        e."id",
+        COALESCE(
+          (CASE
+             WHEN tr."horaInicioAlmuerzo" IS NOT NULL AND tr."horaEntrada" IS NOT NULL
+             THEN EXTRACT(EPOCH FROM tr."horaInicioAlmuerzo" - tr."horaEntrada")
+             ELSE 0
+           END) +
+          (CASE
+             WHEN tr."horaSalida" IS NOT NULL AND tr."horaFinAlmuerzo" IS NOT NULL
+             THEN EXTRACT(EPOCH FROM tr."horaSalida" - tr."horaFinAlmuerzo")
+             ELSE 0
+           END),
+          0
+        ) * 1000 AS "workedMs",
+        CASE
+          WHEN tr."horaFinAlmuerzo" IS NOT NULL AND tr."horaSalida" IS NULL THEN tr."horaFinAlmuerzo"
+          WHEN tr."horaEntrada" IS NOT NULL AND tr."horaInicioAlmuerzo" IS NULL THEN tr."horaEntrada"
+          ELSE NULL
+        END AS "runningSince",
+        CASE
+          WHEN tr."horaSalida" IS NOT NULL THEN 'Salida'
+          WHEN tr."horaFinAlmuerzo" IS NOT NULL THEN 'Fin almuerzo'
+          WHEN tr."horaInicioAlmuerzo" IS NOT NULL THEN 'Inicio almuerzo'
+          WHEN tr."horaEntrada" IS NOT NULL THEN 'Entrada'
+          ELSE NULL
+        END AS "lastAction",
+        COALESCE(
+          tr."horaSalida",
+          tr."horaFinAlmuerzo",
+          tr."horaInicioAlmuerzo",
+          tr."horaEntrada"
+        ) AS "lastTime"
+      FROM "Employee" e
+      LEFT JOIN "TimeRecord" tr
+        ON tr."employeeId" = e."id"
+       AND DATE(tr."fecha") = DATE($2)
+      WHERE e."companyId" = $1
+        AND e."isActive" = true
+      ORDER BY e."nombreCompleto" ASC`,
+    [companyId, date],
   );
-  return row ? mapTimeRecord(row) : null;
+
+  return rows.map((row) => ({
+    id: row.id as string,
+    workedMs: Number(row.workedMs ?? 0),
+    runningSince: row.runningSince
+      ? new Date(row.runningSince as string).toISOString()
+      : null,
+    lastAction: (row.lastAction as string) ?? undefined,
+    lastTime: row.lastTime
+      ? new Date(row.lastTime as string).toISOString()
+      : undefined,
+  })) as WorkerDayStatus[];
 };
