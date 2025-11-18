@@ -1,15 +1,28 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
 
 import { assertRole, getSession, requireSession } from "@/lib/auth";
 import { updateCompany } from "@/lib/repos/companies";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const ALLOWED_TYPES = new Map([
   ["image/png", "png"],
   ["image/jpeg", "jpg"],
   ["image/webp", "webp"],
 ]);
+
+const BUCKET_NAME = "company-logos";
+
+const ensureBucketExists = async () => {
+  if (!supabaseAdmin) return;
+  const { data: existingBuckets } = await supabaseAdmin.storage.listBuckets();
+  const exists = existingBuckets?.some((bucket) => bucket.name === BUCKET_NAME);
+  if (!exists) {
+    await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
+      public: true,
+      fileSizeLimit: 2 * 1024 * 1024,
+    });
+  }
+};
 
 export async function POST(request: Request) {
   const session = requireSession(await getSession());
@@ -49,22 +62,51 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: "Supabase no está configurado para subir archivos." },
+      { status: 500 },
+    );
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(uploadDir, { recursive: true });
-
   const filename = `company-${session.companyId}-${Date.now()}.${extension}`;
-  const filePath = path.join(uploadDir, filename);
+  const storagePath = `${session.companyId}/${filename}`;
 
-  await fs.writeFile(filePath, buffer);
+  try {
+    await ensureBucketExists();
+    const uploadResult = await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .upload(storagePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
 
-  const relativePath = `/uploads/${filename}`;
+    if (uploadResult.error) {
+      throw uploadResult.error;
+    }
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          (error as Error).message ??
+          "No se pudo subir el logo a Supabase Storage.",
+      },
+      { status: 500 },
+    );
+  }
+
+  const { data: publicUrlData } = supabaseAdmin.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(storagePath);
+
+  const logoUrl = publicUrlData?.publicUrl ?? null;
 
   const company = await updateCompany(session.companyId!, {
-    logoUrl: relativePath,
+    logoUrl,
   });
 
-  return NextResponse.json({ logoUrl: company?.logoUrl ?? relativePath });
+  return NextResponse.json({ logoUrl: company?.logoUrl ?? logoUrl });
 }
