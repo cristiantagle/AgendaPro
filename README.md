@@ -69,23 +69,23 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
    npm install
    ```
 
-4. Genera el cliente de Prisma y aplica las migraciones:
+4. Aplica las migraciones SQL directamente contra tu base (local o Supabase):
 
    ```bash
-   npm run db:generate
-   npm run db:migrate
+   set -a && source .env && set +a
+   for file in prisma/migrations/*/migration.sql; do
+     echo "Aplicando $file"
+     psql "$DATABASE_URL" -f "$file"
+   done
    ```
 
-5. Ejecuta los seeds (crea superadmin, empresas, trabajadores y marcaciones) y aplica las migraciones adicionales (kioscos, sueldos mensuales, logos). Si estás en PostgreSQL local, asegúrate de que el servicio esté levantado; si estás en Supabase, verifica que `DATABASE_URL` apunte al host correcto antes de ejecutar:
+5. Ejecuta el seed (crea superadmin, empresas y trabajadores demo):
 
    ```bash
    npm run db:seed
-   npx prisma migrate resolve --applied 20251219120000_kiosk_terminals
-   npx prisma migrate resolve --applied 20251220110000_salary_based_pay
-   npx prisma migrate resolve --applied 20251221100000_company_logo
-   npx prisma migrate resolve --applied 20251222123000_remove_company_timezone
-   npx prisma migrate resolve --applied 20251222130000_weekend_fixed_rates
    ```
+
+   > Si tu entorno muestra `self-signed certificate in certificate chain`, puedes exportar temporalmente `NODE_TLS_REJECT_UNAUTHORIZED=0` (el script ya lo hace automáticamente).
 
    - Usuario superadmin: `superadmin@demo.com`
    - Contraseña de ejemplo (para todos los usuarios seed): `CambioSeguro123!`
