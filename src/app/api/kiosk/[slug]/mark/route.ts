@@ -23,6 +23,14 @@ export async function POST(
   const cookieStore = await cookies();
   const token =
     cookieStore.get(kioskCookieName(params.slug))?.value ?? null;
+  const headerToken =
+    request.headers.get("authorization") ??
+    request.headers.get("x-kiosk-token");
+  const normalizedHeader =
+    headerToken?.startsWith("Bearer ")
+      ? headerToken.slice(7)
+      : headerToken ?? null;
+  const resolvedToken = token ?? normalizedHeader ?? null;
 
   const respondDeviceError = (message: string, status = 401) => {
     const response = NextResponse.json({ error: message }, { status });
@@ -30,13 +38,13 @@ export async function POST(
     return response;
   };
 
-  if (!token) {
+  if (!resolvedToken) {
     return respondDeviceError(
       "Dispositivo no autorizado. Autoriza este kiosco con el PIN.",
     );
   }
 
-  const device = await getDeviceByToken(token);
+  const device = await getDeviceByToken(resolvedToken);
 
   if (!device) {
     return respondDeviceError(

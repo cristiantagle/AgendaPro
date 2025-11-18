@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Employee = {
   id: string;
@@ -30,7 +30,9 @@ export function KioskTerminal({
   initialDeviceName,
   logoUrl,
 }: Props) {
+  const storageKey = useMemo(() => `kiosk-token:${slug}`, [slug]);
   const [authorizedName, setAuthorizedName] = useState(initialDeviceName);
+  const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [pin, setPin] = useState("");
   const [deviceLabel, setDeviceLabel] = useState("");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
@@ -39,6 +41,12 @@ export function KioskTerminal({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [authorizing, setAuthorizing] = useState(false);
+  const [buttonsLocked, setButtonsLocked] = useState(false);
+  const lockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [lastMark, setLastMark] = useState<{
+    action: string;
+    time: string;
+  } | null>(null);
 
   const filteredEmployees = useMemo(
     () =>
@@ -47,6 +55,42 @@ export function KioskTerminal({
       ),
     [employees, filter],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(storageKey);
+    if (!stored) return;
+
+    const verify = async () => {
+      setAuthorizing(true);
+      try {
+        const res = await fetch(`/api/kiosk/${slug}/authorize`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Authorization: `Bearer ${stored}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAuthorizedName(data.device.name ?? "Terminal");
+          setDeviceToken(stored);
+        } else if (res.status === 401) {
+          window.localStorage.removeItem(storageKey);
+        }
+      } finally {
+        setAuthorizing(false);
+      }
+    };
+
+    void verify();
+  }, [slug, storageKey]);
+
+  useEffect(() => {
+    return () => {
+      if (lockTimeoutRef.current) {
+        clearTimeout(lockTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const authorizeDevice = async () => {
     if (!pin.trim()) {
@@ -71,6 +115,12 @@ export function KioskTerminal({
       }
       const data = await res.json();
       setAuthorizedName(data.device.name ?? "Terminal");
+      if (data.token) {
+        setDeviceToken(data.token);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(storageKey, data.token);
+        }
+      }
       setAuthMessage("Dispositivo autorizado correctamente.");
     } catch (error) {
       setAuthMessage((error as Error).message);
@@ -80,6 +130,10 @@ export function KioskTerminal({
   };
 
   const markAction = async (action: (typeof actions)[number]["key"]) => {
+    if (buttonsLocked) {
+      setStatusMessage("Espera unos segundos antes de registrar otra marcación.");
+      return;
+    }
     if (!authorizedName) {
       setStatusMessage("Autoriza este kiosco con el PIN antes de marcar.");
       return;
@@ -91,10 +145,16 @@ export function KioskTerminal({
     setLoadingAction(action);
     setStatusMessage(null);
     try {
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (deviceToken) {
+        headers.Authorization = `Bearer ${deviceToken}`;
+      }
       const res = await fetch(`/api/kiosk/${slug}/mark`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           employeeId: selectedEmployee,
           action,
@@ -108,9 +168,48 @@ export function KioskTerminal({
             data.error ??
               "Autoriza nuevamente este kiosco con el PIN vigente.",
           );
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(storageKey);
+          }
+          setDeviceToken(null);
         }
         throw new Error(data.error ?? "No se pudo registrar la marcación");
       }
+      const data = await res.json();
+      const record = data.record as {
+        horaEntrada?: string | null;
+        horaInicioAlmuerzo?: string | null;
+        horaFinAlmuerzo?: string | null;
+        horaSalida?: string | null;
+      };
+      const fieldMap: Record<string, keyof typeof record> = {
+        entrada: "horaEntrada",
+        inicio_almuerzo: "horaInicioAlmuerzo",
+        fin_almuerzo: "horaFinAlmuerzo",
+        salida: "horaSalida",
+      };
+      const field = fieldMap[action];
+      const timeValue = field ? record?.[field] : null;
+      const formattedTime = timeValue
+        ? new Date(timeValue).toLocaleTimeString("es-CL", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : new Date().toLocaleTimeString("es-CL", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+      setLastMark({
+        action: actions.find((item) => item.key === action)?.label ?? "Acción",
+        time: formattedTime,
+      });
+      if (lockTimeoutRef.current) {
+        clearTimeout(lockTimeoutRef.current);
+      }
+      setButtonsLocked(true);
+      lockTimeoutRef.current = setTimeout(() => {
+        setButtonsLocked(false);
+      }, 4000);
       setStatusMessage("Marcación registrada con éxito.");
     } catch (error) {
       setStatusMessage((error as Error).message);
@@ -235,7 +334,8 @@ export function KioskTerminal({
               disabled={
                 !authorizedName ||
                 !selectedEmployee ||
-                loadingAction === action.key
+                loadingAction === action.key ||
+                buttonsLocked
               }
               className="rounded-xl bg-emerald-600 px-4 py-5 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
             >
@@ -245,6 +345,11 @@ export function KioskTerminal({
         </div>
         {statusMessage ? (
           <p className="text-sm text-emerald-600">{statusMessage}</p>
+        ) : null}
+        {lastMark ? (
+          <p className="text-sm text-slate-600">
+            Última marcación: {lastMark.action} a las {lastMark.time}
+          </p>
         ) : null}
       </section>
     </div>
