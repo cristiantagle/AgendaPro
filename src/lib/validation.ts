@@ -11,15 +11,17 @@ export const updateCompanySchema = createCompanySchema.extend({
   isActive: z.boolean().optional(),
 });
 
+const passwordMessage = "La contraseña debe tener al menos 8 caracteres.";
+
 export const createAdminSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8, { message: passwordMessage }),
   companyId: z.string().uuid(),
 });
 
 export const createWorkerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8, { message: passwordMessage }),
   nombreCompleto: z.string().min(3),
   rut: z.string().optional().nullable(),
   sueldoMensual: z.number().min(0).optional().nullable(),

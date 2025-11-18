@@ -102,6 +102,13 @@ export function KioskTerminal({
       });
       if (!res.ok) {
         const data = await res.json();
+        if (res.status === 401) {
+          setAuthorizedName(null);
+          setAuthMessage(
+            data.error ??
+              "Autoriza nuevamente este kiosco con el PIN vigente.",
+          );
+        }
         throw new Error(data.error ?? "No se pudo registrar la marcación");
       }
       setStatusMessage("Marcación registrada con éxito.");

@@ -24,19 +24,23 @@ export async function POST(
   const token =
     cookieStore.get(kioskCookieName(params.slug))?.value ?? null;
 
+  const respondDeviceError = (message: string, status = 401) => {
+    const response = NextResponse.json({ error: message }, { status });
+    response.cookies.delete(kioskCookieName(params.slug));
+    return response;
+  };
+
   if (!token) {
-    return NextResponse.json(
-      { error: "Dispositivo no autorizado" },
-      { status: 401 },
+    return respondDeviceError(
+      "Dispositivo no autorizado. Autoriza este kiosco con el PIN.",
     );
   }
 
   const device = await getDeviceByToken(token);
 
   if (!device) {
-    return NextResponse.json(
-      { error: "Dispositivo desconocido" },
-      { status: 401 },
+    return respondDeviceError(
+      "Dispositivo no reconocido. Debes volver a autorizarlo con el PIN.",
     );
   }
 
