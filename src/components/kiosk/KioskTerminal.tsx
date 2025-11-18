@@ -52,17 +52,24 @@ export function KioskTerminal({
     action: string;
     time: string;
   } | null>(null);
-  type WorkerStatus = {
-    runningSince: string | null;
-    workedMs: number;
-    lastAction?: string;
-    lastTime?: string;
-    marks: Partial<Record<ActionKey, string>>;
-  };
+type WorkerStatus = {
+  runningSince: string | null;
+  workedMs: number;
+  lastAction?: string;
+  lastTime?: string;
+  marks: Partial<Record<ActionKey, string>>;
+};
+type HistoryEntry = {
+  id: string;
+  employeeName: string;
+  action: string;
+  timestamp: string;
+};
   const [workerStatus, setWorkerStatus] = useState<
     Record<string, WorkerStatus>
   >({});
   const [tick, setTick] = useState(0);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const formatTime = (iso?: string) =>
     iso
@@ -137,6 +144,14 @@ export function KioskTerminal({
         }
         if (Array.isArray(data.workers)) {
           mapWorkers(data.workers as Array<WorkerStatus & { id: string }>);
+        }
+        if (Array.isArray(data.history)) {
+          setHistory(
+            data.history.map((entry: HistoryEntry) => ({
+              ...entry,
+              timestamp: entry.timestamp,
+            })),
+          );
         }
       } catch {
         // ignore
@@ -367,7 +382,20 @@ useEffect(() => {
       lockTimeoutRef.current = setTimeout(() => {
         setButtonsLocked(false);
       }, 4000);
-      updateWorkerTracking(selectedEmployee, action, timeValue ?? null);
+      const isoTime = timeValue ?? new Date().toISOString();
+      updateWorkerTracking(selectedEmployee, action, isoTime);
+      setHistory((prev) => {
+        const entry: HistoryEntry = {
+          id: data.record.id as string,
+          employeeName:
+            employees.find((emp) => emp.id === selectedEmployee)
+              ?.nombreCompleto ?? "Trabajador",
+          action:
+            actions.find((item) => item.key === action)?.label ?? "Marcación",
+          timestamp: isoTime,
+        };
+        return [entry, ...prev].slice(0, 12);
+      });
       void refreshWorkerStatus();
       setStatusMessage("Marcación registrada con éxito.");
     } catch (error) {
@@ -473,24 +501,37 @@ useEffect(() => {
             {filteredEmployees.length} trabajadores
           </p>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEmployees.map((employee) => (
-            <button
-              key={employee.id}
-              type="button"
-              onClick={() => setSelectedEmployee(employee.id)}
-              className={`rounded-2xl border px-4 py-4 text-left text-lg font-semibold transition ${
-                selectedEmployee === employee.id
-                  ? "border-emerald-500 bg-white shadow"
-                  : "border-slate-200 bg-white hover:border-emerald-200"
-              }`}
-            >
-              {employee.nombreCompleto}
-            </button>
-          ))}
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredEmployees.map((employee) => {
+            const status = workerStatus[employee.id];
+            const isActive =
+              Boolean(status?.runningSince) && !status?.marks?.salida;
+            const statusLabel = isActive
+              ? `En jornada desde ${formatTime(status?.runningSince ?? undefined)}`
+              : status?.lastAction
+                ? `${status.lastAction} (${formatTime(status.lastTime)})`
+                : "Sin marcaciones hoy";
+            return (
+              <button
+                key={employee.id}
+                type="button"
+                onClick={() => setSelectedEmployee(employee.id)}
+                className={`rounded-2xl border px-4 py-4 text-left transition ${
+                  selectedEmployee === employee.id
+                    ? "border-emerald-500 bg-white shadow"
+                    : "border-slate-200 bg-white hover:border-emerald-200"
+                } ${isActive ? "ring-2 ring-emerald-200" : ""}`}
+              >
+                <p className="text-lg font-semibold text-slate-900">
+                  {employee.nombreCompleto}
+                </p>
+                <p className="text-xs text-slate-500">{statusLabel}</p>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {actions.map((action) => {
             const markTime =
               selectedStatus?.marks?.[action.key] ?? null;
@@ -541,6 +582,41 @@ useEffect(() => {
                 : "Sin marcaciones hoy"}
             </span>
           </p>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-800">
+            Últimas marcaciones
+          </h3>
+          <span className="text-xs uppercase tracking-wide text-slate-500">
+            Tiempo real
+          </span>
+        </div>
+        <div className="mt-3 max-h-72 overflow-y-auto divide-y divide-slate-100">
+          {history.length ? (
+            history.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between py-2 text-sm text-slate-600"
+              >
+                <div>
+                  <p className="font-semibold text-slate-900">
+                    {entry.employeeName}
+                  </p>
+                  <p>{entry.action}</p>
+                </div>
+                <span className="text-right text-xs">
+                  {formatTime(entry.timestamp)}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="py-3 text-sm text-slate-500">
+              Aún no hay marcaciones registradas hoy.
+            </p>
+          )}
         </div>
       </section>
     </div>

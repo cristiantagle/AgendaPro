@@ -144,7 +144,16 @@ export type WorkerDayStatus = {
   runningSince: string | null;
   lastAction?: string;
   lastTime?: string;
-  marks: Partial<Record<"entrada" | "inicio_almuerzo" | "fin_almuerzo" | "salida", string>>;
+  marks: Partial<
+    Record<"entrada" | "inicio_almuerzo" | "fin_almuerzo" | "salida", string>
+  >;
+};
+
+export type RecentMark = {
+  id: string;
+  employeeName: string;
+  action: string;
+  timestamp: string;
 };
 
 export const listTodayStatusesForCompany = async (
@@ -224,4 +233,58 @@ export const listTodayStatusesForCompany = async (
         : undefined,
     },
   })) as WorkerDayStatus[];
+};
+
+const resolveLastAction = (row: Record<string, unknown>) => {
+  if (row.horaSalida) {
+    return { action: "Salida", timestamp: new Date(row.horaSalida as string) };
+  }
+  if (row.horaFinAlmuerzo) {
+    return {
+      action: "Fin almuerzo",
+      timestamp: new Date(row.horaFinAlmuerzo as string),
+    };
+  }
+  if (row.horaInicioAlmuerzo) {
+    return {
+      action: "Inicio almuerzo",
+      timestamp: new Date(row.horaInicioAlmuerzo as string),
+    };
+  }
+  if (row.horaEntrada) {
+    return {
+      action: "Entrada",
+      timestamp: new Date(row.horaEntrada as string),
+    };
+  }
+  return row.updatedAt
+    ? {
+        action: "Marcación",
+        timestamp: new Date(row.updatedAt as string),
+      }
+    : null;
+};
+
+export const listRecentMarksByCompany = async (
+  companyId: string,
+  limit = 12,
+): Promise<RecentMark[]> => {
+  const rows = await runQuery<Record<string, unknown>>(
+    'SELECT tr."id", tr."horaEntrada", tr."horaInicioAlmuerzo", tr."horaFinAlmuerzo", tr."horaSalida", tr."updatedAt", e."nombreCompleto" FROM "TimeRecord" tr JOIN "Employee" e ON e."id" = tr."employeeId" WHERE tr."companyId" = $1 ORDER BY tr."updatedAt" DESC LIMIT $2',
+    [companyId, limit],
+  );
+  return rows
+    .map((row) => {
+      const last = resolveLastAction(row);
+      if (!last) {
+        return null;
+      }
+      return {
+        id: row.id as string,
+        employeeName: row.nombreCompleto as string,
+        action: last.action,
+        timestamp: last.timestamp.toISOString(),
+      };
+    })
+    .filter(Boolean) as RecentMark[];
 };

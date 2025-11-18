@@ -7,7 +7,10 @@ import {
   getDeviceByToken,
 } from "@/lib/repos/kiosk-devices";
 import { getCompanyBySlug } from "@/lib/repos/companies";
-import { listTodayStatusesForCompany } from "@/lib/repos/time-records";
+import {
+  listRecentMarksByCompany,
+  listTodayStatusesForCompany,
+} from "@/lib/repos/time-records";
 import { kioskAuthorizeSchema } from "@/lib/validation";
 
 type Params = {
@@ -104,13 +107,14 @@ export async function GET(
     );
   }
 
-  const workers = await listTodayStatusesForCompany(
-    company.id,
-    new Date(),
-  );
+  const [workers, history] = await Promise.all([
+    listTodayStatusesForCompany(company.id, new Date()),
+    listRecentMarksByCompany(company.id, 12),
+  ]);
 
   return NextResponse.json({
     device: { id: device.id, name: device.name },
     workers,
+    history,
   });
 }
