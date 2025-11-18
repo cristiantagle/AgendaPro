@@ -1,7 +1,7 @@
 import { hash } from "bcryptjs";
 
 import { createCompany } from "@/lib/repos/companies";
-import { createEmployee } from "@/lib/repos/employees";
+import { createEmployee, getEmployeeByUserId } from "@/lib/repos/employees";
 import {
   createUser,
   getUserByEmail,
@@ -82,12 +82,15 @@ async function seed() {
 
       if (!workerUser) continue;
 
-      await createEmployee({
-        companyId: company.id,
-        userId: workerUser.id,
-        nombreCompleto: `Trabajador ${i} ${company.name}`,
-        sueldoMensual: i % 2 === 0 ? 520000 : 480000,
-      });
+      const existingEmployee = await getEmployeeByUserId(workerUser.id);
+      if (!existingEmployee) {
+        await createEmployee({
+          companyId: company.id,
+          userId: workerUser.id,
+          nombreCompleto: `Trabajador ${i} ${company.name}`,
+          sueldoMensual: i % 2 === 0 ? 520000 : 480000,
+        });
+      }
     }
   }
 
