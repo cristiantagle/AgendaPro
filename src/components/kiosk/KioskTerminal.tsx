@@ -42,11 +42,42 @@ export function KioskTerminal({
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [authorizing, setAuthorizing] = useState(false);
   const [buttonsLocked, setButtonsLocked] = useState(false);
-  const lockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastMark, setLastMark] = useState<{
     action: string;
     time: string;
   } | null>(null);
+  type WorkerStatus = {
+    runningSince: string | null;
+    workedMs: number;
+    lastAction?: string;
+    lastTime?: string;
+  };
+  const [workerStatus, setWorkerStatus] = useState<
+    Record<string, WorkerStatus>
+  >({});
+  const [tick, setTick] = useState(0);
+
+  const formatDuration = (employeeId: string) => {
+    const status = workerStatus[employeeId];
+    if (!status) return "0h 00m";
+    const base = status.workedMs;
+    const runningExtra = status.runningSince
+      ? Date.now() - new Date(status.runningSince).getTime()
+      : 0;
+    const totalMinutes = Math.max(0, Math.floor((base + runningExtra) / 60000));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+  };
+
+  const formatTime = (iso?: string) =>
+    iso
+      ? new Date(iso).toLocaleTimeString("es-CL", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "--:--";
 
   const filteredEmployees = useMemo(
     () =>
@@ -92,6 +123,11 @@ export function KioskTerminal({
     };
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => setTick((value) => value + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const authorizeDevice = async () => {
     if (!pin.trim()) {
       setAuthMessage("Ingresa el PIN entregado por el administrador.");
@@ -127,6 +163,51 @@ export function KioskTerminal({
     } finally {
       setAuthorizing(false);
     }
+  };
+
+  const updateWorkerTracking = (
+    employeeId: string,
+    action: (typeof actions)[number]["key"],
+    timestamp: string | null,
+  ) => {
+    const isoTime = timestamp ?? new Date().toISOString();
+    setWorkerStatus((prev) => {
+      const current = prev[employeeId] ?? {
+        runningSince: null,
+        workedMs: 0,
+      };
+      const currentRunning = current.runningSince
+        ? new Date(current.runningSince).getTime()
+        : null;
+      const timeMs = new Date(isoTime).getTime();
+      let workedMs = current.workedMs;
+      let runningSince = current.runningSince;
+
+      if (action === "entrada" || action === "fin_almuerzo") {
+        runningSince = isoTime;
+      }
+
+      if (action === "inicio_almuerzo" || action === "salida") {
+        if (currentRunning) {
+          workedMs += Math.max(0, timeMs - currentRunning);
+        }
+        runningSince = null;
+      }
+
+      if (action === "entrada") {
+        workedMs = current.workedMs;
+      }
+
+      return {
+        ...prev,
+        [employeeId]: {
+          runningSince,
+          workedMs,
+          lastAction: actions.find((item) => item.key === action)?.label,
+          lastTime: isoTime,
+        },
+      };
+    });
   };
 
   const markAction = async (action: (typeof actions)[number]["key"]) => {
@@ -210,6 +291,7 @@ export function KioskTerminal({
       lockTimeoutRef.current = setTimeout(() => {
         setButtonsLocked(false);
       }, 4000);
+      updateWorkerTracking(selectedEmployee, action, timeValue ?? null);
       setStatusMessage("Marcación registrada con éxito.");
     } catch (error) {
       setStatusMessage((error as Error).message);
@@ -217,6 +299,12 @@ export function KioskTerminal({
       setLoadingAction(null);
     }
   };
+
+  const selectedWorkedLabel = useMemo(
+    () => formatDuration(selectedEmployee),
+    [selectedEmployee, workerStatus, tick],
+  );
+  const selectedStatus = workerStatus[selectedEmployee || ""] ?? null;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 rounded-3xl bg-white p-6 shadow-2xl">
@@ -351,6 +439,22 @@ export function KioskTerminal({
             Última marcación: {lastMark.action} a las {lastMark.time}
           </p>
         ) : null}
+        <div className="rounded-xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-600">
+          <p>
+            Horas trabajadas hoy:{" "}
+            <span className="font-semibold text-slate-900">
+              {selectedWorkedLabel}
+            </span>
+          </p>
+          <p>
+            Última acción del trabajador:{" "}
+            <span className="font-semibold text-slate-900">
+              {selectedStatus?.lastAction
+                ? `${selectedStatus.lastAction} a las ${formatTime(selectedStatus?.lastTime)}`
+                : "Sin marcaciones hoy"}
+            </span>
+          </p>
+        </div>
       </section>
     </div>
   );

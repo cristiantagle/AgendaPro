@@ -78,7 +78,7 @@ export const updateDevice = async (
   }
   values.push(id);
   const row = await runSingle<Record<string, unknown>>(
-    `UPDATE "KioskDevice" SET ${fields.join(", ")}, "updatedAt" = NOW() WHERE "id" = $${
+    `UPDATE "KioskDevice" SET ${fields.join(", ")} WHERE "id" = $${
       fields.length + 1
     } RETURNING *`,
     values,
