@@ -1,6 +1,8 @@
 # Asistencia Pro
 
-Sistema multiempresa para control de asistencia, horas extra y cálculo automático de sueldos. Incluye una Progressive Web App optimizada para móviles, backend en Next.js/TypeScript y base de datos PostgreSQL administrada con Prisma.
+Sistema multiempresa para control de asistencia, horas extra y cálculo automático de sueldos. Incluye una Progressive Web App optimizada para móviles, backend en Next.js/TypeScript y base de datos PostgreSQL operada directamente vía Supabase (sin Prisma).
+
+> Prisma fue removido completamente del proyecto; todas las consultas y migraciones se realizan con SQL/raw repos y Supabase.
 
 > Nota: toda la plataforma opera exclusivamente en la zona horaria de Chile (`America/Santiago`), por lo que no es necesario configurarla por empresa.
 
@@ -32,6 +34,7 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
   - Reportes mensuales con horas normales, extra y montos. El valor hora se deriva automáticamente desde el sueldo mensual configurado.
 - **Exportaciones**: reportes mensuales descargables en PDF o CSV.
 - **Terminales de marcación (kiosco)**: cada empresa posee una URL/pin únicos y puede autorizar tablets permanentes.
+- **Reconocimiento facial local**: el kiosco identifica trabajadores con la cámara de la tablet sin APIs externas; las plantillas se guardan como descriptores matemáticos por empleado.
 - **Logos por empresa**: cada administrador puede subir el logo que aparecerá en su dashboard y kiosco.
 - **Sueldo mensual configurable por trabajador**: el sistema prorratea automáticamente horas normales, extras y fines de semana en base al sueldo líquido de cada empleado.
 - **PWA lista para producción**: manifest, service worker e íconos para instalar en dispositivos móviles.
@@ -40,7 +43,7 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
 ## Stack principal
 
 - Next.js 16 App Router + TypeScript + Tailwind CSS (modo mobile-first).
-- Prisma ORM con PostgreSQL.
+- Supabase (REST + SQL directo) sobre PostgreSQL, sin Prisma.
 - Autenticación basada en JWT con cookies HTTP-only.
 - Zod para validaciones de payload.
 - PDFKit y json2csv para exportes.
@@ -121,6 +124,8 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
 
 La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla principal desde tu móvil para utilizarla offline.
 
+8. (Opcional) Para habilitar el reconocimiento facial en kioscos, aplica las migraciones para crear la tabla `EmployeeFace` y luego registra rostros desde el panel “Reconocimiento facial” dentro del propio kiosco (sección visible tras autorizar la tablet). No se suben fotografías: sólo se almacenan descriptores en tu base Supabase.
+
 > **Nota sobre acceso local:** Si el navegador no abre `http://localhost:3000` pero el servidor está corriendo, prueba con `http://127.0.0.1:3000` o usa la opción **Ports → Open in Browser** de VS Code. En entornos basados en WSL/containers, esa opción crea el túnel correcto automáticamente.
 
 ## Scripts útiles
@@ -131,7 +136,7 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 | `npm run build`    | Compila la aplicación para producción           |
 | `npm run start`    | Levanta la versión compilada                    |
 | `npm run lint`     | Ejecuta ESLint                                  |
-| `npm run db:migrate` | Ejecuta migraciones de Prisma                |
+| `npm run db:migrate` | Aplica las migraciones SQL secuenciales (sin Prisma) |
 | `npm run db:seed`  | Rellena la base de datos con datos demo         |
 
 ## Estructura relevante
@@ -155,24 +160,31 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 
 Con esto tendrás una plataforma sólida para operar hoy y con una hoja de ruta clara hacia funcionalidades más avanzadas.
 
-## Migración a Supabase nativo (sin Prisma)
+## Supabase nativo (sin Prisma)
 
-Actualmente el proyecto está en una transición para dejar de usar Prisma y operar directo contra Supabase (REST + consultas SQL). El avance va así:
+El proyecto ya opera 100% sin Prisma: no quedan dependencias, migraciones ni clientes ORM. Toda la persistencia usa repositorios SQL propios y los SDK/REST de Supabase.
 
 ### Implementado
 
-- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_DB_URL` están configurados y se exponen en `.env` / `.env.example`.
-- Se añadieron utilidades para conectarse tanto por REST (`@supabase/supabase-js`) como por SQL (`pg` via pooler) en `src/lib/supabase.ts` y `src/lib/db.ts`.
-- Existen repositorios base (`src/lib/repos`) para usuarios, empleados, empresas y marcaciones; el login (`lib/auth.ts` / `api/auth/login`) y el endpoint/página de trabajador ya funcionan sin Prisma.
-- Las migraciones SQL originales se aplicaron manualmente con `psql` sobre Supabase y el seed (`npm run db:seed`) opera directamente contra esa instancia.
+- Variables `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_DB_URL` listas en `.env` / `.env.example`.
+- Utilidades dedicadas para REST (`@supabase/supabase-js`) y SQL directo (`pg` vía pooler) en `src/lib/supabase.ts` y `src/lib/db.ts`.
+- Repositorios (`src/lib/repos`) para usuarios, empleados, empresas, kioscos y marcaciones; todos los endpoints y páginas consumen esas capas sin Prisma.
+- Migraciones SQL aplicadas con `psql` sobre Supabase y seed (`npm run db:seed`) que usa los repositorios/SQL nativos.
 
 ### Próximos pasos
 
-1. **Automatizar las migraciones SQL:** hoy se aplican con el loop de `psql`. Puedes convertirlo en un script (`npm run db:migrate`) que ejecute los archivos en orden o usar la UI de Supabase.
-2. **Prepara datasets adicionales:** el nuevo `npm run db:seed` carga datos demo mínimos. Si necesitas más escenarios (por ejemplo, históricos mensuales), crea scripts en `scripts/` que reutilicen los repositorios.
-3. **Optimización/pooling:** algunas consultas complejas (reportes grandes) podrían moverse a RPCs o vistas materializadas en Supabase para aliviar carga futura.
+1. **Automatizar las migraciones SQL:** hoy se aplican con el loop de `psql`. Puedes empaquetarlo mejor en `npm run db:migrate` (ordenar los archivos, validar estado) o usar la UI/Tunnels de Supabase.
+2. **Datasets adicionales:** el seed actual carga datos mínimos. Para escenarios históricos o masivos, agrega scripts en `scripts/` reutilizando los repos existentes.
+3. **Optimización/pooling:** las consultas pesadas (reportes grandes) podrían moverse a RPCs, funciones SQL o vistas materializadas para reducir latencia futura.
 
-Si necesitas continuar con la migración, sigue el plan de “Próximos pasos” usando los repositorios existentes como plantilla.
+## Reconocimiento facial en kioscos
+
+- La sección “Reconocimiento facial” ya viene integrada en el kiosco (`/terminal/[slug]`). Tras autorizar la tablet con el PIN, puedes:
+  1. Seleccionar al trabajador en la lista principal.
+  2. Posicionarlo frente a la cámara y presionar **Guardar rostro** para generar su descriptor.
+  3. Usar **Identificar trabajador** para que el kiosco seleccione automáticamente al colaborador con mayor coincidencia.
+- Todos los cálculos se ejecutan localmente en el navegador con `@vladmandic/face-api` y modelos empaquetados en `public/face-models`, por lo que no depende de APIs externas ni envíos de fotografías. Sólo se almacenan descriptores numéricos en la tabla `EmployeeFace`.
+- Puedes refrescar o regenerar rostros en cualquier momento; cada trabajador mantiene un único descriptor activo y se puede reentrenar directamente desde la tablet.
 
 ## Autoría y branding
 

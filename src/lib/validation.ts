@@ -76,6 +76,18 @@ export const kioskMarkSchema = markActionSchema.extend({
   employeeId: z.string().uuid(),
 });
 
+const descriptorValueSchema = z
+  .number()
+  .refine((value) => Number.isFinite(value), "Descriptor inválido");
+
+export const kioskFaceEnrollmentSchema = z.object({
+  employeeId: z.string().uuid(),
+  descriptor: z
+    .array(descriptorValueSchema)
+    .min(64, { message: "Descriptor inválido" })
+    .max(512, { message: "Descriptor inválido" }),
+});
+
 export const reportQuerySchema = z.object({
   employeeId: z.string().uuid(),
   year: z.coerce.number().min(2000),

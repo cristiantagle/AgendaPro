@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@vladmandic/face-api": "^1.7.15",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",

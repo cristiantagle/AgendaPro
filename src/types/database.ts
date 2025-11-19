@@ -44,6 +44,14 @@ export type Employee = {
   isActive: boolean;
 };
 
+export type EmployeeFace = {
+  id: string;
+  employeeId: string;
+  descriptor: number[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type TimeRecord = {
   id: string;
   employeeId: string;

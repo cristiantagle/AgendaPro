@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { FaceRecognitionPanel } from "./FaceRecognitionPanel";
 
 type Employee = {
   id: string;
@@ -79,18 +80,24 @@ type HistoryEntry = {
         })
       : "--:--";
 
-  const formatDuration = (employeeId: string) => {
-    const status = workerStatus[employeeId];
-    if (!status) return "0h 00m";
-    const base = status.workedMs;
-    const runningExtra = status.runningSince
-      ? Date.now() - new Date(status.runningSince).getTime()
-      : 0;
-    const totalMinutes = Math.max(0, Math.floor((base + runningExtra) / 60000));
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
-  };
+  const formatDuration = useCallback(
+    (employeeId: string) => {
+      const status = workerStatus[employeeId];
+      if (!status) return "0h 00m";
+      const base = status.workedMs;
+      const runningExtra = status.runningSince
+        ? Date.now() - new Date(status.runningSince).getTime()
+        : 0;
+      const totalMinutes = Math.max(
+        0,
+        Math.floor((base + runningExtra) / 60000),
+      );
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+    },
+    [workerStatus],
+  );
 
   const filteredEmployees = useMemo(
     () =>
@@ -406,8 +413,11 @@ useEffect(() => {
   };
 
   const selectedWorkedLabel = useMemo(
-    () => formatDuration(selectedEmployee),
-    [selectedEmployee, workerStatus, tick],
+    () => {
+      void tick;
+      return formatDuration(selectedEmployee);
+    },
+    [formatDuration, selectedEmployee, tick],
   );
   const selectedStatus = workerStatus[selectedEmployee || ""] ?? null;
 
@@ -584,6 +594,19 @@ useEffect(() => {
           </p>
         </div>
       </section>
+
+      <FaceRecognitionPanel
+        slug={slug}
+        employees={employees}
+        selectedEmployeeId={selectedEmployee}
+        deviceToken={deviceToken}
+        authorized={Boolean(authorizedName)}
+        onEmployeeDetected={(employeeId) => {
+          setSelectedEmployee(employeeId);
+          setStatusMessage("Rostro reconocido, seleccionamos al trabajador automáticamente.");
+        }}
+        onStatus={(message) => setStatusMessage(message)}
+      />
 
       <section className="rounded-2xl border border-slate-200 bg-white/80 p-4">
         <div className="flex items-center justify-between">
