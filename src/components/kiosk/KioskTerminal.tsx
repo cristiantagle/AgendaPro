@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -774,11 +773,10 @@ export function KioskTerminal({
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             {logoUrl ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={logoUrl}
                 alt={`Logo ${companyName}`}
-                width={96}
-                height={96}
                 className="h-20 w-20 rounded-2xl border border-white/30 bg-white/10 object-contain p-3"
               />
             ) : (
