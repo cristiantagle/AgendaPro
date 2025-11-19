@@ -326,109 +326,167 @@ export function FaceRecognitionPanel({
   ]);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-emerald-200/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-5 text-white shadow-2xl">
+    <section className="overflow-hidden rounded-3xl border border-sky-500/40 bg-[#030712] p-5 text-white shadow-[0_0_60px_rgba(14,165,233,0.25)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-emerald-400">
-            Módulo biométrico
+          <p className="text-xs uppercase tracking-[0.4em] text-sky-400">
+            Escaneo facial
           </p>
-          <h3 className="text-2xl font-semibold">Identidad por cámara</h3>
+          <h3 className="text-2xl font-semibold">
+            Hola, {selectedEmployee?.nombreCompleto ?? "Trabajador"}
+          </h3>
           <p className="text-sm text-white/70">
-            Captura, entrena e identifica trabajadores sin depender de servicios externos.
+            Mira directamente a la cámara para validar tu identidad.
           </p>
         </div>
         <button
           type="button"
           onClick={() => fetchProfiles()}
           disabled={loadingProfiles}
-          className="rounded-full border border-white/30 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white/10 disabled:opacity-40"
+          className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white/5 disabled:opacity-40"
         >
-          {loadingProfiles ? "Actualizando..." : "Refrescar rostros"}
+          {loadingProfiles ? "Actualizando..." : "Sync rostros"}
         </button>
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[3fr,2fr]">
-        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-black/40 p-3">
+        <div className="relative overflow-hidden rounded-[32px] border border-cyan-500/30 bg-black/60 p-3 shadow-[0_0_50px_rgba(14,165,233,0.2)]">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-6 rounded-[32px] border border-white/15" />
-            <div className="absolute inset-12 rounded-[32px] border border-white/10" />
+            <div className="absolute inset-8 rounded-[28px] border border-cyan-400/20" />
+            <div className="absolute inset-16 rounded-[24px] border border-cyan-300/10" />
+            <div className="absolute inset-20 rounded-[24px] border border-cyan-200/20 blur-[2px]" />
           </div>
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            autoPlay
-            className="aspect-video w-full rounded-[24px] object-cover"
-          />
+          <div className="relative">
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              autoPlay
+              className="aspect-video w-full rounded-[24px] object-cover"
+            />
+            {cameraError ? (
+              <div className="absolute inset-0 flex items-center justify-center rounded-[24px] bg-black/80 p-6 text-center text-sm text-red-300">
+                {cameraError}
+              </div>
+            ) : null}
+          </div>
+          <div className="pointer-events-none absolute inset-6 flex items-center justify-center">
+            <div className="relative h-72 w-72 max-w-full">
+              <div className="absolute inset-0 rounded-full border border-cyan-400/60" />
+              <div className="absolute inset-x-12 top-0 bottom-0 border border-cyan-400/30" />
+              <div className="absolute inset-y-12 left-0 right-0 border border-cyan-400/30" />
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
+                {[...Array(9)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="border border-cyan-400/10"
+                  />
+                ))}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-6 w-6 rounded-full border-2 border-cyan-300/70" />
+              </div>
+              <div className="absolute inset-4 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full border border-cyan-400/50" />
+              </div>
+              {[{ top: "10%", left: "10%" }, { top: "10%", right: "10%" }, { bottom: "10%", left: "10%" }, { bottom: "10%", right: "10%" }].map((pos, index) => (
+                <div
+                  key={index}
+                  className="absolute h-6 w-6 border-2 border-sky-400/70"
+                  style={pos}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="pointer-events-none absolute bottom-3 right-4 text-xs font-mono text-cyan-300/60">
+            <p>ISO: 400</p>
+            <p>EXP: -0.2</p>
+            <p>FPS: 60</p>
+          </div>
           {!authorized ? (
             <div className="absolute inset-0 flex items-center justify-center rounded-[24px] bg-black/70 p-6 text-center text-sm font-medium">
               Autoriza este kiosco para activar la cámara y capturar el rostro.
             </div>
           ) : null}
-          {cameraError ? (
-            <p className="mt-3 text-sm text-red-300">{cameraError}</p>
-          ) : null}
-          {status ? (
-            <p className="mt-1 text-sm text-white/80">{status}</p>
-          ) : null}
         </div>
         <div className="space-y-4">
-          <div className="grid gap-3 rounded-3xl border border-white/20 bg-white/5 p-4 text-sm text-white/80 lg:grid-cols-2">
-            <div>
-              <p className="text-xs uppercase text-white/50">Rostros entrenados</p>
-              <p className="text-2xl font-semibold">{profiles.length}</p>
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+            <div className="flex items-center justify-between text-xs uppercase text-white/50">
+              <span>Biometría:</span>
+              <span>{recognizing ? "Procesando" : modelsReady ? "Listo" : "Inicializando"}</span>
             </div>
+            <div className="mt-3 h-2 rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300"
+                style={{
+                  width: `${recognizing ? 60 : modelsReady ? 100 : 10}%`,
+                }}
+              />
+            </div>
+            <p className="mt-2 text-center text-base font-semibold">
+              {status ?? (recognizing ? "Escaneando puntos faciales..." : "Posiciona tu rostro en el centro")}
+            </p>
+            <button
+              type="button"
+              onClick={() => recognizeFace()}
+              disabled={!authorized || recognizing || !modelsReady}
+              className="mt-4 w-full rounded-2xl border border-white/30 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-40"
+            >
+              {recognizing ? "Procesando..." : "Reintentar escaneo"}
+            </button>
+            <p className="mt-2 text-center text-xs text-white/50">
+              o{" "}
+              <button
+                type="button"
+                className="text-cyan-300 underline"
+                onClick={() => setStatus("Modo PIN manual no implementado")}
+              >
+                usar PIN manual
+              </button>
+            </p>
+          </div>
+          <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
             <div>
-              <p className="text-xs uppercase text-white/50">Trabajador seleccionado</p>
+              <p className="text-xs uppercase text-white/50">Trabajador</p>
               <p className="text-base font-semibold">
                 {selectedEmployee?.nombreCompleto ?? "Ninguno"}
               </p>
             </div>
-            <div>
-              <p className="text-xs uppercase text-white/50">Modelos</p>
-              <p className="text-base font-semibold">
-                {modelsReady ? "Operativos" : "Inicializando…"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase text-white/50">Estado cámara</p>
-              <p className="text-base font-semibold">
-                {authorized ? "Activa" : "Bloqueada"}
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase text-white/50">Rostros registrados</p>
+                <p className="text-base font-semibold">{profiles.length}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-white/50">Modelos</p>
+                <p className="text-base font-semibold">
+                  {modelsReady ? "Operativos" : "Cargando…"}
+                </p>
+              </div>
             </div>
           </div>
-          <div className="space-y-3">
+          {allowEnrollment ? (
             <button
               type="button"
-              onClick={recognizeFace}
-              disabled={!authorized || recognizing || !modelsReady}
-              className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 via-sky-500 to-emerald-400 px-4 py-4 text-lg font-semibold text-slate-950 shadow-lg shadow-cyan-400/40 transition hover:brightness-110 disabled:opacity-50"
+              onClick={enrollFace}
+              disabled={
+                !authorized ||
+                !selectedEmployee ||
+                enrolling ||
+                !modelsReady
+              }
+              className="w-full rounded-2xl border border-white/30 px-4 py-4 text-lg font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
             >
-              {recognizing ? "Escaneando en vivo..." : "Identificar automáticamente"}
+              {enrolling ? "Guardando rostro..." : "Guardar rostro del trabajador"}
             </button>
-            {allowEnrollment ? (
-              <button
-                type="button"
-                onClick={enrollFace}
-                disabled={
-                  !authorized ||
-                  !selectedEmployee ||
-                  enrolling ||
-                  !modelsReady
-                }
-                className="w-full rounded-2xl border border-white/30 px-4 py-4 text-lg font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
-              >
-                {enrolling ? "Guardando rostro..." : "Guardar rostro del trabajador"}
-              </button>
-            ) : (
-              <div className="rounded-2xl border border-white/20 px-4 py-4 text-sm text-white/70">
-                Inicia sesión como administrador para registrar nuevos rostros o gestionar el kiosco.
-              </div>
-            )}
-            <p className="text-xs text-white/70">
-              Guardamos únicamente descriptores matemáticos. Nunca almacenamos fotos en disco ni
-              enviamos datos a servicios externos.
-            </p>
-          </div>
+          ) : (
+            <div className="rounded-2xl border border-white/20 px-4 py-4 text-sm text-white/70">
+              Inicia sesión como administrador para registrar nuevos rostros o gestionar el kiosco.
+            </div>
+          )}
+          <p className="text-xs text-white/70">
+            Guardamos únicamente descriptores matemáticos. Nunca almacenamos fotos en disco ni
+            enviamos datos a servicios externos.
+          </p>
         </div>
       </div>
     </section>
