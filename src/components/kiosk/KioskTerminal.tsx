@@ -509,10 +509,12 @@ export function KioskTerminal({
   };
 
   const renderAuthorizeCard = () => (
-    <section className="rounded-3xl border border-emerald-200/50 bg-white p-5 shadow-lg shadow-emerald-100/40">
-      <p className="text-xs uppercase tracking-[0.3em] text-emerald-500">Paso 0 · Seguridad</p>
-      <h2 className="text-2xl font-semibold text-slate-900">Autoriza esta terminal con tu PIN</h2>
-      <p className="text-sm text-slate-500">
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+      <p className="text-xs font-mono uppercase tracking-[0.35em] text-cyan-300">
+        Paso 0 · Seguridad
+      </p>
+      <h2 className="text-2xl font-semibold">Autoriza esta terminal con tu PIN</h2>
+      <p className="text-sm text-white/70">
         Sólo los dispositivos permitidos pueden capturar rostros o registrar marcaciones.
       </p>
       <div className="mt-4 flex flex-col gap-3 lg:flex-row">
@@ -520,40 +522,42 @@ export function KioskTerminal({
           value={pin}
           onChange={(event) => setPin(event.target.value)}
           placeholder="PIN de 6 dígitos"
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-2xl tracking-[0.4em]"
+          className="w-full rounded-2xl border border-white/20 bg-black/40 px-4 py-3 text-center text-2xl tracking-[0.4em] text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
         />
         <input
           value={deviceLabel}
           onChange={(event) => setDeviceLabel(event.target.value)}
           placeholder="Nombre de la tablet (opcional)"
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3"
+          className="w-full rounded-2xl border border-white/20 bg-black/40 px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
         />
         <button
           type="button"
           onClick={authorizeDevice}
           disabled={authorizing}
-          className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 px-6 py-3 text-lg font-semibold text-white shadow-lg shadow-emerald-200/50 transition hover:brightness-110 disabled:opacity-60"
+          className="rounded-2xl bg-gradient-to-r from-violet-700 to-cyan-400 px-6 py-3 text-lg font-semibold text-white shadow-[0_0_25px_rgba(109,40,217,0.45)] transition hover:scale-[1.01] disabled:opacity-50"
         >
           {authorizing ? "Autorizando..." : "Autorizar"}
         </button>
       </div>
       {authMessage ? (
-        <p className="mt-3 text-sm font-medium text-emerald-600">{authMessage}</p>
+        <p className="mt-3 text-sm text-cyan-300">{authMessage}</p>
       ) : null}
     </section>
   );
 
   const renderScanCard = () => (
-    <section className="rounded-3xl border border-white/60 bg-slate-950 p-4 text-white shadow-2xl">
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-4 text-white backdrop-blur-2xl shadow-[0_20px_90px_rgba(0,0,0,0.55)]">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">Paso 1 · Escaneo</p>
+          <p className="text-xs font-mono uppercase tracking-[0.4em] text-cyan-300">
+            Paso 1 · Escaneo
+          </p>
           <h3 className="text-2xl font-semibold">Posiciona tu rostro</h3>
         </div>
         <button
           type="button"
           onClick={resetSession}
-          className="text-sm text-white/70 underline"
+          className="text-sm text-white/70 underline decoration-dotted"
         >
           Cancelar
         </button>
@@ -578,23 +582,25 @@ export function KioskTerminal({
   );
 
   const renderWorkerCard = () => (
-    <section className="rounded-3xl border border-white/60 bg-white p-6 shadow-lg">
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white backdrop-blur-2xl shadow-[0_20px_90px_rgba(0,0,0,0.55)]">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Paso 2 · Marcación</p>
-          <h3 className="text-2xl font-semibold text-slate-900">
+          <p className="text-xs font-mono uppercase tracking-[0.4em] text-cyan-300">
+            Paso 2 · Marcación
+          </p>
+          <h3 className="text-2xl font-semibold">
             Hola, {recognizedEmployee?.nombreCompleto ?? "trabajador"}
           </h3>
         </div>
         <button
           type="button"
           onClick={beginScan}
-          className="rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-500"
+          className="rounded-full border border-white/20 px-3 py-1 text-sm text-white/60"
         >
           Cambiar persona
         </button>
       </div>
-      <p className="mt-2 text-xs font-semibold text-slate-500">
+      <p className="mt-2 text-xs font-semibold text-white/60">
         Biometría activa: {biometricRemainingSeconds}s
       </p>
       {workerActive ? (
@@ -609,14 +615,14 @@ export function KioskTerminal({
                 disabled={loadingAction === action.key}
                 className={`group rounded-2xl border px-4 py-4 text-left transition ${
                   markTime
-                    ? "border-emerald-400 bg-emerald-50 text-emerald-900"
-                    : "border-slate-200 bg-white hover:border-emerald-200"
+                    ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                    : "border-white/10 bg-white/5 hover:border-cyan-300 hover:bg-white/10"
                 }`}
               >
-                <p className="text-sm uppercase tracking-wide text-slate-400">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/60">
                   {action.label}
                 </p>
-                <p className="text-2xl font-semibold">
+                <p className="text-2xl font-semibold text-white">
                   {loadingAction === action.key
                     ? "..."
                     : markTime
@@ -628,7 +634,7 @@ export function KioskTerminal({
           })}
         </div>
       ) : (
-        <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+        <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-black/40 px-4 py-6 text-center text-sm text-white/60">
           Vuelve a posicionar tu rostro para desbloquear las acciones.
         </div>
       )}
@@ -636,46 +642,46 @@ export function KioskTerminal({
   );
 
   const renderAdminPanel = () => (
-    <section className="rounded-3xl border border-emerald-200/60 bg-white p-6 shadow-xl">
+    <section className="rounded-3xl border border-white/10 bg-[#0b0f1a] p-6 text-white backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-emerald-500">
+          <p className="text-xs font-mono uppercase tracking-[0.3em] text-emerald-300">
             Modo administrador activo
           </p>
-          <h3 className="text-2xl font-semibold text-slate-900">
+          <h3 className="text-2xl font-semibold">
             {recognizedEmployee?.nombreCompleto ?? "Admin"}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-white/70">
             Gestiona la terminal, comparte la URL y registra nuevos rostros.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <p className="text-xs font-semibold text-slate-500">
+          <p className="text-xs font-semibold text-white/60">
             Tiempo restante:{" "}
             {Math.max(0, Math.floor(((adminSessionExpiresAt ?? 0) - Date.now()) / 1000))}s
           </p>
           <button
             type="button"
             onClick={resetSession}
-            className="rounded-full border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-600"
+            className="rounded-full border border-emerald-400/60 px-4 py-2 text-sm font-semibold text-emerald-200"
           >
             Salir
           </button>
         </div>
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-4">
           <div>
-            <p className="text-xs uppercase text-slate-400">URL kiosco</p>
-            <p className="break-all text-sm font-semibold text-slate-900">{kioskUrl}</p>
+            <p className="text-xs uppercase text-white/50">URL kiosco</p>
+            <p className="break-all text-sm font-semibold text-white">{kioskUrl}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-slate-400">Selecciona trabajador</p>
+            <p className="text-xs uppercase text-white/50">Selecciona trabajador</p>
             <input
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
               placeholder="Buscar..."
-              className="mb-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm"
+              className="mb-3 w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-300 focus:outline-none"
             />
             <div className="max-h-64 space-y-2 overflow-y-auto">
               {filteredEmployees.map((employee) => (
@@ -685,8 +691,8 @@ export function KioskTerminal({
                   onClick={() => setSelectedEmployee(employee.id)}
                   className={`w-full rounded-2xl border px-3 py-2 text-left text-sm transition ${
                     selectedEmployee === employee.id
-                      ? "border-emerald-400 bg-white shadow"
-                      : "border-transparent bg-white/70 hover:border-emerald-200"
+                      ? "border-cyan-400 bg-white/10 text-white shadow-[0_0_20px_rgba(14,165,233,0.25)]"
+                      : "border-white/5 bg-white/5 text-white/70 hover:border-cyan-300"
                   }`}
                 >
                   {employee.nombreCompleto}
@@ -713,24 +719,26 @@ export function KioskTerminal({
   );
 
   const renderSuccessCard = () => (
-    <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-lg">
-      <p className="text-xs uppercase tracking-[0.4em] text-emerald-500">Registro exitoso</p>
-      <h3 className="text-3xl font-semibold text-slate-900">{successMessage}</h3>
-      <p className="text-sm text-slate-500">Tu marcación fue guardada y sincronizada.</p>
+    <section className="rounded-3xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 p-6 text-center text-white shadow-[0_20px_80px_rgba(16,185,129,0.35)]">
+      <p className="text-xs font-mono uppercase tracking-[0.4em] text-emerald-200">
+        Registro exitoso
+      </p>
+      <h3 className="text-3xl font-semibold">{successMessage}</h3>
+      <p className="text-sm text-white/70">Tu marcación fue guardada y sincronizada.</p>
     </section>
   );
 
   const renderBitacora = () => (
-    <section className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-lg">
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-5 text-white backdrop-blur-2xl shadow-[0_20px_90px_rgba(0,0,0,0.55)]">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+          <p className="text-xs font-mono uppercase tracking-[0.3em] text-cyan-300">
             Bitácora en tiempo real
           </p>
-          <h3 className="text-xl font-semibold text-slate-900">Últimas marcaciones</h3>
+          <h3 className="text-xl font-semibold">Últimas marcaciones</h3>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs uppercase tracking-wide text-slate-500">
-          Live
+        <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-wide text-white/70">
+          LIVE
         </span>
       </div>
       <div className="mt-4 max-h-72 overflow-y-auto space-y-3">
@@ -738,17 +746,17 @@ export function KioskTerminal({
           history.map((entry) => (
             <div
               key={entry.id}
-              className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm"
+              className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80"
             >
               <div>
-                <p className="font-semibold text-slate-900">{entry.employeeName}</p>
+                <p className="font-semibold text-white">{entry.employeeName}</p>
                 <p>{entry.action}</p>
               </div>
-              <span className="text-xs text-slate-400">{formatTime(entry.timestamp)}</span>
+              <span className="text-xs text-white/50">{formatTime(entry.timestamp)}</span>
             </div>
           ))
         ) : (
-          <p className="py-6 text-center text-sm text-slate-500">
+          <p className="py-6 text-center text-sm text-white/60">
             Aún no hay marcaciones registradas hoy.
           </p>
         )}
@@ -757,8 +765,8 @@ export function KioskTerminal({
   );
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-900 p-6 text-white shadow-2xl">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-4 text-white">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-900 p-6 text-white shadow-[0_30px_120px_rgba(0,0,0,0.65)]">
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <div className="absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-500 blur-3xl" />
           <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-sky-400 blur-3xl" />
@@ -828,7 +836,7 @@ export function KioskTerminal({
       {!authorizedName ? renderAuthorizeCard() : null}
 
       {statusMessage ? (
-        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
           {statusMessage}
         </div>
       ) : null}

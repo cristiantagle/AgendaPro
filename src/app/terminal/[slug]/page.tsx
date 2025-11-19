@@ -37,15 +37,23 @@ export default async function KioskPage({
   const employees = await listActiveEmployeesForCompany(company.id);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-slate-50 p-6 text-slate-900">
-      <KioskTerminal
-        companyId={company.id}
-        slug={company.kioskSlug}
-        companyName={company.name}
-        logoUrl={company.logoUrl ?? undefined}
-        employees={employees}
-        initialDeviceName={deviceName}
-      />
+    <main className="relative min-h-screen overflow-hidden bg-[#050507] text-gray-100">
+      <div className="noise-overlay" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 top-10 h-72 w-72 rounded-full bg-violet-700/25 blur-[140px]" />
+        <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-cyan-400/20 blur-[160px]" />
+        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-emerald-400/20 blur-[150px]" />
+      </div>
+      <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-8">
+        <KioskTerminal
+          companyId={company.id}
+          slug={company.kioskSlug}
+          companyName={company.name}
+          logoUrl={company.logoUrl ?? undefined}
+          employees={employees}
+          initialDeviceName={deviceName}
+        />
+      </div>
     </main>
   );
 }
