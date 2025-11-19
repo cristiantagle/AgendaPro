@@ -80,23 +80,21 @@ export function KioskTerminal({
   const [lastMark, setLastMark] = useState<{ action: string; time: string } | null>(null);
   const lockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [currentStep, setCurrentStep] = useState<Step>("idle");
+  const [currentStep, setCurrentStep] = useState<Step>(initialDeviceName ? "scan" : "idle");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [recognizedEmployee, setRecognizedEmployee] = useState<Employee | null>(null);
   const [sessionRole, setSessionRole] = useState<"none" | "worker" | "admin">("none");
   const [adminSessionExpiresAt, setAdminSessionExpiresAt] = useState<number | null>(null);
   const [biometricUnlock, setBiometricUnlock] = useState<{ employeeId: string; expiresAt: number } | null>(null);
-  const [tick, setTick] = useState(0);
+  const [liveTime, setLiveTime] = useState(new Date());
 
   const BIOMETRIC_UNLOCK_MS = 45 * 1000;
   const ADMIN_SESSION_MS = 3 * 60 * 1000;
 
   useEffect(() => {
-    const interval = setInterval(() => setTick((value) => value + 1), 1000);
+    const interval = setInterval(() => setLiveTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const liveTime = useMemo(() => new Date(), [tick]);
 
   const filteredEmployees = useMemo(
     () =>
@@ -133,6 +131,15 @@ export function KioskTerminal({
   );
 
   const selectedStatus = workerStatus[selectedEmployee || ""] ?? null;
+
+  const beginScan = useCallback(() => {
+    setStatusMessage(null);
+    setSuccessMessage(null);
+    setRecognizedEmployee(null);
+    setSessionRole("none");
+    setBiometricUnlock(null);
+    setCurrentStep("scan");
+  }, []);
 
   const mapWorkers = useCallback((workers: Array<WorkerStatus & { id: string }>) => {
     const statusMap: Record<string, WorkerStatus> = {};
@@ -200,6 +207,15 @@ export function KioskTerminal({
     if (!stored) return;
     refreshWorkerStatus(stored).catch(() => {});
   }, [refreshWorkerStatus, storageKey]);
+
+  useEffect(() => {
+    if (authorizedName && currentStep === "idle") {
+      beginScan();
+    }
+    if (!authorizedName) {
+      setCurrentStep("idle");
+    }
+  }, [authorizedName, currentStep, beginScan]);
 
   useEffect(() => {
     if (!deviceToken) return undefined;
@@ -277,15 +293,6 @@ export function KioskTerminal({
     }, remaining);
     return () => clearTimeout(timeout);
   }, [adminSessionExpiresAt]);
-
-  const beginScan = () => {
-    setStatusMessage(null);
-    setSuccessMessage(null);
-    setRecognizedEmployee(null);
-    setSessionRole("none");
-    setBiometricUnlock(null);
-    setCurrentStep("scan");
-  };
 
   const resetSession = () => {
     setSessionRole("none");
@@ -536,29 +543,6 @@ export function KioskTerminal({
     </section>
   );
 
-  const renderIdleCard = () => (
-    <section className="rounded-3xl border border-white/60 bg-white p-6 text-center shadow-lg">
-      <p className="text-sm uppercase tracking-[0.4em] text-slate-400">Bienvenido</p>
-      <h2 className="text-5xl font-bold text-slate-900">
-        {liveTime.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
-      </h2>
-      <p className="text-sm text-slate-500">
-        {liveTime.toLocaleDateString("es-CL", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        })}
-      </p>
-      <button
-        type="button"
-        onClick={beginScan}
-        className="mt-6 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-200/50 transition hover:brightness-110"
-      >
-        Iniciar reconocimiento facial
-      </button>
-    </section>
-  );
-
   const renderScanCard = () => (
     <section className="rounded-3xl border border-white/60 bg-slate-950 p-4 text-white shadow-2xl">
       <div className="flex items-center justify-between">
@@ -582,6 +566,7 @@ export function KioskTerminal({
           deviceToken={deviceToken}
           authorized={Boolean(authorizedName)}
           allowEnrollment={false}
+          autoDetect
           onEmployeeDetected={(employeeId, confidence) => {
             setSelectedEmployee(employeeId);
             handleRecognition(employeeId, confidence);
@@ -848,8 +833,7 @@ export function KioskTerminal({
         </div>
       ) : null}
 
-      {currentStep === "idle" && authorizedName ? renderIdleCard() : null}
-      {currentStep === "scan" ? renderScanCard() : null}
+      {authorizedName && currentStep === "scan" ? renderScanCard() : null}
       {currentStep === "worker" ? renderWorkerCard() : null}
       {currentStep === "admin" && adminSessionActive ? renderAdminPanel() : null}
       {currentStep === "success" ? renderSuccessCard() : null}

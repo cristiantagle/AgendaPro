@@ -15,6 +15,7 @@ type FaceRecognitionPanelProps = {
   deviceToken: string | null;
   authorized: boolean;
   allowEnrollment: boolean;
+  autoDetect?: boolean;
   onEmployeeDetected: (employeeId: string, confidence: number) => void;
   onStatus?: (message: string) => void;
 };
@@ -37,6 +38,7 @@ export function FaceRecognitionPanel({
   deviceToken,
   authorized,
   allowEnrollment,
+  autoDetect = false,
   onEmployeeDetected,
   onStatus,
 }: FaceRecognitionPanelProps) {
@@ -257,6 +259,15 @@ export function FaceRecognitionPanel({
       setStatus(null);
     }
   }, [authorized, captureDescriptor, employees, faceApi, onEmployeeDetected, postStatus, profiles]);
+
+  useEffect(() => {
+    if (!autoDetect) return;
+    if (!authorized || !modelsReady || recognizing) return;
+    const timer = setTimeout(() => {
+      void recognizeFace();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [autoDetect, authorized, modelsReady, recognizeFace, recognizing]);
 
   const enrollFace = useCallback(async () => {
     if (!authorized) {
