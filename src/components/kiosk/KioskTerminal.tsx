@@ -49,6 +49,11 @@ export function KioskTerminal({
   const [authorizing, setAuthorizing] = useState(false);
   const [buttonsLocked, setButtonsLocked] = useState(false);
   const lockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const BIOMETRIC_UNLOCK_MS = 45 * 1000;
+  const [biometricUnlock, setBiometricUnlock] = useState<{
+    employeeId: string;
+    expiresAt: number;
+  } | null>(null);
   const [lastMark, setLastMark] = useState<{
     action: string;
     time: string;
@@ -188,6 +193,27 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, []);
 
+  const biometricRemainingSeconds = biometricUnlock
+    ? Math.max(0, Math.floor((biometricUnlock.expiresAt - Date.now()) / 1000))
+    : 0;
+  const biometricValid =
+    Boolean(biometricUnlock) &&
+    biometricUnlock?.employeeId === selectedEmployee &&
+    biometricRemainingSeconds > 0;
+
+  useEffect(() => {
+    if (!biometricUnlock) {
+      return;
+    }
+    const remaining = biometricUnlock.expiresAt - Date.now();
+    if (remaining <= 0) {
+      setBiometricUnlock(null);
+      return;
+    }
+    const timeout = setTimeout(() => setBiometricUnlock(null), remaining);
+    return () => clearTimeout(timeout);
+  }, [biometricUnlock]);
+
 useEffect(() => {
   if (!deviceToken) return undefined;
   let activeChannel: { unsubscribe: () => void } | null = null;
@@ -313,6 +339,10 @@ useEffect(() => {
       setStatusMessage("Espera unos segundos antes de registrar otra marcación.");
       return;
     }
+    if (!biometricValid) {
+      setStatusMessage("Identifícate con tu rostro para desbloquear las acciones.");
+      return;
+    }
     if (!authorizedName) {
       setStatusMessage("Autoriza este kiosco con el PIN antes de marcar.");
       return;
@@ -405,6 +435,7 @@ useEffect(() => {
       });
       void refreshWorkerStatus();
       setStatusMessage("Marcación registrada con éxito.");
+      setBiometricUnlock(null);
     } catch (error) {
       setStatusMessage((error as Error).message);
     } finally {
@@ -568,7 +599,10 @@ useEffect(() => {
                 <button
                   key={employee.id}
                   type="button"
-                  onClick={() => setSelectedEmployee(employee.id)}
+                  onClick={() => {
+                    setSelectedEmployee(employee.id);
+                    setBiometricUnlock(null);
+                  }}
                   className={`group flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
                     selectedEmployee === employee.id
                       ? "border-emerald-400 bg-white shadow-lg shadow-emerald-100"
@@ -613,11 +647,22 @@ useEffect(() => {
                 Marca la acción correspondiente
               </h3>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-              {selectedStatus?.lastAction
-                ? `${selectedStatus.lastAction}`
-                : "Sin registros"}
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                {selectedStatus?.lastAction
+                  ? `${selectedStatus.lastAction}`
+                  : "Sin registros"}
+              </span>
+              <span
+                className={`mt-1 text-xs font-semibold ${
+                  biometricValid ? "text-emerald-600" : "text-rose-500"
+                }`}
+              >
+                {biometricValid
+                  ? `Biometría activa (${biometricRemainingSeconds}s)`
+                  : "Biometría requerida"}
+              </span>
+            </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {actions.map((action) => {
@@ -631,7 +676,8 @@ useEffect(() => {
                     !authorizedName ||
                     !selectedEmployee ||
                     loadingAction === action.key ||
-                    buttonsLocked
+                    buttonsLocked ||
+                    !biometricValid
                   }
                   className={`group rounded-2xl border px-4 py-4 text-left transition ${
                     markTime
@@ -672,9 +718,15 @@ useEffect(() => {
         selectedEmployeeId={selectedEmployee}
         deviceToken={deviceToken}
         authorized={Boolean(authorizedName)}
-        onEmployeeDetected={(employeeId) => {
+        onEmployeeDetected={(employeeId, confidence) => {
           setSelectedEmployee(employeeId);
-          setStatusMessage("Rostro reconocido, seleccionamos al trabajador automáticamente.");
+          setBiometricUnlock({
+            employeeId,
+            expiresAt: Date.now() + BIOMETRIC_UNLOCK_MS,
+          });
+          setStatusMessage(
+            `Rostro reconocido (confianza ${(confidence * 100).toFixed(0)}%). Acciones desbloqueadas temporalmente.`,
+          );
         }}
         onStatus={(message) => setStatusMessage(message)}
       />

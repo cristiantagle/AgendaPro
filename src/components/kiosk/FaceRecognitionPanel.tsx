@@ -101,13 +101,19 @@ export function FaceRecognitionPanel({
       if (faceApi) return;
       try {
         const faceModule = await import("@vladmandic/face-api");
-        await tf.setBackend("webgl");
+        try {
+          await tf.setBackend("webgl");
+        } catch {
+          await tf.setBackend("cpu");
+        }
         await tf.ready();
+        setStatus("Cargando modelos biométricos...");
         await Promise.all([
           faceModule.nets.tinyFaceDetector.loadFromUri(MODEL_PATH),
           faceModule.nets.faceLandmark68Net.loadFromUri(MODEL_PATH),
           faceModule.nets.faceRecognitionNet.loadFromUri(MODEL_PATH),
         ]);
+        setStatus("Modelos listos. Puedes comenzar a detectar rostros.");
         if (mounted) {
           setFaceApi(faceModule);
           setModelsReady(true);
@@ -117,6 +123,7 @@ export function FaceRecognitionPanel({
           (error as Error).message ??
             "No se pudieron cargar los modelos de reconocimiento.",
         );
+        setStatus("Error al cargar modelos. Reintenta o revisa la conexión.");
       }
     };
     void loadModels();
@@ -130,6 +137,7 @@ export function FaceRecognitionPanel({
       stopCamera();
       return;
     }
+    setStatus("Activando cámara frontal...");
     void setupCamera();
     return () => {
       stopCamera();
@@ -142,6 +150,7 @@ export function FaceRecognitionPanel({
       return;
     }
     setLoadingProfiles(true);
+    setStatus("Sincronizando rostros registrados...");
     try {
       const res = await fetch(`/api/kiosk/${slug}/faces`, {
         method: "GET",
@@ -169,6 +178,7 @@ export function FaceRecognitionPanel({
       );
     } finally {
       setLoadingProfiles(false);
+      setStatus(null);
     }
   }, [authorized, deviceToken, postStatus, slug]);
 
@@ -181,6 +191,7 @@ export function FaceRecognitionPanel({
       postStatus("El reconocimiento aún se está inicializando.");
       return null;
     }
+    postStatus("Detectando rostro...");
     const options = new faceApi.TinyFaceDetectorOptions({ inputSize: 320 });
     const detection = await faceApi
       .detectSingleFace(videoRef.current, options)
@@ -190,6 +201,7 @@ export function FaceRecognitionPanel({
       postStatus("No se detectó ningún rostro. Ajusta la posición e iluminación.");
       return null;
     }
+    postStatus("Rostro detectado.");
     return detection.descriptor;
   }, [faceApi, modelsReady, postStatus]);
 
@@ -203,6 +215,7 @@ export function FaceRecognitionPanel({
       return;
     }
     setRecognizing(true);
+    postStatus("Comparando rostro en vivo con la base local...");
     try {
       const descriptor = await captureDescriptor();
       if (!descriptor || !faceApi) {
@@ -239,6 +252,7 @@ export function FaceRecognitionPanel({
       );
     } finally {
       setRecognizing(false);
+      setStatus(null);
     }
   }, [authorized, captureDescriptor, employees, faceApi, onEmployeeDetected, postStatus, profiles]);
 
@@ -256,6 +270,7 @@ export function FaceRecognitionPanel({
       return;
     }
     setEnrolling(true);
+    postStatus("Capturando descriptor para el trabajador seleccionado...");
     try {
       const descriptor = await captureDescriptor();
       if (!descriptor) {
@@ -285,6 +300,7 @@ export function FaceRecognitionPanel({
       );
     } finally {
       setEnrolling(false);
+      setStatus(null);
     }
   }, [
     authorized,
