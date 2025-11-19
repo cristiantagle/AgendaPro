@@ -31,6 +31,7 @@ export function KioskPanel({ slug, pin, devices }: Props) {
   const [loadingPin, setLoadingPin] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [copied, setCopied] = useState<"url" | "pin" | null>(null);
 
   const kioskUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -78,6 +79,16 @@ export function KioskPanel({ slug, pin, devices }: Props) {
     }
   };
 
+  const copyValue = async (value: string, type: "url" | "pin") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(type);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      setMessage("No se pudo copiar. Copia manualmente.");
+    }
+  };
+
   return (
     <section className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 text-gray-100 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -100,31 +111,47 @@ export function KioskPanel({ slug, pin, devices }: Props) {
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
+      <div className="space-y-4">
+        <label className="block text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
           URL del kiosco
-          <input
-            readOnly
-            value={kioskUrl}
-            className="mt-2 w-full rounded-2xl border border-white/15 bg-black/30 px-4 py-3 font-mono text-sm text-white"
-          />
+          <div className="mt-2 flex gap-3">
+            <input
+              readOnly
+              value={kioskUrl}
+              className="flex-1 rounded-2xl border border-white/15 bg-black/30 px-4 py-3 font-mono text-sm text-white"
+            />
+            <button
+              type="button"
+              onClick={() => copyValue(kioskUrl, "url")}
+              className="rounded-2xl border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-gray-200 transition hover:border-white/40"
+            >
+              {copied === "url" ? "Copiado" : "Copiar"}
+            </button>
+          </div>
         </label>
-        <label className="text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
+        <label className="block text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
           PIN vigente
           <div className="mt-2 flex gap-3">
             <input
               readOnly
               value={currentPin}
-              className="w-40 rounded-2xl border border-white/15 bg-black/30 px-3 py-3 text-center text-2xl font-semibold tracking-[0.5em] text-white"
+              className="flex-1 rounded-2xl border border-white/15 bg-black/30 px-4 py-3 text-center text-3xl font-semibold tracking-[0.6em] text-white"
             />
-            <div className="flex flex-1 flex-col justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-300">
-              Estado OK
-              <span className="text-[10px] text-gray-400">
-                Última actualización {formatDate(items[0]?.lastUsedAt ?? null)}
-              </span>
-            </div>
+            <button
+              type="button"
+              onClick={() => copyValue(currentPin, "pin")}
+              className="rounded-2xl border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-gray-200 transition hover:border-white/40"
+            >
+              {copied === "pin" ? "Copiado" : "Copiar"}
+            </button>
           </div>
         </label>
+        <div className="flex flex-col rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-xs uppercase tracking-[0.3em] text-emerald-300 md:flex-row md:items-center md:justify-between">
+          <span>Estado OK</span>
+          <span className="text-[10px] text-gray-200">
+            Última actualización {formatDate(items[0]?.lastUsedAt ?? null)}
+          </span>
+        </div>
       </div>
 
       <div className="space-y-3">
