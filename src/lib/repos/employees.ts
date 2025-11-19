@@ -152,12 +152,13 @@ export const listEmployeesByCompany = async (companyId: string) => {
 
 export const listActiveEmployeesForCompany = async (companyId: string) => {
   const rows = await runQuery<Record<string, unknown>>(
-    'SELECT "id","nombreCompleto" FROM "Employee" WHERE "companyId" = $1 AND "isActive" = true ORDER BY "nombreCompleto" ASC',
+    'SELECT e."id", e."nombreCompleto", u."role" FROM "Employee" e JOIN "User" u ON u."id" = e."userId" WHERE e."companyId" = $1 AND e."isActive" = true ORDER BY e."nombreCompleto" ASC',
     [companyId],
   );
   return rows.map((row) => ({
     id: row.id as string,
     nombreCompleto: row.nombreCompleto as string,
+    role: row.role as Role,
   }));
 };
 

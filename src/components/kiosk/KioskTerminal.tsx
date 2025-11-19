@@ -5,10 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { FaceRecognitionPanel } from "./FaceRecognitionPanel";
+import type { Role } from "@/types/database";
 
 type Employee = {
   id: string;
   nombreCompleto: string;
+  role: Role;
 };
 
 type Props = {
@@ -37,6 +39,12 @@ export function KioskTerminal({
   logoUrl,
 }: Props) {
   const storageKey = useMemo(() => `kiosk-token:${slug}`, [slug]);
+  const kioskUrl = useMemo(() => {
+    if (typeof window === "undefined") {
+      return `/terminal/${slug}`;
+    }
+    return `${window.location.origin}/terminal/${slug}`;
+  }, [slug]);
   const [authorizedName, setAuthorizedName] = useState(initialDeviceName);
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [pin, setPin] = useState("");
@@ -58,6 +66,10 @@ export function KioskTerminal({
     action: string;
     time: string;
   } | null>(null);
+  const ADMIN_SESSION_MS = 3 * 60 * 1000;
+  const [recognizedEmployee, setRecognizedEmployee] = useState<Employee | null>(null);
+  const [sessionRole, setSessionRole] = useState<"none" | "worker" | "admin">("none");
+  const [adminSessionExpiresAt, setAdminSessionExpiresAt] = useState<number | null>(null);
 type WorkerStatus = {
   runningSince: string | null;
   workedMs: number;
@@ -201,6 +213,24 @@ useEffect(() => {
     biometricUnlock?.employeeId === selectedEmployee &&
     biometricRemainingSeconds > 0;
 
+  const adminSessionActive =
+    Boolean(adminSessionExpiresAt) && (adminSessionExpiresAt ?? 0) > Date.now();
+  const workerActive =
+    sessionRole === "worker" &&
+    biometricValid &&
+    recognizedEmployee &&
+    recognizedEmployee.id === selectedEmployee;
+  useEffect(() => {
+    if (!adminSessionExpiresAt) return;
+    const remaining = adminSessionExpiresAt - Date.now();
+    if (remaining <= 0) {
+      setAdminSessionExpiresAt(null);
+      return;
+    }
+    const timeout = setTimeout(() => setAdminSessionExpiresAt(null), remaining);
+    return () => clearTimeout(timeout);
+  }, [adminSessionExpiresAt]);
+
   useEffect(() => {
     if (!biometricUnlock) {
       return;
@@ -213,6 +243,27 @@ useEffect(() => {
     const timeout = setTimeout(() => setBiometricUnlock(null), remaining);
     return () => clearTimeout(timeout);
   }, [biometricUnlock]);
+
+  useEffect(() => {
+    if (sessionRole === "worker" && !biometricValid) {
+      setSessionRole("none");
+      setRecognizedEmployee(null);
+    }
+  }, [biometricValid, sessionRole]);
+
+  useEffect(() => {
+    if (sessionRole === "admin" && !adminSessionActive) {
+      setSessionRole("none");
+      setRecognizedEmployee(null);
+    }
+  }, [adminSessionActive, sessionRole]);
+
+  const resetSession = () => {
+    setSessionRole("none");
+    setRecognizedEmployee(null);
+    setBiometricUnlock(null);
+    setAdminSessionExpiresAt(null);
+  };
 
 useEffect(() => {
   if (!deviceToken) return undefined;
@@ -443,6 +494,30 @@ useEffect(() => {
     }
   };
 
+  const handleRecognition = (employeeId: string, confidence: number) => {
+    const person = employees.find((emp) => emp.id === employeeId) ?? null;
+    setRecognizedEmployee(person);
+    if (person?.role === "company_admin") {
+      setSessionRole("admin");
+      setAdminSessionExpiresAt(Date.now() + ADMIN_SESSION_MS);
+      setStatusMessage(
+        `Hola ${person.nombreCompleto}. Panel administrador desbloqueado por ${(ADMIN_SESSION_MS / 60000).toFixed(0)} min.`,
+      );
+      setBiometricUnlock(null);
+    } else {
+      setSessionRole("worker");
+      setBiometricUnlock({
+        employeeId,
+        expiresAt: Date.now() + BIOMETRIC_UNLOCK_MS,
+      });
+      setStatusMessage(
+        `Rostro reconocido (confianza ${(confidence * 100).toFixed(0)}%). Acciones desbloqueadas por ${
+          BIOMETRIC_UNLOCK_MS / 1000
+        }s.`,
+      );
+    }
+  };
+
   const selectedWorkedLabel = useMemo(
     () => {
       void tick;
@@ -664,41 +739,64 @@ useEffect(() => {
               </span>
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {actions.map((action) => {
-              const markTime = selectedStatus?.marks?.[action.key] ?? null;
-              return (
-                <button
-                  key={action.key}
-                  type="button"
-                  onClick={() => markAction(action.key)}
-                  disabled={
-                    !authorizedName ||
-                    !selectedEmployee ||
-                    loadingAction === action.key ||
-                    buttonsLocked ||
-                    !biometricValid
-                  }
-                  className={`group rounded-2xl border px-4 py-4 text-left transition ${
-                    markTime
-                      ? "border-emerald-400 bg-emerald-50 text-emerald-900"
-                      : "border-slate-200 bg-white hover:border-emerald-200"
-                  }`}
-                >
-                  <p className="text-sm uppercase tracking-wide text-slate-400 group-disabled:text-slate-300">
-                    {action.label}
-                  </p>
-                  <p className="text-2xl font-semibold">
-                    {loadingAction === action.key
-                      ? "..."
-                      : markTime
-                        ? formatTime(markTime)
-                        : "— — : — —"}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+          {workerActive && recognizedEmployee ? (
+            <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <div>
+                <p className="text-xs uppercase text-emerald-600">Trabajador reconocido</p>
+                <p className="text-lg font-semibold text-emerald-900">
+                  {recognizedEmployee.nombreCompleto}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={resetSession}
+                className="rounded-full border border-emerald-500 px-3 py-1 text-xs font-semibold text-emerald-600"
+              >
+                No soy yo
+              </button>
+            </div>
+          ) : null}
+          {workerActive ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {actions.map((action) => {
+                const markTime = selectedStatus?.marks?.[action.key] ?? null;
+                return (
+                  <button
+                    key={action.key}
+                    type="button"
+                    onClick={() => markAction(action.key)}
+                    disabled={
+                      !authorizedName ||
+                      !selectedEmployee ||
+                      loadingAction === action.key ||
+                      buttonsLocked ||
+                      !biometricValid
+                    }
+                    className={`group rounded-2xl border px-4 py-4 text-left transition ${
+                      markTime
+                        ? "border-emerald-400 bg-emerald-50 text-emerald-900"
+                        : "border-slate-200 bg-white hover:border-emerald-200"
+                    }`}
+                  >
+                    <p className="text-sm uppercase tracking-wide text-slate-400 group-disabled:text-slate-300">
+                      {action.label}
+                    </p>
+                    <p className="text-2xl font-semibold">
+                      {loadingAction === action.key
+                        ? "..."
+                        : markTime
+                          ? formatTime(markTime)
+                          : "— — : — —"}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+              Identifica tu rostro para desbloquear las acciones de marcación.
+            </div>
+          )}
           {statusMessage ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               {statusMessage}
@@ -718,18 +816,62 @@ useEffect(() => {
         selectedEmployeeId={selectedEmployee}
         deviceToken={deviceToken}
         authorized={Boolean(authorizedName)}
+        allowEnrollment={sessionRole === "admin" && adminSessionActive}
         onEmployeeDetected={(employeeId, confidence) => {
           setSelectedEmployee(employeeId);
-          setBiometricUnlock({
-            employeeId,
-            expiresAt: Date.now() + BIOMETRIC_UNLOCK_MS,
-          });
-          setStatusMessage(
-            `Rostro reconocido (confianza ${(confidence * 100).toFixed(0)}%). Acciones desbloqueadas temporalmente.`,
-          );
+          handleRecognition(employeeId, confidence);
         }}
         onStatus={(message) => setStatusMessage(message)}
       />
+
+      {sessionRole === "admin" && adminSessionActive && recognizedEmployee ? (
+        <section className="rounded-3xl border border-emerald-200/60 bg-white p-5 shadow-xl">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-500">
+                Modo administrador activo
+              </p>
+              <h3 className="text-2xl font-semibold text-slate-900">
+                {recognizedEmployee.nombreCompleto}
+              </h3>
+              <p className="text-sm text-slate-500">
+                Gestiona la terminal, consulta la URL y entrena nuevos rostros.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={resetSession}
+              className="rounded-full border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-600"
+            >
+              Cerrar sesión admin
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <p className="text-xs uppercase text-slate-400">URL del kiosco</p>
+              <p className="break-all text-base font-semibold text-slate-900">
+                {kioskUrl}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <p className="text-xs uppercase text-slate-400">Dispositivo</p>
+              <p className="text-base font-semibold text-slate-900">
+                {authorizedName ?? "No autorizado"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <p className="text-xs uppercase text-slate-400">Tiempo restante</p>
+              <p className="text-base font-semibold text-slate-900">
+                {Math.max(0, Math.floor(((adminSessionExpiresAt ?? 0) - Date.now()) / 1000))}s
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            Desde aquí puedes autorizar tabletas, compartir la URL o registrar rostros. Para más
+            opciones, abre el panel de empresa en tu computador.
+          </p>
+        </section>
+      ) : null}
 
       <section className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-lg">
         <div className="flex items-center justify-between">

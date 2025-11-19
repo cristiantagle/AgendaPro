@@ -14,6 +14,7 @@ type FaceRecognitionPanelProps = {
   selectedEmployeeId: string;
   deviceToken: string | null;
   authorized: boolean;
+  allowEnrollment: boolean;
   onEmployeeDetected: (employeeId: string, confidence: number) => void;
   onStatus?: (message: string) => void;
 };
@@ -35,6 +36,7 @@ export function FaceRecognitionPanel({
   selectedEmployeeId,
   deviceToken,
   authorized,
+  allowEnrollment,
   onEmployeeDetected,
   onStatus,
 }: FaceRecognitionPanelProps) {
@@ -392,19 +394,25 @@ export function FaceRecognitionPanel({
             >
               {recognizing ? "Escaneando en vivo..." : "Identificar automáticamente"}
             </button>
-            <button
-              type="button"
-              onClick={enrollFace}
-              disabled={
-                !authorized ||
-                !selectedEmployee ||
-                enrolling ||
-                !modelsReady
-              }
-              className="w-full rounded-2xl border border-white/30 px-4 py-4 text-lg font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
-            >
-              {enrolling ? "Guardando rostro..." : "Guardar rostro del trabajador"}
-            </button>
+            {allowEnrollment ? (
+              <button
+                type="button"
+                onClick={enrollFace}
+                disabled={
+                  !authorized ||
+                  !selectedEmployee ||
+                  enrolling ||
+                  !modelsReady
+                }
+                className="w-full rounded-2xl border border-white/30 px-4 py-4 text-lg font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
+              >
+                {enrolling ? "Guardando rostro..." : "Guardar rostro del trabajador"}
+              </button>
+            ) : (
+              <div className="rounded-2xl border border-white/20 px-4 py-4 text-sm text-white/70">
+                Inicia sesión como administrador para registrar nuevos rostros o gestionar el kiosco.
+              </div>
+            )}
             <p className="text-xs text-white/70">
               Guardamos únicamente descriptores matemáticos. Nunca almacenamos fotos en disco ni
               enviamos datos a servicios externos.
