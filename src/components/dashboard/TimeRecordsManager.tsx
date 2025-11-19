@@ -106,38 +106,56 @@ export function TimeRecordsManager({ records }: Props) {
     }
   };
 
+  const fieldClasses =
+    "mt-2 w-full rounded-2xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none";
+
   return (
-    <div className="space-y-4 rounded-xl border border-slate-200 bg-white/70 p-5">
-      <h3 className="text-lg font-semibold text-slate-800">
-        Marcaciones recientes
-      </h3>
-      <div className="overflow-x-auto">
+    <div className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 text-gray-100 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
+            Timeline
+          </p>
+          <h3 className="text-2xl font-semibold text-white">
+            Marcaciones recientes
+          </h3>
+        </div>
+        <p className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400">
+          {items.length} registros
+        </p>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-white/10">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="text-left text-slate-500">
-              <th className="p-2">Fecha</th>
-              <th className="p-2">Trabajador</th>
-              <th className="p-2">Entrada</th>
-              <th className="p-2">Inicio alm.</th>
-              <th className="p-2">Fin alm.</th>
-              <th className="p-2">Salida</th>
-              <th className="p-2">Acciones</th>
+            <tr className="bg-white/5 text-left font-mono text-[11px] uppercase tracking-[0.3em] text-gray-400">
+              <th className="p-3">Fecha</th>
+              <th className="p-3">Trabajador</th>
+              <th className="p-3">Entrada</th>
+              <th className="p-3">Inicio alm.</th>
+              <th className="p-3">Fin alm.</th>
+              <th className="p-3">Salida</th>
+              <th className="p-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {items.map((record) => (
-              <tr key={record.id} className="border-t border-slate-100">
-                <td className="p-2">{record.fecha.slice(0, 10)}</td>
-                <td className="p-2">{record.empleado}</td>
-                <td className="p-2">{fmt(record.horaEntrada)}</td>
-                <td className="p-2">{fmt(record.horaInicioAlmuerzo)}</td>
-                <td className="p-2">{fmt(record.horaFinAlmuerzo)}</td>
-                <td className="p-2">{fmt(record.horaSalida)}</td>
-                <td className="p-2">
+              <tr
+                key={record.id}
+                className="border-t border-white/5 bg-black/30 transition hover:bg-white/5"
+              >
+                <td className="p-3 font-mono text-xs text-gray-300">
+                  {record.fecha.slice(0, 10)}
+                </td>
+                <td className="p-3">{record.empleado}</td>
+                <td className="p-3">{fmt(record.horaEntrada)}</td>
+                <td className="p-3">{fmt(record.horaInicioAlmuerzo)}</td>
+                <td className="p-3">{fmt(record.horaFinAlmuerzo)}</td>
+                <td className="p-3">{fmt(record.horaSalida)}</td>
+                <td className="p-3">
                   <button
                     type="button"
                     onClick={() => handleSelect(record)}
-                    className="text-blue-600 underline"
+                    className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300 underline decoration-dotted"
                   >
                     Editar
                   </button>
@@ -149,26 +167,29 @@ export function TimeRecordsManager({ records }: Props) {
       </div>
 
       {selected ? (
-        <form onSubmit={handleSubmit} className="space-y-3 rounded-lg bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-700">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-5"
+        >
+          <h4 className="font-semibold text-white">
             Editando registro de {selected.empleado}
           </h4>
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm text-slate-600">
+            <label className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400">
               Fecha
               <input
                 type="date"
                 name="fecha"
                 value={form.fecha}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                className={fieldClasses}
               />
             </label>
             {["horaEntrada", "horaInicioAlmuerzo", "horaFinAlmuerzo", "horaSalida"].map(
               (field) => (
                 <label
                   key={field}
-                  className="text-sm text-slate-600"
+                  className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400"
                 >
                   {field.replace("hora", "Hora ")}
                   <input
@@ -176,27 +197,27 @@ export function TimeRecordsManager({ records }: Props) {
                     name={field}
                     value={(form as Record<string, string>)[field] ?? ""}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                    className={fieldClasses}
                   />
                 </label>
               ),
             )}
           </div>
-          <label className="text-sm text-slate-600">
+          <label className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400">
             Notas
             <textarea
               name="notas"
               value={form.notas}
               onChange={handleChange}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className={`${fieldClasses} h-24`}
             />
           </label>
           {message ? (
-            <p className="text-sm text-emerald-600">{message}</p>
+            <p className="text-sm text-emerald-400">{message}</p>
           ) : null}
           <button
             type="submit"
-            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500"
+            className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-cyan-400 px-4 py-3 font-semibold text-white shadow-[0_0_25px_rgba(34,211,238,0.3)]"
           >
             Guardar corrección
           </button>

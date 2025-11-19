@@ -54,15 +54,23 @@ export function PaySettingsForm({ settings }: Props) {
     }
   };
 
+  const inputClasses =
+    "mt-2 w-full rounded-2xl border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-gray-400 transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40";
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-5"
+      className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]"
     >
-      <h3 className="text-lg font-semibold text-slate-800">
-        Parámetros de pago
-      </h3>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div>
+        <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-violet-300">
+          Pay matrix
+        </p>
+        <h3 className="text-2xl font-semibold text-white tracking-tight">
+          Parámetros de pago
+        </h3>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
         {(
           [
             { key: "sueldoMensualBase", label: "Sueldo mensual base ($)" },
@@ -73,7 +81,7 @@ export function PaySettingsForm({ settings }: Props) {
         ).map((field) => (
           <label
             key={field.key}
-            className="text-sm font-medium text-slate-600"
+            className="text-sm font-medium text-gray-200"
           >
             {field.label}
             <input
@@ -83,18 +91,18 @@ export function PaySettingsForm({ settings }: Props) {
               required
               value={form[field.key]}
               onChange={handleChange}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className={inputClasses}
             />
           </label>
         ))}
       </div>
       {message ? (
-        <p className="text-sm text-emerald-600">{message}</p>
+        <p className="text-sm text-emerald-400">{message}</p>
       ) : null}
       <button
         type="submit"
         disabled={saving}
-        className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-700 px-4 py-3 font-semibold text-white shadow-[0_0_20px_rgba(34,211,238,0.35)] transition hover:scale-[1.01] disabled:opacity-60"
       >
         {saving ? "Guardando..." : "Guardar cambios"}
       </button>

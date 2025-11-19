@@ -43,16 +43,18 @@ export function CompanyLogoUploader({ initialLogo }: Props) {
   };
 
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="text-lg font-semibold text-slate-800">
-        Identidad visual
-      </h3>
-      <p className="text-sm text-slate-500">
-        Sube el logo de la empresa para que aparezca en los dashboards y en el
-        kiosco. Formatos admitidos: PNG, JPG o WEBP. Máximo 2 MB.
-      </p>
-      <div className="flex items-center gap-4">
-        <div className="h-24 w-24 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 text-gray-100 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+      <div className="flex flex-col gap-2">
+        <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
+          Identidad visual
+        </p>
+        <h3 className="text-2xl font-semibold text-white">Logo corporativo</h3>
+        <p className="text-sm text-gray-400">
+          Muestra tu marca en kioscos y dashboards. PNG/JPG/WEBP hasta 2 MB.
+        </p>
+      </div>
+      <div className="flex flex-col gap-6 md:flex-row md:items-center">
+        <div className="relative h-28 w-28 rounded-3xl border border-white/15 bg-white/5 p-4 text-center">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -61,24 +63,29 @@ export function CompanyLogoUploader({ initialLogo }: Props) {
               className="h-full w-full object-contain"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+            <div className="flex h-full w-full items-center justify-center text-xs uppercase text-gray-500">
               Sin logo
             </div>
           )}
+          <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.3em] text-gray-200 backdrop-blur">
+            Live
+          </span>
         </div>
-        <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-          Selecciona archivo
+        <label className="flex-1 text-sm text-gray-200">
+          <span className="font-mono uppercase tracking-[0.3em] text-xs text-cyan-300">
+            Subir archivo
+          </span>
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={handleFileChange}
             disabled={uploading}
-            className="rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-2 w-full rounded-2xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-gray-100 transition focus:border-cyan-400 focus:outline-none"
           />
         </label>
       </div>
       {message ? (
-        <p className="text-sm text-emerald-600">{message}</p>
+        <p className="text-sm text-emerald-400">{message}</p>
       ) : null}
     </section>
   );

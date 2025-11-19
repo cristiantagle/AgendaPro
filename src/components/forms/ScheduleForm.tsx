@@ -76,24 +76,35 @@ export function ScheduleForm({ schedules }: Props) {
     }
   };
 
+  const fieldClasses =
+    "mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white transition focus:border-cyan-400 focus:outline-none";
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-5"
+      className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 text-gray-200 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]"
     >
-      <h3 className="text-lg font-semibold text-slate-800">
-        Horarios estándar
-      </h3>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
+            Grid horario
+          </p>
+          <h3 className="text-2xl font-semibold text-white">
+            Horarios estándar
+          </h3>
+        </div>
+        <span className="text-xs text-gray-400">
+          {items.length} franjas activas
+        </span>
+      </div>
       <div className="grid gap-4">
         {items.map((item, index) => (
           <div
             key={`${item.diaSemana}-${item.tipo}`}
-            className="grid gap-3 rounded-lg border border-slate-100 p-3 md:grid-cols-4"
+            className="grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-4 md:grid-cols-4"
           >
-            <p className="font-medium text-slate-700">
-              {DAY_LABELS[item.diaSemana]}
-            </p>
-            <label className="text-sm text-slate-600">
+            <p className="font-semibold text-white">{DAY_LABELS[item.diaSemana]}</p>
+            <label className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400">
               Inicio
               <input
                 type="time"
@@ -101,10 +112,10 @@ export function ScheduleForm({ schedules }: Props) {
                 onChange={(event) =>
                   updateItem(index, "horaInicio", event.target.value)
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1"
+                className={fieldClasses}
               />
             </label>
-            <label className="text-sm text-slate-600">
+            <label className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400">
               Fin
               <input
                 type="time"
@@ -112,17 +123,17 @@ export function ScheduleForm({ schedules }: Props) {
                 onChange={(event) =>
                   updateItem(index, "horaFin", event.target.value)
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1"
+                className={fieldClasses}
               />
             </label>
-            <label className="text-sm text-slate-600">
+            <label className="text-xs font-mono uppercase tracking-[0.3em] text-gray-400">
               Tipo
               <select
                 value={item.tipo}
                 onChange={(event) =>
                   updateItem(index, "tipo", event.target.value)
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1"
+                className={`${fieldClasses} bg-black/50`}
               >
                 <option value="normal">Normal</option>
                 <option value="viernes">Viernes</option>
@@ -133,12 +144,12 @@ export function ScheduleForm({ schedules }: Props) {
         ))}
       </div>
       {message ? (
-        <p className="text-sm text-emerald-600">{message}</p>
+        <p className="text-sm text-emerald-400">{message}</p>
       ) : null}
       <button
         type="submit"
         disabled={saving}
-        className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-cyan-400 px-4 py-3 font-semibold text-white shadow-[0_0_25px_rgba(109,40,217,0.5)] transition hover:scale-[1.01] disabled:opacity-60"
       >
         {saving ? "Guardando..." : "Guardar horarios"}
       </button>

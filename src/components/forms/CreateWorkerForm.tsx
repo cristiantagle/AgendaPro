@@ -55,71 +55,88 @@ export function CreateWorkerForm() {
     }
   };
 
+  const inputClasses =
+    "mt-2 w-full rounded-2xl border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-gray-400 transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40";
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-4"
+      className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]"
     >
-      <h3 className="text-lg font-semibold text-slate-800">
-        Nuevo trabajador
-      </h3>
-      <label className="text-sm font-medium text-slate-600">
-        Nombre completo
-        <input
-          name="nombreCompleto"
-          value={form.nombreCompleto}
-          onChange={handleChange}
-          required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-      </label>
-      <label className="text-sm font-medium text-slate-600">
-        Correo
-        <input
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-      </label>
-      <label className="text-sm font-medium text-slate-600">
-        Contraseña inicial
-        <input
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-      </label>
-      <label className="text-sm font-medium text-slate-600">
-        RUT
-        <input
-          name="rut"
-          value={form.rut}
-          onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-      </label>
-      <label className="text-sm font-medium text-slate-600">
-        Sueldo mensual (opcional)
-        <input
-          name="sueldoMensual"
-          type="number"
-          min="0"
-          value={form.sueldoMensual}
-          onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-      </label>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
+            Registro inmediato
+          </p>
+          <h3 className="text-2xl font-semibold text-white tracking-tight">
+            Nuevo trabajador
+          </h3>
+        </div>
+        <span className="rounded-full border border-white/15 px-4 py-1 text-xs font-mono uppercase tracking-[0.4em] text-gray-300">
+          LIVE
+        </span>
+      </div>
+
+      {(
+        [
+          {
+            key: "nombreCompleto",
+            label: "Nombre completo",
+            type: "text",
+          },
+          {
+            key: "email",
+            label: "Correo",
+            type: "email",
+          },
+          {
+            key: "password",
+            label: "Contraseña inicial",
+            type: "password",
+          },
+          {
+            key: "rut",
+            label: "RUT",
+            type: "text",
+            optional: true,
+          },
+          {
+            key: "sueldoMensual",
+            label: "Sueldo mensual (opcional)",
+            type: "number",
+            min: 0,
+            optional: true,
+          },
+        ] satisfies Array<{
+          key: keyof typeof initialState;
+          label: string;
+          type: string;
+          min?: number;
+          optional?: boolean;
+        }>
+      ).map((field) => (
+        <label
+          key={field.key}
+          className="block text-sm font-medium text-gray-200"
+        >
+          {field.label}
+          <input
+            name={field.key}
+            type={field.type}
+            min={field.min}
+            value={(form as Record<string, string>)[field.key] ?? ""}
+            onChange={handleChange}
+            required={!field.optional}
+            className={inputClasses}
+          />
+        </label>
+      ))}
+
+      {error ? <p className="text-sm text-red-400">{error}</p> : null}
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-cyan-400 px-4 py-3 font-semibold text-white shadow-[0_0_20px_rgba(109,40,217,0.5)] transition hover:scale-[1.01] disabled:opacity-60"
       >
         {loading ? "Guardando..." : "Crear trabajador"}
       </button>

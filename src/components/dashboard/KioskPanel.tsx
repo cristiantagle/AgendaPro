@@ -79,75 +79,88 @@ export function KioskPanel({ slug, pin, devices }: Props) {
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 text-gray-100 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-slate-800">
-            Terminal de marcaciones
-          </h3>
-          <p className="text-sm text-slate-500">
-            Comparte esta URL con la tablet y usa el PIN para autorizarla una sola vez.
+          <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
+            Terminal
+          </p>
+          <h3 className="text-2xl font-semibold text-white">Control biométrico</h3>
+          <p className="text-sm text-gray-400">
+            Autoriza tablets e inspecciona actividad en tiempo real.
           </p>
         </div>
         <button
           type="button"
           onClick={regeneratePin}
           disabled={loadingPin}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+          className="rounded-2xl border border-white/20 bg-gradient-to-r from-violet-700 to-cyan-400 px-6 py-3 text-sm font-semibold uppercase tracking-widest shadow-[0_0_18px_rgba(109,40,217,0.45)] transition hover:scale-[1.02] disabled:opacity-60"
         >
           {loadingPin ? "Generando..." : "Nuevo PIN"}
         </button>
       </div>
 
-      <label className="text-sm font-medium text-slate-600">
-        URL del kiosco
-        <input
-          readOnly
-          value={kioskUrl}
-          className="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-sm"
-        />
-      </label>
-
-      <label className="text-sm font-medium text-slate-600">
-        PIN vigente
-        <div className="mt-1 flex items-center gap-2">
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
+          URL del kiosco
           <input
             readOnly
-            value={currentPin}
-            className="w-32 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-center text-xl font-semibold tracking-widest"
+            value={kioskUrl}
+            className="mt-2 w-full rounded-2xl border border-white/15 bg-black/30 px-4 py-3 font-mono text-sm text-white"
           />
-        </div>
-      </label>
+        </label>
+        <label className="text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
+          PIN vigente
+          <div className="mt-2 flex gap-3">
+            <input
+              readOnly
+              value={currentPin}
+              className="w-40 rounded-2xl border border-white/15 bg-black/30 px-3 py-3 text-center text-2xl font-semibold tracking-[0.5em] text-white"
+            />
+            <div className="flex flex-1 flex-col justify-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-300">
+              Estado OK
+              <span className="text-[10px] text-gray-400">
+                Última actualización {formatDate(items[0]?.lastUsedAt ?? null)}
+              </span>
+            </div>
+          </div>
+        </label>
+      </div>
 
-      <div>
-        <h4 className="font-semibold text-slate-700">Kioscos autorizados</h4>
+      <div className="space-y-3">
+        <h4 className="text-sm font-semibold uppercase tracking-[0.4em] text-gray-400">
+          Kioscos autorizados
+        </h4>
         {items.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Aún no hay dispositivos autorizados. Usa el PIN en la tablet para registrar el primero.
+          <p className="text-sm text-gray-400">
+            Aún no hay dispositivos autorizados. Registra el primero usando el PIN.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="mt-2 min-w-full text-sm">
+          <div className="overflow-hidden rounded-2xl border border-white/10">
+            <table className="min-w-full text-sm text-gray-200">
               <thead>
-                <tr className="text-left text-slate-500">
-                  <th className="p-2">Nombre</th>
-                  <th className="p-2">Registrado</th>
-                  <th className="p-2">Último uso</th>
-                  <th className="p-2"></th>
+                <tr className="bg-white/5 text-left font-mono uppercase tracking-[0.3em] text-[11px] text-gray-400">
+                  <th className="p-3">Nombre</th>
+                  <th className="p-3">Registrado</th>
+                  <th className="p-3">Último uso</th>
+                  <th className="p-3 text-right"></th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((device) => (
-                  <tr key={device.id} className="border-t border-slate-100">
-                    <td className="p-2">{device.name ?? "Terminal"}</td>
-                    <td className="p-2">{formatDate(device.createdAt)}</td>
-                    <td className="p-2">{formatDate(device.lastUsedAt)}</td>
-                    <td className="p-2 text-right">
+                  <tr
+                    key={device.id}
+                    className="border-t border-white/5 bg-black/30 transition hover:bg-white/5"
+                  >
+                    <td className="p-3">{device.name ?? "Terminal"}</td>
+                    <td className="p-3">{formatDate(device.createdAt)}</td>
+                    <td className="p-3">{formatDate(device.lastUsedAt)}</td>
+                    <td className="p-3 text-right">
                       <button
                         type="button"
                         onClick={() => revokeDevice(device.id)}
                         disabled={removingId === device.id}
-                        className="text-sm text-red-600 underline"
+                        className="text-xs font-semibold uppercase tracking-[0.3em] text-red-300 underline decoration-dotted disabled:opacity-40"
                       >
                         Revocar
                       </button>
@@ -160,7 +173,7 @@ export function KioskPanel({ slug, pin, devices }: Props) {
         )}
       </div>
       {message ? (
-        <p className="text-sm text-emerald-600">{message}</p>
+        <p className="text-sm text-emerald-400">{message}</p>
       ) : null}
     </section>
   );
