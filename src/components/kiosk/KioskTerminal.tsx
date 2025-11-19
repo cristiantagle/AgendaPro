@@ -422,137 +422,209 @@ useEffect(() => {
   const selectedStatus = workerStatus[selectedEmployee || ""] ?? null;
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 rounded-3xl bg-white p-6 shadow-2xl">
-      <header className="space-y-1">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-6 p-2">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-900 p-6 text-white shadow-2xl">
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-500 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-sky-400 blur-3xl" />
+        </div>
+        <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={logoUrl}
                 alt={`Logo ${companyName}`}
-                className="h-20 w-20 rounded-2xl border border-slate-200 bg-white object-contain p-2"
+                className="h-24 w-24 rounded-2xl border border-white/30 bg-white/10 object-contain p-3"
               />
-            ) : null}
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-white/30 bg-white/5 text-4xl font-light uppercase">
+                {companyName.slice(0, 2)}
+              </div>
+            )}
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-emerald-600">
-                Terminal de asistencia
-              </p>
-              <h1 className="text-4xl font-semibold text-slate-900">
+              <span className="text-xs uppercase tracking-[0.4em] text-white/70">
+                Terminal Neo · Paso guiado
+              </span>
+              <h1 className="text-4xl font-semibold leading-tight">
                 {companyName}
               </h1>
+              <p className="text-sm text-white/80">
+                Sigue los pasos para marcar tu jornada o entrenar el reconocimiento facial.
+              </p>
             </div>
           </div>
-          <Image
-            src="/tagle-labs-logo.svg"
-            alt="Tagle Labs"
-            width={180}
-            height={48}
-            className="h-12 w-auto"
-            priority
-          />
+          <div className="flex flex-wrap gap-3 text-sm">
+            <div className="rounded-2xl border border-white/30 bg-white/5 px-4 py-3">
+              <p className="text-xs uppercase text-white/60">Estado kiosco</p>
+              <p className="text-base font-semibold">
+                {authorizedName ? `Autorizado • ${authorizedName}` : "No autorizado"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/30 bg-white/5 px-4 py-3">
+              <p className="text-xs uppercase text-white/60">Horas en seguimiento</p>
+              <p className="text-base font-semibold">{selectedWorkedLabel}</p>
+            </div>
+            <div className="rounded-2xl border border-white/30 bg-white/5 px-4 py-3">
+              <p className="text-xs uppercase text-white/60">Última acción</p>
+              <p className="text-base font-semibold">
+                {selectedStatus?.lastAction
+                  ? `${selectedStatus.lastAction} · ${formatTime(selectedStatus.lastTime)}`
+                  : "Sin marcar hoy"}
+              </p>
+            </div>
+            <Image
+              src="/tagle-labs-logo.svg"
+              alt="Tagle Labs"
+              width={160}
+              height={40}
+              className="h-12 w-auto opacity-80"
+              priority
+            />
+          </div>
         </div>
-        <p className="text-sm text-slate-500">
-          Toca tu nombre y selecciona la acción que corresponda.
-        </p>
-        <p className="text-xs text-slate-500">
-          Kiosco{" "}
-          {authorizedName
-            ? `autorizado (${authorizedName})`
-            : "no autorizado"}
-        </p>
-      </header>
+      </section>
 
       {!authorizedName ? (
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-xl font-semibold text-slate-800">
-            Autorizar este dispositivo
-          </h2>
-          <p className="text-sm text-slate-600">
-            Ingresa el PIN vigente para dejar la tablet siempre habilitada.
-          </p>
-          <div className="mt-3 flex flex-col gap-3 md:flex-row">
+        <section className="rounded-3xl border border-emerald-200/50 bg-white p-5 shadow-lg shadow-emerald-100/40">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-500">
+              Paso 0 · Seguridad
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Autoriza esta terminal con tu PIN maestro
+            </h2>
+            <p className="text-sm text-slate-500">
+              Sólo los dispositivos autorizados pueden registrar rostros y marcaciones.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-col gap-3 lg:flex-row">
             <input
               value={pin}
               onChange={(event) => setPin(event.target.value)}
               placeholder="PIN de 6 dígitos"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-2xl tracking-[0.4em]"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-2xl tracking-[0.4em]"
             />
             <input
               value={deviceLabel}
               onChange={(event) => setDeviceLabel(event.target.value)}
               placeholder="Nombre del terminal (opcional)"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3"
             />
             <button
               type="button"
               onClick={authorizeDevice}
               disabled={authorizing}
-              className="rounded-xl bg-emerald-600 px-6 py-3 text-lg font-bold text-white hover:bg-emerald-500 disabled:opacity-60"
+              className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 px-6 py-3 text-lg font-semibold text-white shadow-lg shadow-emerald-200/50 transition hover:brightness-110 disabled:opacity-60"
             >
               {authorizing ? "Autorizando..." : "Autorizar"}
             </button>
           </div>
           {authMessage ? (
-            <p className="mt-2 text-sm text-emerald-600">{authMessage}</p>
+            <p className="mt-3 text-sm font-medium text-emerald-600">{authMessage}</p>
           ) : null}
         </section>
       ) : null}
 
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            placeholder="Buscar trabajador..."
-            className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2"
-          />
-          <p className="text-sm text-slate-600">
-            {filteredEmployees.length} trabajadores
-          </p>
-        </div>
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredEmployees.map((employee) => {
-            const status = workerStatus[employee.id];
-            const isActive =
-              Boolean(status?.runningSince) && !status?.marks?.salida;
-            const statusLabel = isActive
-              ? `En jornada desde ${formatTime(status?.runningSince ?? undefined)}`
-              : status?.lastAction
-                ? `${status.lastAction} (${formatTime(status.lastTime)})`
-                : "Sin marcaciones hoy";
-            return (
-              <button
-                key={employee.id}
-                type="button"
-                onClick={() => setSelectedEmployee(employee.id)}
-                className={`rounded-2xl border px-4 py-4 text-left transition ${
-                  selectedEmployee === employee.id
-                    ? "border-emerald-500 bg-white shadow"
-                    : "border-slate-200 bg-white hover:border-emerald-200"
-                } ${isActive ? "ring-2 ring-emerald-200" : ""}`}
-              >
-                <p className="text-lg font-semibold text-slate-900">
-                  {employee.nombreCompleto}
-                </p>
-                <p className="text-xs text-slate-500">{statusLabel}</p>
-              </button>
-            );
-          })}
+      <section className="grid gap-6 rounded-3xl bg-slate-950/5 p-4 sm:grid-cols-2">
+        <div className="space-y-4 rounded-3xl border border-white/60 bg-white p-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Paso 1
+              </p>
+              <h3 className="text-xl font-semibold text-slate-900">
+                Selecciona tu nombre
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500">
+              {filteredEmployees.length} trabajadores
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2">
+            <input
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              placeholder="Busca por nombre o apellido..."
+              className="w-full border-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+            />
+          </div>
+          <div className="grid max-h-[360px] gap-3 overflow-y-auto rounded-2xl bg-slate-50/60 p-2 sm:grid-cols-1">
+            {filteredEmployees.map((employee) => {
+              const status = workerStatus[employee.id];
+              const isActive =
+                Boolean(status?.runningSince) && !status?.marks?.salida;
+              const statusLabel = isActive
+                ? `En jornada desde ${formatTime(status?.runningSince ?? undefined)}`
+                : status?.lastAction
+                  ? `${status.lastAction} (${formatTime(status.lastTime)})`
+                  : "Sin marcaciones hoy";
+              const initials = employee.nombreCompleto
+                .split(" ")
+                .slice(0, 2)
+                .map((word) => word[0])
+                .join("");
+              return (
+                <button
+                  key={employee.id}
+                  type="button"
+                  onClick={() => setSelectedEmployee(employee.id)}
+                  className={`group flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+                    selectedEmployee === employee.id
+                      ? "border-emerald-400 bg-white shadow-lg shadow-emerald-100"
+                      : "border-transparent bg-white/80 hover:border-emerald-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${
+                        isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {initials}
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-slate-900">
+                        {employee.nombreCompleto}
+                      </p>
+                      <p className="text-xs text-slate-500">{statusLabel}</p>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-xs font-semibold ${
+                      isActive ? "text-emerald-600" : "text-slate-400"
+                    }`}
+                  >
+                    {isActive ? "EN JORNADA" : "LISTO"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {actions.map((action) => {
-            const markTime =
-              selectedStatus?.marks?.[action.key] ?? null;
-            return (
-              <div key={action.key} className="space-y-1">
-                <p className="text-xs text-slate-500">
-                  {markTime
-                    ? `${action.label}: ${formatTime(markTime)}`
-                    : `${action.label}: sin registrar`}
-                </p>
+        <div className="space-y-4 rounded-3xl border border-white/60 bg-white p-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Paso 2
+              </p>
+              <h3 className="text-xl font-semibold text-slate-900">
+                Marca la acción correspondiente
+              </h3>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+              {selectedStatus?.lastAction
+                ? `${selectedStatus.lastAction}`
+                : "Sin registros"}
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {actions.map((action) => {
+              const markTime = selectedStatus?.marks?.[action.key] ?? null;
+              return (
                 <button
+                  key={action.key}
                   type="button"
                   onClick={() => markAction(action.key)}
                   disabled={
@@ -561,37 +633,36 @@ useEffect(() => {
                     loadingAction === action.key ||
                     buttonsLocked
                   }
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-5 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+                  className={`group rounded-2xl border px-4 py-4 text-left transition ${
+                    markTime
+                      ? "border-emerald-400 bg-emerald-50 text-emerald-900"
+                      : "border-slate-200 bg-white hover:border-emerald-200"
+                  }`}
                 >
-                  {loadingAction === action.key ? "Enviando..." : action.label}
+                  <p className="text-sm uppercase tracking-wide text-slate-400 group-disabled:text-slate-300">
+                    {action.label}
+                  </p>
+                  <p className="text-2xl font-semibold">
+                    {loadingAction === action.key
+                      ? "..."
+                      : markTime
+                        ? formatTime(markTime)
+                        : "— — : — —"}
+                  </p>
                 </button>
-              </div>
-            );
-          })}
-        </div>
-        {statusMessage ? (
-          <p className="text-sm text-emerald-600">{statusMessage}</p>
-        ) : null}
-        {lastMark ? (
-          <p className="text-sm text-slate-600">
-            Última marcación: {lastMark.action} a las {lastMark.time}
-          </p>
-        ) : null}
-        <div className="rounded-xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-600">
-          <p>
-            Horas trabajadas hoy:{" "}
-            <span className="font-semibold text-slate-900">
-              {selectedWorkedLabel}
-            </span>
-          </p>
-          <p>
-            Última acción del trabajador:{" "}
-            <span className="font-semibold text-slate-900">
-              {selectedStatus?.lastAction
-                ? `${selectedStatus.lastAction} a las ${formatTime(selectedStatus?.lastTime)}`
-                : "Sin marcaciones hoy"}
-            </span>
-          </p>
+              );
+            })}
+          </div>
+          {statusMessage ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {statusMessage}
+            </div>
+          ) : null}
+          {lastMark ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Última marcación: <strong>{lastMark.action}</strong> · {lastMark.time}
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -608,21 +679,26 @@ useEffect(() => {
         onStatus={(message) => setStatusMessage(message)}
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+      <section className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-lg">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-800">
-            Últimas marcaciones
-          </h3>
-          <span className="text-xs uppercase tracking-wide text-slate-500">
-            Tiempo real
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+              Paso 3
+            </p>
+            <h3 className="text-xl font-semibold text-slate-900">
+              Bitácora en tiempo real
+            </h3>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs uppercase tracking-wide text-slate-500">
+            Live
           </span>
         </div>
-        <div className="mt-3 max-h-72 overflow-y-auto divide-y divide-slate-100">
+        <div className="mt-4 max-h-72 overflow-y-auto space-y-3">
           {history.length ? (
             history.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center justify-between py-2 text-sm text-slate-600"
+                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm"
               >
                 <div>
                   <p className="font-semibold text-slate-900">
@@ -630,13 +706,13 @@ useEffect(() => {
                   </p>
                   <p>{entry.action}</p>
                 </div>
-                <span className="text-right text-xs">
+                <span className="text-xs text-slate-400">
                   {formatTime(entry.timestamp)}
                 </span>
               </div>
             ))
           ) : (
-            <p className="py-3 text-sm text-slate-500">
+            <p className="py-6 text-center text-sm text-slate-500">
               Aún no hay marcaciones registradas hoy.
             </p>
           )}
