@@ -88,9 +88,9 @@ export function WorkerSelfSignupForm({ companies }: Props) {
 
   if (companies.length === 0) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-white/80 p-6 text-center text-amber-800">
+      <div className="rounded-3xl border border-amber-400/40 bg-amber-400/10 p-6 text-center text-amber-100 backdrop-blur-xl">
         <p className="font-semibold">Aún no hay empresas disponibles.</p>
-        <p className="text-sm">
+        <p className="text-sm text-amber-200/90">
           Pídele al superadmin que registre tu empresa antes de crear tu cuenta.
         </p>
       </div>
@@ -100,25 +100,25 @@ export function WorkerSelfSignupForm({ companies }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-lg"
+      className="space-y-4 rounded-3xl border border-white/10 bg-black/40 p-6 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
     >
-      <h2 className="text-xl font-semibold text-slate-900">
+      <h2 className="text-xl font-semibold text-white">
         Únete como trabajador
       </h2>
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-200/80">
         Ingresa tus datos y selecciona la empresa a la que perteneces para
         activar tu cuenta. El administrador podrá aprobar o ajustar tus datos
         luego.
       </p>
 
-      <label className="text-sm font-semibold text-slate-700">
+      <label className="text-sm font-semibold text-slate-100">
         Empresa
         <select
           name="companyId"
           value={form.companyId}
           onChange={handleChange}
           required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
         >
           {companies.map((company) => (
             <option key={company.id} value={company.id}>
@@ -128,18 +128,18 @@ export function WorkerSelfSignupForm({ companies }: Props) {
         </select>
       </label>
 
-      <label className="text-sm font-semibold text-slate-700">
+      <label className="text-sm font-semibold text-slate-100">
         Nombre completo
         <input
           name="nombreCompleto"
           value={form.nombreCompleto}
           onChange={handleChange}
           required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>
 
-      <label className="text-sm font-semibold text-slate-700">
+      <label className="text-sm font-semibold text-slate-100">
         Correo laboral
         <input
           name="email"
@@ -147,11 +147,11 @@ export function WorkerSelfSignupForm({ companies }: Props) {
           value={form.email}
           onChange={handleChange}
           required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>
 
-      <label className="text-sm font-semibold text-slate-700">
+      <label className="text-sm font-semibold text-slate-100">
         Crea una contraseña
         <input
           name="password"
@@ -160,36 +160,36 @@ export function WorkerSelfSignupForm({ companies }: Props) {
           onChange={handleChange}
           minLength={8}
           required
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>
 
-      <label className="text-sm font-semibold text-slate-700">
+      <label className="text-sm font-semibold text-slate-100">
         RUT (opcional)
         <input
           name="rut"
           value={form.rut}
           onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       {successMessage ? (
-        <p className="text-sm text-emerald-600">{successMessage}</p>
+        <p className="text-sm text-emerald-300">{successMessage}</p>
       ) : null}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-emerald-600 py-2 font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-400 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-slate-950 transition hover:shadow-[0_0_25px_rgba(16,185,129,0.45)] disabled:opacity-60"
       >
         {loading ? "Registrando..." : "Registrarme"}
       </button>
       <button
         type="button"
         onClick={() => router.push("/login")}
-        className="w-full rounded-lg border border-slate-300 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        className="w-full rounded-2xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-slate-100 transition hover:border-white/30"
       >
         Ya tengo cuenta
       </button>

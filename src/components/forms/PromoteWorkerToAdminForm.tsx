@@ -85,20 +85,20 @@ export function PromoteWorkerToAdminForm({ companies }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-4"
+      className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
     >
-      <h3 className="text-lg font-semibold text-slate-800">
+      <h3 className="text-lg font-semibold text-white">
         Promover trabajador a administrador
       </h3>
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-200/80">
         Selecciona la empresa y el trabajador que será promovido. Mantendrá sus
         credenciales actuales.
       </p>
 
-      <label className="text-sm font-medium text-slate-600">
+      <label className="text-sm font-medium text-slate-100">
         Empresa
         <select
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
           value={selectedCompanyId}
           onChange={handleCompanyChange}
         >
@@ -110,10 +110,10 @@ export function PromoteWorkerToAdminForm({ companies }: Props) {
         </select>
       </label>
 
-      <label className="text-sm font-medium text-slate-600">
+      <label className="text-sm font-medium text-slate-100">
         Trabajador
         <select
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
           value={selectedWorkerId}
           onChange={handleWorkerChange}
           disabled={workersForCompany.length === 0}
@@ -127,18 +127,18 @@ export function PromoteWorkerToAdminForm({ companies }: Props) {
               </option>
             ))
           )}
-        </select>
+          </select>
       </label>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       {success ? (
-        <p className="text-sm text-emerald-600">{success}</p>
+        <p className="text-sm text-emerald-300">{success}</p>
       ) : null}
 
       <button
         type="submit"
         disabled={loading || workersForCompany.length === 0}
-        className="w-full rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-slate-950 transition hover:shadow-[0_0_20px_rgba(16,185,129,0.45)] disabled:opacity-60"
       >
         {loading ? "Promoviendo..." : "Promover a administrador"}
       </button>

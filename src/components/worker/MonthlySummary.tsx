@@ -56,9 +56,9 @@ export function WorkerMonthlySummary({
   }, [employeeId, month, year]);
 
   return (
-    <div className="space-y-3 rounded-2xl bg-white p-5 shadow-lg">
-      <div className="flex flex-wrap gap-2">
-        <label className="text-sm text-slate-600">
+    <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+      <div className="flex flex-wrap gap-3">
+        <label className="text-sm text-slate-200/85">
           Mes
           <input
             type="number"
@@ -66,58 +66,60 @@ export function WorkerMonthlySummary({
             max={12}
             value={month}
             onChange={(event) => setMonth(Number(event.target.value))}
-            className="ml-2 w-16 rounded-lg border border-slate-300 px-2 py-1"
+            className="ml-2 w-20 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
           />
         </label>
-        <label className="text-sm text-slate-600">
+        <label className="text-sm text-slate-200/85">
           Año
           <input
             type="number"
             value={year}
             onChange={(event) => setYear(Number(event.target.value))}
-            className="ml-2 w-20 rounded-lg border border-slate-300 px-2 py-1"
+            className="ml-2 w-24 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
           />
         </label>
-        {loading ? <span className="text-sm text-slate-500">Cargando...</span> : null}
+        {loading ? (
+          <span className="text-sm text-slate-300">Cargando...</span>
+        ) : null}
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+      <div className="overflow-hidden rounded-2xl border border-white/10">
+        <table className="min-w-full text-sm text-gray-100">
           <thead>
-            <tr className="bg-slate-50 text-left text-slate-500">
-              <th className="p-2">Fecha</th>
-              <th className="p-2">Horas normales</th>
-              <th className="p-2">Horas extra</th>
-              <th className="p-2">Horas finde</th>
-              <th className="p-2">Monto día</th>
+            <tr className="bg-white/5 text-left font-mono uppercase tracking-[0.3em] text-[11px] text-gray-400">
+              <th className="p-3">Fecha</th>
+              <th className="p-3">Horas normales</th>
+              <th className="p-3">Horas extra</th>
+              <th className="p-3">Horas finde</th>
+              <th className="p-3">Monto día</th>
             </tr>
           </thead>
           <tbody>
             {summary.dias.map((day) => (
-              <tr key={day.fecha} className="border-t border-slate-100">
-                <td className="p-2">{day.fecha}</td>
-                <td className="p-2">{day.horasNormales.toFixed(2)}</td>
-                <td className="p-2">{day.horasExtra.toFixed(2)}</td>
-                <td className="p-2">
+              <tr
+                key={day.fecha}
+                className="border-t border-white/5 bg-black/30 transition hover:bg-white/5"
+              >
+                <td className="p-3">{day.fecha}</td>
+                <td className="p-3">{day.horasNormales.toFixed(2)}</td>
+                <td className="p-3">{day.horasExtra.toFixed(2)}</td>
+                <td className="p-3">
                   {(day.horasFindeNormales + day.horasFindeExtra).toFixed(2)}
                 </td>
-                <td className="p-2">
-                  ${day.montoTotalDia.toFixed(0)}
-                </td>
+                <td className="p-3">${day.montoTotalDia.toFixed(0)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+      <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-slate-200/85">
         <p>Días trabajados: {summary.diasTrabajados}</p>
         <p>Horas normales: {summary.horasNormales.toFixed(2)}</p>
         <p>Horas extra: {summary.horasExtra.toFixed(2)}</p>
         <p>
-          Horas fin de semana:{" "}
-          {summary.horasFindeNormales.toFixed(2)} normales /{" "}
+          Horas fin de semana: {summary.horasFindeNormales.toFixed(2)} normales /{" "}
           {summary.horasFindeExtra.toFixed(2)} extra
         </p>
-        <p className="text-lg font-semibold text-slate-900">
+        <p className="text-lg font-semibold text-white">
           Sueldo estimado: ${summary.montoTotal.toFixed(0)}
         </p>
       </div>

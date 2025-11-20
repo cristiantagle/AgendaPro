@@ -50,58 +50,58 @@ export function CreateCompanyForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-xl border border-slate-200 bg-white/70 p-5"
+      className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
     >
-      <h3 className="text-lg font-semibold text-slate-800">
+      <h3 className="text-lg font-semibold text-white">
         Crear nueva empresa
       </h3>
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="text-sm font-medium text-slate-600">
+        <label className="text-sm font-medium text-slate-100">
           Nombre
           <input
             required
             name="name"
             value={form.name}
             onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
             placeholder="Constructora Ejemplo"
           />
         </label>
-        <label className="text-sm font-medium text-slate-600">
+        <label className="text-sm font-medium text-slate-100">
           RUT
           <input
             name="rut"
             value={form.rut}
             onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
             placeholder="76.123.456-7"
           />
         </label>
-        <label className="text-sm font-medium text-slate-600">
+        <label className="text-sm font-medium text-slate-100">
           Email contacto
           <input
             name="emailContacto"
             type="email"
             value={form.emailContacto}
             onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
           />
         </label>
-        <label className="text-sm font-medium text-slate-600">
+        <label className="text-sm font-medium text-slate-100">
           Teléfono
           <input
             name="telefonoContacto"
             value={form.telefonoContacto}
             onChange={handleChange}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
           />
         </label>
       </div>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+        className="rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-slate-950 transition hover:shadow-[0_0_20px_rgba(16,185,129,0.45)] disabled:opacity-60"
       >
         {loading ? "Guardando..." : "Crear empresa"}
       </button>

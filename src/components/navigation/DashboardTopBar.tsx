@@ -55,6 +55,11 @@ export function DashboardTopBar({ role, appearance = "light" }: Props) {
       ? "cursor-not-allowed border-white/10 text-white/50"
       : "cursor-not-allowed border-slate-100 text-slate-400";
 
+  const accentLinkClasses =
+    appearance === "dark"
+      ? "font-semibold text-emerald-300 underline-offset-2 hover:underline"
+      : "font-semibold text-emerald-600 underline-offset-2 hover:underline";
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     setError(null);
@@ -92,23 +97,23 @@ export function DashboardTopBar({ role, appearance = "light" }: Props) {
           </p>
           <p className="mt-1 text-xs opacity-80">
             Contacto{" "}
-            <a
-              href="https://wa.me/56956804513"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-emerald-600 underline-offset-2 hover:underline"
-            >
-              +56 9 5680 4513 (WhatsApp)
-            </a>{" "}
-            ·{" "}
-            <a
-              href="mailto:cristian.gonzalez.gt@gmail.com"
-              className="font-semibold text-emerald-600 underline-offset-2 hover:underline"
-            >
-              cristian.gonzalez.gt@gmail.com
-            </a>
-          </p>
-        </div>
+                <a
+                  href="https://wa.me/56956804513"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={accentLinkClasses}
+                >
+                  +56 9 5680 4513 (WhatsApp)
+                </a>{" "}
+                ·{" "}
+                <a
+                  href="mailto:cristian.gonzalez.gt@gmail.com"
+                  className={accentLinkClasses}
+                >
+                  cristian.gonzalez.gt@gmail.com
+                </a>
+              </p>
+            </div>
         {error ? (
           <p className="mt-1 text-xs text-red-500">{error}</p>
         ) : null}

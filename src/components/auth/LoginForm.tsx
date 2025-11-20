@@ -60,7 +60,7 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-sm space-y-4 rounded-2xl bg-white/80 p-6 shadow-lg"
+      className="w-full max-w-md space-y-4 rounded-3xl border border-white/10 bg-black/40 p-6 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
     >
       <div className="mb-1 flex items-center gap-3">
         <Image
@@ -68,14 +68,14 @@ export function LoginForm() {
           alt="Tagle Labs"
           width={32}
           height={32}
-          className="rounded-lg"
+          className="rounded-lg border border-white/15 bg-white/5 p-1"
         />
-        <p className="text-sm font-semibold text-slate-700">
+        <p className="text-sm font-semibold text-white">
           Tu sesión en Asistencia Pro
         </p>
       </div>
       <div>
-        <label className="block text-sm font-semibold text-slate-700">
+        <label className="block text-sm font-semibold text-slate-200">
           Correo electrónico
         </label>
         <input
@@ -84,12 +84,12 @@ export function LoginForm() {
           required
           value={form.email}
           onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
           placeholder="usuario@empresa.com"
         />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-slate-700">
+        <label className="block text-sm font-semibold text-slate-200">
           Contraseña
         </label>
         <input
@@ -98,17 +98,17 @@ export function LoginForm() {
           required
           value={form.password}
           onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
           placeholder="********"
         />
       </div>
       {error ? (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-rose-300">{error}</p>
       ) : null}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-400 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-slate-950 transition hover:shadow-[0_0_25px_rgba(16,185,129,0.45)] disabled:opacity-60"
       >
         {loading ? "Ingresando..." : "Iniciar sesión"}
       </button>

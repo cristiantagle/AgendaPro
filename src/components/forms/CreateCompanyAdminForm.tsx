@@ -55,19 +55,19 @@ export function CreateCompanyAdminForm({ companies }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-5"
+      className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
     >
-      <h3 className="text-lg font-semibold text-slate-800">
+      <h3 className="text-lg font-semibold text-white">
         Asignar administrador de empresa
       </h3>
-      <label className="text-sm font-medium text-slate-600">
+      <label className="text-sm font-medium text-slate-100">
         Empresa
         <select
           name="companyId"
           value={form.companyId}
           required
           onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
         >
           <option value="">Seleccione...</option>
           {companies.map((company) => (
@@ -77,7 +77,7 @@ export function CreateCompanyAdminForm({ companies }: Props) {
           ))}
         </select>
       </label>
-      <label className="text-sm font-medium text-slate-600">
+      <label className="text-sm font-medium text-slate-100">
         Correo
         <input
           name="email"
@@ -85,10 +85,10 @@ export function CreateCompanyAdminForm({ companies }: Props) {
           required
           value={form.email}
           onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>
-      <label className="text-sm font-medium text-slate-600">
+      <label className="text-sm font-medium text-slate-100">
         Contraseña temporal
         <input
           name="password"
@@ -96,14 +96,14 @@ export function CreateCompanyAdminForm({ companies }: Props) {
           required
           value={form.password}
           onChange={handleChange}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+        className="rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-slate-950 transition hover:shadow-[0_0_20px_rgba(59,130,246,0.45)] disabled:opacity-60"
       >
         {loading ? "Guardando..." : "Crear administrador"}
       </button>

@@ -77,8 +77,8 @@ export function MarkAttendanceCard({ todayRecord, onRefresh }: Props) {
   };
 
   return (
-    <div className="space-y-3 rounded-2xl bg-white p-5 shadow-lg">
-      <h3 className="text-lg font-semibold text-slate-800">
+    <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+      <h3 className="text-lg font-semibold text-white">
         Marcaciones del día
       </h3>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -88,14 +88,16 @@ export function MarkAttendanceCard({ todayRecord, onRefresh }: Props) {
             type="button"
             disabled={!canTrigger(step.key) || Boolean(loading)}
             onClick={() => triggerAction(step.key)}
-            className={`rounded-xl border px-3 py-2 text-left ${
+            className={`rounded-2xl border px-4 py-3 text-left transition ${
               step.done
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                : "border-slate-200 bg-slate-50 text-slate-700"
-            }`}
+                ? "border-emerald-300/40 bg-emerald-400/10 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                : "border-white/10 bg-black/30 text-white hover:border-white/20 hover:bg-white/5"
+            } ${!canTrigger(step.key) ? "opacity-60" : ""}`}
           >
-            <p className="font-semibold">{ACTION_LABELS[step.key]}</p>
-            <p className="text-sm">
+            <p className="font-semibold tracking-tight">
+              {ACTION_LABELS[step.key]}
+            </p>
+            <p className="text-sm text-slate-200/85">
               {step.done
                 ? `Registrado ${(() => {
                     const key =
@@ -121,7 +123,7 @@ export function MarkAttendanceCard({ todayRecord, onRefresh }: Props) {
         ))}
       </div>
       {message ? (
-        <p className="text-sm text-blue-700">{message}</p>
+        <p className="text-sm text-emerald-300">{message}</p>
       ) : null}
     </div>
   );
