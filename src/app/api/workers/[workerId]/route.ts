@@ -8,6 +8,7 @@ import {
   updateEmployee,
 } from "@/lib/repos/employees";
 import { updateWorkerSchema } from "@/lib/validation";
+import { ZodError } from "zod";
 
 const paramsSchema = z.object({
   workerId: z.string().uuid(),
@@ -55,36 +56,50 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ workerId: string }> },
 ) {
-  const session = await getSession();
-  assertRole(session, ["company_admin", "superadmin"]);
-  const { workerId } = paramsSchema.parse(await context.params);
+  try {
+    const session = await getSession();
+    assertRole(session, ["company_admin", "superadmin"]);
+    const { workerId } = paramsSchema.parse(await context.params);
 
-  const payload = await request.json();
-  const data = updateWorkerSchema.parse(payload);
+    const payload = await request.json();
+    const data = updateWorkerSchema.parse(payload);
 
-  const existing = await getEmployeeById(workerId);
-  if (!existing) {
+    const existing = await getEmployeeById(workerId);
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Trabajador no encontrado" },
+        { status: 404 },
+      );
+    }
+    if (
+      session.role === "company_admin" &&
+      existing.companyId !== session.companyId
+    ) {
+      return NextResponse.json(
+        { error: "Trabajador no encontrado" },
+        { status: 404 },
+      );
+    }
+
+    const employee = await updateEmployee(workerId, {
+      nombreCompleto: data.nombreCompleto,
+      rut: data.rut ?? null,
+      sueldoMensual: data.sueldoMensual ?? null,
+      isActive: data.isActive ?? existing.isActive,
+    });
+
+    return NextResponse.json({ employee });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0]?.message ?? "Datos inválidos" },
+        { status: 400 },
+      );
+    }
+    console.error("Error actualizando trabajador:", error);
     return NextResponse.json(
-      { error: "Trabajador no encontrado" },
-      { status: 404 },
+      { error: "No se pudo actualizar el trabajador" },
+      { status: 500 },
     );
   }
-  if (
-    session.role === "company_admin" &&
-    existing.companyId !== session.companyId
-  ) {
-    return NextResponse.json(
-      { error: "Trabajador no encontrado" },
-      { status: 404 },
-    );
-  }
-
-  const employee = await updateEmployee(workerId, {
-    nombreCompleto: data.nombreCompleto,
-    rut: data.rut ?? null,
-    sueldoMensual: data.sueldoMensual ?? null,
-    isActive: data.isActive ?? existing.isActive,
-  });
-
-  return NextResponse.json({ employee });
 }
