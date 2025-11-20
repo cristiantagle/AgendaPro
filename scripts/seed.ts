@@ -65,6 +65,16 @@ async function seed() {
         companyId: company.id,
       });
     }
+    const adminEmployee = await getEmployeeByUserId(adminUser!.id);
+    if (!adminEmployee) {
+      await createEmployee({
+        companyId: company.id,
+        userId: adminUser!.id,
+        nombreCompleto: `Administrador ${company.name}`,
+        rut: null,
+        sueldoMensual: null,
+      });
+    }
 
     for (let i = 1; i <= 3; i += 1) {
       const workerEmail = `worker${i}.${company.name

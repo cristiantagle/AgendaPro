@@ -35,6 +35,12 @@ export default async function KioskPage({
   }
 
   const employees = await listActiveEmployeesForCompany(company.id);
+  const sortedEmployees = employees.slice().sort((a, b) => {
+    if (a.role === b.role) {
+      return a.nombreCompleto.localeCompare(b.nombreCompleto);
+    }
+    return a.role === "company_admin" ? -1 : 1;
+  });
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#050507] text-gray-100">
@@ -50,7 +56,7 @@ export default async function KioskPage({
           slug={company.kioskSlug}
           companyName={company.name}
           logoUrl={company.logoUrl ?? undefined}
-          employees={employees}
+          employees={sortedEmployees}
           initialDeviceName={deviceName}
         />
       </div>

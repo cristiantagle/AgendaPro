@@ -8,6 +8,7 @@ type Props = {
 };
 
 const initialForm = {
+  nombreCompleto: "",
   email: "",
   password: "",
   companyId: "",
@@ -60,6 +61,17 @@ export function CreateCompanyAdminForm({ companies }: Props) {
       <h3 className="text-lg font-semibold text-white">
         Asignar administrador de empresa
       </h3>
+      <label className="text-sm font-medium text-slate-100">
+        Nombre completo
+        <input
+          name="nombreCompleto"
+          required
+          value={form.nombreCompleto}
+          onChange={handleChange}
+          className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
+          placeholder="Nombre y apellido del administrador"
+        />
+      </label>
       <label className="text-sm font-medium text-slate-100">
         Empresa
         <select

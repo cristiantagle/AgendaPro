@@ -694,7 +694,18 @@ export function KioskTerminal({
                       : "border-white/5 bg-white/5 text-white/70 hover:border-cyan-300"
                   }`}
                 >
-                  {employee.nombreCompleto}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="truncate">{employee.nombreCompleto}</span>
+                    <span
+                      className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                        employee.role === "company_admin"
+                          ? "border border-amber-300/60 bg-amber-300/15 text-amber-100"
+                          : "border border-white/15 bg-white/5 text-white/70"
+                      }`}
+                    >
+                      {employee.role === "company_admin" ? "Admin" : "Trab."}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
