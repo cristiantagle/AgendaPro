@@ -165,11 +165,12 @@ export function WorkerSelfSignupForm({ companies }: Props) {
       </label>
 
       <label className="text-sm font-semibold text-slate-100">
-        RUT (opcional)
+        RUT
         <input
           name="rut"
           value={form.rut}
           onChange={handleChange}
+          required
           className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/50 focus:border-cyan-300 focus:outline-none"
         />
       </label>

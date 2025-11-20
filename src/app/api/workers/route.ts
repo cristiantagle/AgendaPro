@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       companyId: session.companyId!,
       userId: user!.id,
       nombreCompleto: data.nombreCompleto,
-      rut: data.rut ?? null,
+      rut: data.rut,
       sueldoMensual: data.sueldoMensual ?? null,
     });
 

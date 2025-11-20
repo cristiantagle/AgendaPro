@@ -23,7 +23,10 @@ export const createWorkerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, { message: passwordMessage }),
   nombreCompleto: z.string().min(3),
-  rut: z.string().optional().nullable(),
+  rut: z
+    .string()
+    .trim()
+    .min(3, { message: "El RUT es obligatorio." }),
   sueldoMensual: z.number().min(0).optional().nullable(),
 });
 

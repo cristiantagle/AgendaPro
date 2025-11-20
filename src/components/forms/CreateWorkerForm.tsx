@@ -96,9 +96,8 @@ export function CreateWorkerForm() {
           },
           {
             key: "rut",
-            label: "RUT",
+            label: "RUT (obligatorio)",
             type: "text",
-            optional: true,
           },
           {
             key: "sueldoMensual",
