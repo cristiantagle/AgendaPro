@@ -56,14 +56,23 @@ export async function PATCH(
   context: { params: Promise<{ workerId: string }> },
 ) {
   const session = await getSession();
-  assertRole(session, ["company_admin"]);
+  assertRole(session, ["company_admin", "superadmin"]);
   const { workerId } = paramsSchema.parse(await context.params);
 
   const payload = await request.json();
   const data = updateWorkerSchema.parse(payload);
 
   const existing = await getEmployeeById(workerId);
-  if (!existing || existing.companyId !== session.companyId) {
+  if (!existing) {
+    return NextResponse.json(
+      { error: "Trabajador no encontrado" },
+      { status: 404 },
+    );
+  }
+  if (
+    session.role === "company_admin" &&
+    existing.companyId !== session.companyId
+  ) {
     return NextResponse.json(
       { error: "Trabajador no encontrado" },
       { status: 404 },
