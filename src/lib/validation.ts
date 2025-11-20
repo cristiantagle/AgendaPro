@@ -98,6 +98,16 @@ export const reportQuerySchema = z.object({
   month: z.coerce.number().min(1).max(12),
 });
 
+export const paymentCreateSchema = z.object({
+  employeeId: z.string().uuid(),
+  amount: z.coerce.number().int().min(1, { message: "Monto debe ser mayor a 0" }),
+  type: z.enum(["adelanto", "quincena", "pago"], {
+    message: "Tipo inválido",
+  }),
+  note: z.string().max(500).optional().nullable(),
+  paidAt: z.coerce.date().optional(),
+});
+
 export const scheduleSchema = z.object({
   diaSemana: z.number().int().min(0).max(6),
   horaInicio: z.string().regex(/^\d{2}:\d{2}$/),

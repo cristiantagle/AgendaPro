@@ -9,6 +9,7 @@ import { PaySettingsForm } from "@/components/forms/PaySettingsForm";
 import { CompanyLogoUploader } from "@/components/forms/CompanyLogoUploader";
 import { ScheduleForm } from "@/components/forms/ScheduleForm";
 import { DashboardTopBar } from "@/components/navigation/DashboardTopBar";
+import { PaymentsPanel } from "@/components/dashboard/PaymentsPanel";
 import { getSession } from "@/lib/auth";
 import {
   getCompanyById,
@@ -18,6 +19,7 @@ import {
 import { listEmployeesByCompany } from "@/lib/repos/employees";
 import { listDevices } from "@/lib/repos/kiosk-devices";
 import { listRecentRecordsByCompany } from "@/lib/repos/time-records";
+import { listPaymentsByCompany } from "@/lib/repos/payments";
 
 export default async function EmpresaPage() {
   const session = await getSession();
@@ -36,6 +38,7 @@ export default async function EmpresaPage() {
   const employees = await listEmployeesByCompany(company.id);
   const kioskDevices = await listDevices(company.id);
   const records = await listRecentRecordsByCompany(company.id, 15);
+  const payments = await listPaymentsByCompany(company.id, 30);
 
   const paySettingsForForm = paySettings
     ? {
@@ -134,6 +137,22 @@ export default async function EmpresaPage() {
               <CreateWorkerForm />
               <PaySettingsForm settings={paySettingsForForm} />
             </div>
+            <PaymentsPanel
+              employees={employees.map((employee) => ({
+                id: employee.id,
+                nombre: employee.nombreCompleto,
+              }))}
+              initialPayments={payments.map((payment) => ({
+                id: payment.id,
+                employeeId: payment.employeeId,
+                employeeNombre: payment.employeeNombre,
+                employeeEmail: payment.employeeEmail,
+                amount: payment.amount,
+                type: payment.type as "adelanto" | "quincena" | "pago",
+                note: payment.note,
+                paidAt: payment.paidAt.toISOString(),
+              }))}
+            />
             <KioskPanel
               slug={company.kioskSlug}
               pin={company.kioskPin}
