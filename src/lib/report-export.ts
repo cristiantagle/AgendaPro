@@ -102,7 +102,11 @@ export const monthlySummaryToPdf = async (
           summary.horasFindeNormales,
         )} / ${formatHours(summary.horasFindeExtra)}`,
       )
-      .text(`Monto total: ${formatMoney(summary.montoTotal)}`);
+      .text(`Monto bruto: ${formatMoney(summary.montoBruto ?? summary.montoTotal)}`)
+      .text(
+        `Adelantos/quincenas: -${formatMoney(summary.totalAdelantos ?? 0)}`,
+      )
+      .text(`Monto neto: ${formatMoney(summary.montoTotal)}`);
 
     doc.moveTo(infoStartX, infoStartY + infoBoxHeight).lineTo(infoStartX + infoBoxWidth, infoStartY + infoBoxHeight).strokeColor("#cbd5f5").stroke();
     doc.y = infoStartY + infoBoxHeight + 20;

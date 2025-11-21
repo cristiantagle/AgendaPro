@@ -19,6 +19,9 @@ type Summary = {
   horasFindeNormales: number;
   horasFindeExtra: number;
   montoTotal: number;
+  montoBruto?: number;
+  montoNeto?: number;
+  totalAdelantos?: number;
 };
 
 type Props = {
@@ -119,8 +122,9 @@ export function WorkerMonthlySummary({
           Horas fin de semana: {summary.horasFindeNormales.toFixed(2)} normales /{" "}
           {summary.horasFindeExtra.toFixed(2)} extra
         </p>
+        <p>Adelantos/quincenas: -${(summary.totalAdelantos ?? 0).toFixed(0)}</p>
         <p className="text-lg font-semibold text-white">
-          Sueldo estimado: ${summary.montoTotal.toFixed(0)}
+          Sueldo estimado neto: ${summary.montoTotal.toFixed(0)}
         </p>
       </div>
     </div>

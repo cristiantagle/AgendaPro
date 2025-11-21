@@ -10,6 +10,8 @@ import { getEmployeeById } from "./repos/employees";
 import { buildMonthlySummary } from "./time-calculations";
 import type { Role } from "@/types/database";
 
+const DEDUCTIBLE_PAYMENT_TYPES = ["adelanto", "quincena"];
+
 export const getMonthlySummaryForEmployee = async (
   employeeId: string,
   month: number,
@@ -63,6 +65,19 @@ export const getMonthlySummaryForEmployee = async (
     [employee.id, start, end],
   );
 
+  const payments = await runQuery(
+    `SELECT "amount","type" FROM "Payment"
+     WHERE "employeeId" = $1
+       AND "paidAt" BETWEEN $2 AND $3
+       AND "type" = ANY($4::text[])`,
+    [employee.id, start, end, DEDUCTIBLE_PAYMENT_TYPES],
+  );
+
+  const totalAdelantos = payments.reduce(
+    (acc, payment) => acc + Number(payment.amount ?? 0),
+    0,
+  );
+
   return buildMonthlySummary(
     records.map((row) => ({
       id: row.id,
@@ -88,5 +103,6 @@ export const getMonthlySummaryForEmployee = async (
     companyData.paySettings,
     month,
     year,
+    totalAdelantos,
   );
 };

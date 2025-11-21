@@ -38,6 +38,10 @@ export type DaySummary = HourTotals & {
 export type MonthlySummary = HourTotals & {
   diasTrabajados: number;
   montoTotal: number;
+  montoBruto?: number;
+  montoNeto?: number;
+  totalAdelantos?: number;
+  totalDeducciones?: number;
   montoNormalSemana: number;
   montoExtraSemana: number;
   montoFinde: number;
@@ -266,6 +270,7 @@ export const buildMonthlySummary = (
   paySettings: CompanyPaySetting,
   month: number,
   year: number,
+  totalAdelantos = 0,
 ): MonthlySummary => {
   const valorHora = deriveHourlyRate(employee, paySettings, month, year);
   const dias = records.map((record) =>
@@ -306,8 +311,17 @@ export const buildMonthlySummary = (
     },
   );
 
+  const montoBruto = totals.montoTotal;
+  const adelantosAplicados = Math.max(totalAdelantos, 0);
+  const montoNeto = Math.max(montoBruto - adelantosAplicados, 0);
+
   return {
     ...totals,
+    montoTotal: montoNeto,
+    montoBruto,
+    montoNeto,
+    totalAdelantos: adelantosAplicados,
+    totalDeducciones: adelantosAplicados,
     dias,
     company: {
       name: company.name,
