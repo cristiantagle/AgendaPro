@@ -21,6 +21,18 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Asegura contraste en desplegables nativos en el tema oscuro */
+select option {
+  color: #e2e8f0;
+  background-color: #0b1220;
+}
+
+select option:checked,
+select option:hover {
+  color: #0b1220;
+  background-color: #22d3ee;
+}
+
 .noise-overlay {
   position: fixed;
   top: 0;
