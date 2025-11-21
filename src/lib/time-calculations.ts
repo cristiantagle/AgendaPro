@@ -42,6 +42,12 @@ export type MonthlySummary = HourTotals & {
   montoNeto?: number;
   totalAdelantos?: number;
   totalDeducciones?: number;
+  payments?: Array<{
+    fecha: string;
+    amount: number;
+    type: string;
+    note?: string | null;
+  }>;
   montoNormalSemana: number;
   montoExtraSemana: number;
   montoFinde: number;
@@ -271,6 +277,7 @@ export const buildMonthlySummary = (
   month: number,
   year: number,
   totalAdelantos = 0,
+  payments: MonthlySummary["payments"] = [],
 ): MonthlySummary => {
   const valorHora = deriveHourlyRate(employee, paySettings, month, year);
   const dias = records.map((record) =>
@@ -328,6 +335,7 @@ export const buildMonthlySummary = (
       emailContacto: company.emailContacto ?? "",
       telefonoContacto: company.telefonoContacto ?? "",
     },
+    payments,
     employee: {
       nombreCompleto: employee.nombreCompleto,
     },

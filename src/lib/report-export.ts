@@ -127,7 +127,7 @@ export const monthlySummaryToPdf = async (
         value: `-${formatMoney(summary.totalAdelantos ?? 0)}`,
       },
       {
-        label: "Monto neto",
+        label: "Total a pagar",
         value: formatMoney(summary.montoTotal),
       },
     ];
@@ -161,6 +161,82 @@ export const monthlySummaryToPdf = async (
     });
 
     doc.y = totalsStartY + 100;
+
+    // Payments detail (adelantos/quincenas)
+    if (summary.payments && summary.payments.length > 0) {
+      doc
+        .moveDown(0.5)
+        .fillColor(palette.text)
+        .font("Helvetica-Bold")
+        .fontSize(12)
+        .text("Detalle de adelantos/quincenas");
+
+      const payCols: Array<{
+        header: string;
+        width: number;
+        accessor: (pay: NonNullable<MonthlySummary["payments"]>[number]) => string;
+      }> = [
+        { header: "Fecha", width: 90, accessor: (p) => p.fecha },
+        { header: "Tipo", width: 90, accessor: (p) => p.type },
+        {
+          header: "Nota",
+          width: 200,
+          accessor: (p) => p.note ?? "-",
+        },
+        {
+          header: "Monto",
+          width: 100,
+          accessor: (p) => `-${formatMoney(p.amount)}`,
+        },
+      ];
+
+      const payTableX = doc.page.margins.left;
+      let payY = doc.y + 8;
+      const payTableWidth = payCols.reduce((sum, col) => sum + col.width, 0);
+
+      doc
+        .roundedRect(payTableX, payY, payTableWidth, 22, 6)
+        .fill(palette.panel)
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor(palette.text);
+
+      let payOffset = payTableX;
+      payCols.forEach((col) => {
+        doc.text(col.header, payOffset + 6, payY + 6, {
+          width: col.width - 12,
+          align: "left",
+        });
+        payOffset += col.width;
+      });
+
+      payY += 22;
+      doc.font("Helvetica").fontSize(10);
+
+      summary.payments.forEach((payment, idx) => {
+        const isStriped = idx % 2 === 0;
+        if (isStriped) {
+          doc
+            .rect(payTableX, payY, payTableWidth, 20)
+            .fill(palette.stripe)
+            .fillColor(palette.text);
+        } else {
+          doc.fillColor(palette.text);
+        }
+
+        payOffset = payTableX;
+        payCols.forEach((col) => {
+          doc.text(col.accessor(payment), payOffset + 6, payY + 6, {
+            width: col.width - 12,
+            align: "left",
+          });
+          payOffset += col.width;
+        });
+        payY += 20;
+      });
+
+      doc.y = payY + 6;
+    }
 
     // Table
     const columnConfig: Array<{

@@ -66,7 +66,7 @@ export const getMonthlySummaryForEmployee = async (
   );
 
   const payments = await runQuery(
-    `SELECT "amount","type" FROM "Payment"
+    `SELECT "amount","type","note","paidAt" FROM "Payment"
      WHERE "employeeId" = $1
        AND "paidAt" BETWEEN $2 AND $3
        AND "type" = ANY($4::text[])`,
@@ -77,6 +77,13 @@ export const getMonthlySummaryForEmployee = async (
     (acc, payment) => acc + Number(payment.amount ?? 0),
     0,
   );
+
+  const paymentDetails = payments.map((payment) => ({
+    amount: Number(payment.amount ?? 0),
+    type: String(payment.type ?? ""),
+    note: (payment.note as string) ?? null,
+    fecha: new Date(payment.paidAt as Date).toISOString().split("T")[0],
+  }));
 
   return buildMonthlySummary(
     records.map((row) => ({
@@ -104,5 +111,6 @@ export const getMonthlySummaryForEmployee = async (
     month,
     year,
     totalAdelantos,
+    paymentDetails,
   );
 };
