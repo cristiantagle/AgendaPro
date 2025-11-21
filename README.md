@@ -13,6 +13,7 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
 - Migración completa a Supabase (DB, Realtime y seed scripts) con despliegue en Vercel funcionando.
 - Kiosco PWA con autorización persistente, bloqueo de botones, contadores en vivo y bitácora de marcaciones recientes.
 - Panel de empresa con creación/edición de trabajadores, actualización de sueldos y ahora activación/desactivación sin eliminar registros.
+- Rediseño completo “glassmorphism” tanto en el dashboard de empresa como en el kiosco, con overlays, ruido y animaciones coherentes en toda la app.
 
 ## Release estable 1.0
 
@@ -21,6 +22,13 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
 - Kioscos sincronizados en tiempo real (Supabase Realtime + service worker optimizado).
 - Control completo de horarios, sueldos y pay settings desde el dashboard (sin tocar código).
 - Branding, PWA y despliegue productivo listo para clientes finales bajo la marca Tagle Labs.
+
+## Novedades recientes (noviembre 2025)
+
+- **UI Cinemática unificada:** dashboard de empresa, kiosco y formularios principales adoptan la estética “Cinematic Dark Glassmorphism” (Inter + JetBrains Mono, blobs, ruido y neon glows).
+- **Kiosco biométrico reforzado:** el flujo ahora exige desbloquear acciones con reconocimiento facial antes de permitir marcaciones o modo administrador, y cada acción muestra feedback en tarjetas translúcidas.
+- **Modelos empaquetados y logs mejorados:** los modelos face-api se sirven desde `public/face-models` con índices y botones de “copiar” para URL/PIN, y se documentaron los pasos para depurar la carga en tablets con hardware limitado.
+- **Documentación ampliada:** README y `ai.md` incluyen instrucciones para operar el kiosco, enrolar rostros (incluidos administradores existentes) y reproducir todo el stack sin Prisma.
 
 ## Características
 
@@ -157,6 +165,7 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 4. **Integraciones contables:** exportar automáticamente datos a ERP/contabilidad (SII, libro de remuneraciones, imposiciones).
 5. **Campos custom por empresa:** permitir turnos especiales, ubicaciones o centros de costo definidos por cada cliente.
 6. **Modo offline en kioscos:** cachear marcaciones cuando no haya red y sincronizarlas al recuperar conexión.
+7. **Enrolamiento nativo para administradores:** exponer un flujo UI que permita registrar rostros de `company_admin` sin pasos manuales ni cambios temporales de rol.
 
 Con esto tendrás una plataforma sólida para operar hoy y con una hoja de ruta clara hacia funcionalidades más avanzadas.
 
@@ -185,6 +194,28 @@ El proyecto ya opera 100% sin Prisma: no quedan dependencias, migraciones ni cli
   3. Usar **Identificar trabajador** para que el kiosco seleccione automáticamente al colaborador con mayor coincidencia.
 - Todos los cálculos se ejecutan localmente en el navegador con `@vladmandic/face-api` y modelos empaquetados en `public/face-models`, por lo que no depende de APIs externas ni envíos de fotografías. Sólo se almacenan descriptores numéricos en la tabla `EmployeeFace`.
 - Puedes refrescar o regenerar rostros en cualquier momento; cada trabajador mantiene un único descriptor activo y se puede reentrenar directamente desde la tablet.
+
+### Flujo para enrolar administradores existentes
+
+1. **Asegura que el administrador tenga registro en `Employee`:**
+   ```sql
+   INSERT INTO "Employee"
+     ("id","companyId","userId","nombreCompleto","rut","valorHoraBase","isActive","createdAt","updatedAt")
+   SELECT
+     gen_random_uuid(),
+     "companyId",
+     "id",
+     'Nombre del Admin',
+     NULL,
+     NULL,
+     true,
+     NOW(),
+     NOW()
+   FROM "User"
+   WHERE "email" = 'admin@empresa.cl';
+   ```
+2. **Primer enrolamiento:** si todavía no hay ningún rostro guardado para ese admin, cámbiale temporalmente el `role` a `worker`, selecciónalo en la lista del kiosco y pulsa **Guardar rostro**. Una vez grabado, vuelve a dejar su `role` en `company_admin`.
+3. **Desbloqueo posterior:** con el descriptor ya almacenado, bastará con que mire la cámara en “Paso 1 · Escaneo” para activar el modo administrador y enrolar a otros trabajadores desde la tablet.
 
 ## Autoría y branding
 

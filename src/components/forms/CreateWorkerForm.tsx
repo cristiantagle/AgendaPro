@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+
 const initialState = {
   email: "",
   password: "",
@@ -17,9 +20,7 @@ export function CreateWorkerForm() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -35,9 +36,7 @@ export function CreateWorkerForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          sueldoMensual: form.sueldoMensual
-            ? Number(form.sueldoMensual)
-            : null,
+          sueldoMensual: form.sueldoMensual ? Number(form.sueldoMensual) : null,
         }),
       });
 
@@ -55,13 +54,10 @@ export function CreateWorkerForm() {
     }
   };
 
-  const inputClasses =
-    "mt-2 w-full rounded-2xl border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-gray-400 transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40";
-
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]"
+      className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]"
     >
       <div className="flex items-center justify-between">
         <div>
@@ -77,68 +73,62 @@ export function CreateWorkerForm() {
         </span>
       </div>
 
-      {(
-        [
-          {
-            key: "nombreCompleto",
-            label: "Nombre completo",
-            type: "text",
-          },
-          {
-            key: "email",
-            label: "Correo",
-            type: "email",
-          },
-          {
-            key: "password",
-            label: "Contraseña inicial",
-            type: "password",
-          },
-          {
-            key: "rut",
-            label: "RUT (obligatorio)",
-            type: "text",
-          },
-          {
-            key: "sueldoMensual",
-            label: "Sueldo mensual (opcional)",
-            type: "number",
-            min: 0,
-            optional: true,
-          },
-        ] satisfies Array<{
-          key: keyof typeof initialState;
-          label: string;
-          type: string;
-          min?: number;
-          optional?: boolean;
-        }>
-      ).map((field) => (
-        <label
-          key={field.key}
-          className="block text-sm font-medium text-gray-200"
-        >
-          {field.label}
-          <input
-            name={field.key}
-            type={field.type}
-            min={field.min}
-            value={(form as Record<string, string>)[field.key] ?? ""}
-            onChange={handleChange}
-            required={!field.optional}
-            className={inputClasses}
-          />
-        </label>
-      ))}
+      <div className="space-y-4">
+        <Input
+          label="Nombre completo"
+          name="nombreCompleto"
+          value={form.nombreCompleto}
+          onChange={handleChange}
+          required
+          placeholder="Ej: Juan Pérez"
+        />
+        <Input
+          label="Correo"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          placeholder="juan@empresa.com"
+        />
+        <Input
+          label="Contraseña inicial"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          placeholder="••••••••"
+        />
+        <Input
+          label="RUT (obligatorio)"
+          name="rut"
+          value={form.rut}
+          onChange={handleChange}
+          required
+          placeholder="12.345.678-9"
+        />
+        <Input
+          label="Sueldo mensual (opcional)"
+          name="sueldoMensual"
+          type="number"
+          min={0}
+          value={form.sueldoMensual}
+          onChange={handleChange}
+          placeholder="0"
+        />
+      </div>
 
-      {error ? <p className="text-sm text-red-400">{error}</p> : null}
-      <button
+      {error && <p className="text-sm text-red-400">{error}</p>}
+
+      <Button
         type="submit"
-        disabled={loading}
-        className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-cyan-400 px-4 py-3 font-semibold text-white shadow-[0_0_20px_rgba(109,40,217,0.5)] transition hover:scale-[1.01] disabled:opacity-60"
+        isLoading={loading}
+        className="w-full bg-gradient-to-r from-violet-700 to-cyan-400 hover:from-violet-600 hover:to-cyan-300 border-none"
       >
         {loading ? "Guardando..." : "Crear trabajador"}
-      </button>
+      </Button>
     </form>
   );
 }
+

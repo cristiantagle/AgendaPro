@@ -9,15 +9,15 @@ import { toZonedTime } from "date-fns-tz";
 
 import { findScheduleForDay, getScheduleBoundaries } from "./schedules";
 import { CHILE_TIMEZONE } from "./timezone";
+import { APP_CONFIG } from "./config";
 
-const LUNCH_BREAK_HOURS = 1;
-const HOURS_MON_TO_THU = 9;
-const HOURS_FRIDAY = 8;
-
-const WEEKDAY_LIMIT = {
-  default: 9,
-  friday: 8,
-};
+const {
+  LUNCH_BREAK_HOURS,
+  HOURS_MON_TO_THU,
+  HOURS_FRIDAY,
+  WEEKDAY_LIMIT,
+  WEEKEND_RANGES,
+} = APP_CONFIG.timeTracking;
 
 type HourTotals = {
   horasNormales: number;
@@ -157,8 +157,8 @@ const calculateWeekendHours = (
   const startHour = toHourFloat(entrada);
   const endHour = toHourFloat(salida);
 
-  const normalRangeStart = 8;
-  const normalRangeEnd = 18;
+  const normalRangeStart = WEEKEND_RANGES.start;
+  const normalRangeEnd = WEEKEND_RANGES.end;
 
   const normalOverlap = Math.max(
     0,
@@ -205,11 +205,11 @@ export const calculateDaySummary = (
   const effectiveEntrada =
     record.horaEntrada && scheduleBounds
       ? new Date(
-          Math.max(
-            record.horaEntrada.getTime(),
-            scheduleBounds.startUtc.getTime(),
-          ),
-        )
+        Math.max(
+          record.horaEntrada.getTime(),
+          scheduleBounds.startUtc.getTime(),
+        ),
+      )
       : record.horaEntrada ?? null;
 
   let horasNormales = 0;
