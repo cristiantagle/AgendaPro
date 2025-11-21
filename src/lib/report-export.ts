@@ -22,11 +22,22 @@ export const monthlySummaryToPdf = async (
   summary: MonthlySummary,
 ): Promise<Buffer> =>
   new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 32 });
     const chunks: Buffer[] = [];
     doc.on("data", (chunk) => chunks.push(chunk as Buffer));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", (err) => reject(err));
+
+    const palette = {
+      bg: "#0b1220",
+      panel: "#0f172a",
+      accent: "#06b6d4",
+      accentSoft: "#22d3ee",
+      text: "#e2e8f0",
+      muted: "#94a3b8",
+      border: "#1f2937",
+      stripe: "#0b192f",
+    };
 
     const formatMoney = (value: number) =>
       new Intl.NumberFormat("es-CL", {
@@ -37,134 +48,198 @@ export const monthlySummaryToPdf = async (
 
     const formatHours = (value: number) => value.toFixed(2);
 
+    // Background panel
+    doc
+      .rect(0, 0, doc.page.width, doc.page.height)
+      .fill(palette.bg)
+      .fillColor(palette.text);
+
+    // Header
+    doc
+      .fontSize(20)
+      .fillColor(palette.text)
+      .text("Reporte Mensual de Asistencia", { align: "left" });
+    doc
+      .fontSize(11)
+      .fillColor(palette.muted)
+      .text(
+        `Periodo: ${summary.month.toString().padStart(2, "0")}/${summary.year}`,
+      )
+      .text(`Generado: ${new Date().toLocaleString("es-CL")}`, { underline: false })
+      .moveDown(0.5);
+
+    // Info rows
+    const infoStartY = doc.y;
+    const columnWidth =
+      (doc.page.width - doc.page.margins.left - doc.page.margins.right - 12) /
+      3;
+
+    const infoBlocks: Array<{ title: string; value: string }> = [
+      { title: "Empresa", value: summary.company.name },
+      { title: "Trabajador", value: summary.employee.nombreCompleto },
+      {
+        title: "Días trabajados",
+        value: summary.diasTrabajados.toString(),
+      },
+    ];
+
+    infoBlocks.forEach((block, idx) => {
+      const x =
+        doc.page.margins.left + idx * (columnWidth + 6);
+      const y = infoStartY;
+      doc
+        .roundedRect(x, y, columnWidth, 54, 8)
+        .fill(palette.panel)
+        .fillColor(palette.muted)
+        .fontSize(10)
+        .text(block.title, x + 10, y + 10, { width: columnWidth - 20 });
+      doc
+        .fillColor(palette.text)
+        .fontSize(12)
+        .text(block.value, x + 10, y + 26, { width: columnWidth - 20 });
+    });
+
+    doc.y = infoStartY + 64;
+
+    // Totals box
+    const totalsStartY = doc.y;
+    const totals = [
+      {
+        label: "Horas normales",
+        value: `${formatHours(summary.horasNormales)}h`,
+      },
+      {
+        label: "Horas extra",
+        value: `${formatHours(summary.horasExtra)}h`,
+      },
+      {
+        label: "Finde (norm/extra)",
+        value: `${formatHours(summary.horasFindeNormales)}h / ${formatHours(
+          summary.horasFindeExtra,
+        )}h`,
+      },
+      {
+        label: "Monto bruto",
+        value: formatMoney(summary.montoBruto ?? summary.montoTotal),
+      },
+      {
+        label: "Adelantos/quincenas",
+        value: `-${formatMoney(summary.totalAdelantos ?? 0)}`,
+      },
+      {
+        label: "Monto neto",
+        value: formatMoney(summary.montoTotal),
+      },
+    ];
+
+    const totalsWidth =
+      doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    doc
+      .roundedRect(
+        doc.page.margins.left,
+        totalsStartY,
+        totalsWidth,
+        90,
+        10,
+      )
+      .fill(palette.panel);
+
+    const totalColWidth = (totalsWidth - 20) / 3;
+    totals.forEach((item, idx) => {
+      const col = idx % 3;
+      const row = Math.floor(idx / 3);
+      const x = doc.page.margins.left + 10 + col * totalColWidth;
+      const y = totalsStartY + 12 + row * 36;
+      doc
+        .fillColor(palette.muted)
+        .fontSize(10)
+        .text(item.label, x, y, { width: totalColWidth - 12 });
+      doc
+        .fillColor(idx === totals.length - 1 ? palette.accentSoft : palette.text)
+        .fontSize(12)
+        .text(item.value, x, y + 14, { width: totalColWidth - 12 });
+    });
+
+    doc.y = totalsStartY + 100;
+
+    // Table
     const columnConfig: Array<{
       header: string;
       width: number;
       accessor: (day: MonthlySummary["dias"][number]) => string;
     }> = [
-      { header: "Fecha", width: 90, accessor: (day) => day.fecha },
+      { header: "Fecha", width: 80, accessor: (day) => day.fecha },
       {
-        header: "Hrs. normales",
-        width: 90,
+        header: "Normales",
+        width: 70,
         accessor: (day) => formatHours(day.horasNormales),
       },
       {
-        header: "Hrs. extra",
-        width: 90,
+        header: "Extra",
+        width: 70,
         accessor: (day) => formatHours(day.horasExtra),
       },
       {
-        header: "Hrs. finde",
-        width: 90,
+        header: "Finde",
+        width: 70,
         accessor: (day) => formatHours(day.horasFindeNormales),
       },
       {
-        header: "Hrs. finde extra",
-        width: 90,
+        header: "Finde extra",
+        width: 80,
         accessor: (day) => formatHours(day.horasFindeExtra),
       },
       {
         header: "Monto día",
-        width: 100,
+        width: 90,
         accessor: (day) => formatMoney(day.montoTotalDia),
       },
     ];
 
-    doc
-      .fontSize(18)
-      .text("Reporte Mensual de Asistencia", { align: "center" })
-      .moveDown(0.5);
+    const tableStartX = doc.page.margins.left;
+    let tableY = doc.y + 8;
+    const tableWidth = columnConfig.reduce((sum, col) => sum + col.width, 0);
 
-    doc
-      .fontSize(12)
-      .text(`Empresa: ${summary.company.name}`)
-      .text(`Trabajador: ${summary.employee.nombreCompleto}`)
-      .text(
-        `Periodo: ${summary.month.toString().padStart(2, "0")}/${summary.year}`,
-      )
-      .moveDown(0.5);
-
-    const infoBoxWidth =
-      doc.page.width - doc.page.margins.left - doc.page.margins.right;
-    const infoBoxHeight = 70;
-    const infoStartX = doc.x;
-    const infoStartY = doc.y;
-
-    doc.rect(infoStartX, infoStartY, infoBoxWidth, infoBoxHeight).fill("#f1f5f9");
-    doc
-      .fillColor("#0f172a")
-      .fontSize(11)
-      .text(`Días trabajados: ${summary.diasTrabajados}`, infoStartX + 12, infoStartY + 10)
-      .text(`Horas normales: ${formatHours(summary.horasNormales)}`)
-      .text(`Horas extra: ${formatHours(summary.horasExtra)}`)
-      .text(
-        `Horas finde (normales/extra): ${formatHours(
-          summary.horasFindeNormales,
-        )} / ${formatHours(summary.horasFindeExtra)}`,
-      )
-      .text(`Monto bruto: ${formatMoney(summary.montoBruto ?? summary.montoTotal)}`)
-      .text(
-        `Adelantos/quincenas: -${formatMoney(summary.totalAdelantos ?? 0)}`,
-      )
-      .text(`Monto neto: ${formatMoney(summary.montoTotal)}`);
-
-    doc.moveTo(infoStartX, infoStartY + infoBoxHeight).lineTo(infoStartX + infoBoxWidth, infoStartY + infoBoxHeight).strokeColor("#cbd5f5").stroke();
-    doc.y = infoStartY + infoBoxHeight + 20;
-
-    doc.fontSize(11).fillColor("#0f172a");
-
-    const tableTop = doc.y;
-    const tableStartX = doc.x;
-    const tableWidth =
-      doc.page.width - doc.page.margins.left - doc.page.margins.right;
-
-    doc.lineWidth(1).strokeColor("#cbd5f5");
-
-    // Header row
     doc
       .font("Helvetica-Bold")
-      .fillColor("#1e293b")
-      .rect(tableStartX, tableTop, tableWidth, 22)
-      .fill("#e2e8f0");
+      .fontSize(10)
+      .fillColor(palette.text)
+      .roundedRect(tableStartX, tableY, tableWidth, 22, 6)
+      .fill(palette.panel);
 
     let xOffset = tableStartX;
     columnConfig.forEach((column) => {
-      doc
-        .fillColor("#0f172a")
-        .text(column.header, xOffset + 4, tableTop + 6, {
-          width: column.width - 8,
-        });
+      doc.text(column.header, xOffset + 6, tableY + 6, {
+        width: column.width - 12,
+        align: "left",
+      });
       xOffset += column.width;
     });
 
-    doc.font("Helvetica").fillColor("#0f172a");
+    tableY += 22;
+    doc.font("Helvetica").fontSize(10);
 
-    let rowY = tableTop + 22;
     summary.dias.forEach((day, idx) => {
-      const isEven = idx % 2 === 0;
-      if (isEven) {
+      const isStriped = idx % 2 === 0;
+      if (isStriped) {
         doc
-          .rect(tableStartX, rowY, tableWidth, 20)
-          .fill("#f8fafc")
-          .fillColor("#0f172a");
+          .rect(tableStartX, tableY, tableWidth, 20)
+          .fill(palette.stripe)
+          .fillColor(palette.text);
+      } else {
+        doc.fillColor(palette.text);
       }
+
       xOffset = tableStartX;
       columnConfig.forEach((column) => {
-        doc.text(column.accessor(day), xOffset + 4, rowY + 6, {
-          width: column.width - 8,
+        doc.text(column.accessor(day), xOffset + 6, tableY + 6, {
+          width: column.width - 12,
+          align: "left",
         });
         xOffset += column.width;
       });
-      rowY += 20;
+      tableY += 20;
     });
-
-    doc
-      .moveTo(tableStartX, tableTop)
-      .lineTo(tableStartX, rowY)
-      .stroke()
-      .moveTo(tableStartX + tableWidth, tableTop)
-      .lineTo(tableStartX + tableWidth, rowY)
-      .stroke();
 
     doc.end();
   });
