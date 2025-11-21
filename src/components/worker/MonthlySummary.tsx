@@ -38,10 +38,17 @@ export function WorkerMonthlySummary({
   const [year, setYear] = useState(today.getFullYear());
   const [summary, setSummary] = useState(initialSummary);
   const [loading, setLoading] = useState(false);
+  const cacheRef = useState(() => new Map<string, Summary>())[0];
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+       const cacheKey = `${employeeId}-${year}-${month}`;
+       if (cacheRef.has(cacheKey)) {
+         setSummary(cacheRef.get(cacheKey)!);
+         setLoading(false);
+         return;
+       }
       const params = new URLSearchParams({
         employeeId,
         month: String(month),
@@ -50,13 +57,14 @@ export function WorkerMonthlySummary({
       const response = await fetch(`/api/reports?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
+        cacheRef.set(cacheKey, data.summary);
         setSummary(data.summary);
       }
       setLoading(false);
     };
 
     load();
-  }, [employeeId, month, year]);
+  }, [employeeId, month, year, cacheRef]);
 
   return (
     <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 text-slate-100 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
@@ -122,6 +130,7 @@ export function WorkerMonthlySummary({
           Horas fin de semana: {summary.horasFindeNormales.toFixed(2)} normales /{" "}
           {summary.horasFindeExtra.toFixed(2)} extra
         </p>
+        <p>Monto bruto: ${(summary.montoBruto ?? summary.montoTotal).toFixed(0)}</p>
         <p>Adelantos/quincenas: -${(summary.totalAdelantos ?? 0).toFixed(0)}</p>
         <p className="text-lg font-semibold text-white">
           Sueldo estimado neto: ${summary.montoTotal.toFixed(0)}

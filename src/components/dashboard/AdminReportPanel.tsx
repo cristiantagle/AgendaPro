@@ -47,9 +47,15 @@ export function AdminReportPanel({
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cacheRef = useMemo(() => new Map<string, ReportSummary>(), []);
 
   const loadSummary = async () => {
     if (!employeeId) return;
+    const cacheKey = `${employeeId}-${year}-${month}`;
+    if (cacheRef.has(cacheKey)) {
+      setSummary(cacheRef.get(cacheKey) ?? null);
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -65,6 +71,7 @@ export function AdminReportPanel({
         throw new Error(data.error ?? "Error al generar reporte");
       }
       const data = await response.json();
+      cacheRef.set(cacheKey, data.summary);
       setSummary(data.summary);
     } catch (err) {
       setError((err as Error).message);
@@ -132,6 +139,34 @@ export function AdminReportPanel({
           Actualizar
         </button>
       </div>
+      {summary ? (
+        <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-gray-200 md:grid-cols-3">
+          <div>
+            <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-gray-400">
+              Monto bruto
+            </p>
+            <p className="text-xl font-semibold text-white">
+              ${summary.montoBruto?.toFixed(0) ?? summary.montoTotal.toFixed(0)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-gray-400">
+              Adelantos/quincenas
+            </p>
+            <p className="text-xl font-semibold text-amber-200">
+              -${(summary.totalAdelantos ?? 0).toFixed(0)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-gray-400">
+              Total a pagar (neto)
+            </p>
+            <p className="text-xl font-semibold text-emerald-300">
+              ${summary.montoTotal.toFixed(0)}
+            </p>
+          </div>
+        </div>
+      ) : null}
       {error ? (
         <p className="text-sm text-red-400">{error}</p>
       ) : null}
