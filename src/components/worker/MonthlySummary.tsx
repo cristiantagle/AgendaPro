@@ -93,8 +93,8 @@ export function WorkerMonthlySummary({
           <span className="text-sm text-slate-300">Cargando...</span>
         ) : null}
       </div>
-      <div className="overflow-hidden rounded-2xl border border-white/10">
-        <table className="min-w-full text-sm text-gray-100">
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <table className="min-w-[640px] text-sm text-gray-100">
           <thead>
             <tr className="bg-white/5 text-left font-mono uppercase tracking-[0.3em] text-[11px] text-gray-400">
               <th className="p-3">Fecha</th>

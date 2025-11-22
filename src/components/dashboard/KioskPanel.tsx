@@ -114,7 +114,7 @@ export function KioskPanel({ slug, pin, devices }: Props) {
       <div className="space-y-4">
         <label className="block text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
           URL del kiosco
-          <div className="mt-2 flex gap-3">
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <input
               readOnly
               value={kioskUrl}
@@ -131,7 +131,7 @@ export function KioskPanel({ slug, pin, devices }: Props) {
         </label>
         <label className="block text-xs font-mono uppercase tracking-[0.35em] text-gray-400">
           PIN vigente
-          <div className="mt-2 flex gap-3">
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <input
               readOnly
               value={currentPin}
@@ -163,8 +163,8 @@ export function KioskPanel({ slug, pin, devices }: Props) {
             Aún no hay dispositivos autorizados. Registra el primero usando el PIN.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-white/10">
-            <table className="min-w-full text-sm text-gray-200">
+          <div className="overflow-x-auto rounded-2xl border border-white/10">
+            <table className="min-w-[680px] text-sm text-gray-200">
               <thead>
                 <tr className="bg-white/5 text-left font-mono uppercase tracking-[0.3em] text-[11px] text-gray-400">
                   <th className="p-3">Nombre</th>

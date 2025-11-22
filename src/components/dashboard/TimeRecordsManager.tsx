@@ -124,8 +124,8 @@ export function TimeRecordsManager({ records }: Props) {
           {items.length} registros
         </p>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-white/10">
-        <table className="min-w-full text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <table className="min-w-[760px] text-sm">
           <thead>
             <tr className="bg-white/5 text-left font-mono text-[11px] uppercase tracking-[0.3em] text-gray-400">
               <th className="p-3">Fecha</th>

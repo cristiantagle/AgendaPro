@@ -131,8 +131,8 @@ export function WorkersTable({ workers, sueldoBase }: Props) {
             {rows.length} registros
           </p>
         </div>
-        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-          <table className="min-w-full text-sm">
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
+          <table className="min-w-[720px] text-sm">
             <thead>
               <tr className="bg-white/5 text-left font-mono text-[11px] uppercase tracking-[0.3em] text-gray-400">
                 <th className="p-3">Nombre</th>
