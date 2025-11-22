@@ -149,7 +149,7 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 | `npm run db:migrate` | Aplica las migraciones SQL secuenciales (sin Prisma) |
 | `npm run db:seed`  | Rellena la base de datos con datos demo         |
 
-## Flujo recomendado (antes de push)
+## Flujo estándar (antes de push)
 
 1. Instala dependencias si es la primera vez: `npm install`.
 2. Corre el linter siempre: `npm run lint`.
@@ -157,7 +157,7 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 4. Verifica la compilación: `npm run build`.
 5. Revisa y commitea: `git status`, `git add ...`, `git commit -m "..."` y `git push`.
 
-Con eso te aseguras de subir cambios limpios, compilables y versionados.
+Siempre sigue estos pasos antes de cualquier push/PR para mantener el repo limpio, compilable y versionado.
 
 ## Estructura relevante
 
