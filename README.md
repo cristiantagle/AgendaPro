@@ -29,6 +29,8 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
 - **Kiosco biométrico reforzado:** el flujo ahora exige desbloquear acciones con reconocimiento facial antes de permitir marcaciones o modo administrador, y cada acción muestra feedback en tarjetas translúcidas.
 - **Modelos empaquetados y logs mejorados:** los modelos face-api se sirven desde `public/face-models` con índices y botones de “copiar” para URL/PIN, y se documentaron los pasos para depurar la carga en tablets con hardware limitado.
 - **Documentación ampliada:** README y `ai.md` incluyen instrucciones para operar el kiosco, enrolar rostros (incluidos administradores existentes) y reproducir todo el stack sin Prisma.
+- **Exportes con deducciones:** los reportes mensuales (PDF/CSV) ahora muestran monto bruto, adelantos/quincenas y el total neto a pagar; el PDF incluye detalle de pagos deducibles con fecha/tipo/nota.
+- **Dashboard con menú colapsable:** el panel de empresa suma un sidebar hamburguesa (mobile/desktop) con scroll a secciones clave (pagos, kiosco, horarios, reportes) para limpiar la vista principal.
 
 ## Características
 
