@@ -159,6 +159,13 @@ La PWA estará disponible en `http://localhost:3000`. Agrega a la pantalla princ
 
 Siempre sigue estos pasos antes de cualquier push/PR para mantener el repo limpio, compilable y versionado.
 
+### Hook pre-push (automático)
+
+- Usa el hook incluido para que no se pueda hacer `git push` sin pasar lint/test/build:
+  - Configura una vez: `npm run setup:hooks`.
+  - El hook ejecuta `npm run prepush` (lint + test + build) antes de cada push.
+  - Si falla algo, se cancela el push y puedes corregir.
+
 ## Estructura relevante
 
 - `src/app/api/*`: Route handlers para autenticación, empresas, trabajadores, marcaciones y reportes.

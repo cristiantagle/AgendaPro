@@ -8,7 +8,9 @@
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "test": "vitest",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "prepush": "npm run lint && npm test && npm run build",
+    "setup:hooks": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",

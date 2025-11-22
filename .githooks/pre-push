@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "pre-push: running lint, test, build..."
+
+npm run lint
+npm test
+npm run build
+
+echo "pre-push: all checks passed."
