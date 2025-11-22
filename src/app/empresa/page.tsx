@@ -76,14 +76,15 @@ export default async function EmpresaPage() {
   ];
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#050507] text-gray-100">
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_20%_20%,rgba(80,117,255,0.14),transparent_45%),radial-gradient(circle_at_78%_15%,rgba(34,211,238,0.16),transparent_40%),#04060c] text-gray-100">
       <div className="noise-overlay" aria-hidden="true" />
+      <div className="grid-overlay" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 top-0 h-72 w-72 rounded-full bg-violet-700/30 blur-[140px]" />
-        <div className="absolute right-0 top-1/4 h-96 w-96 rounded-full bg-cyan-400/20 blur-[160px]" />
-        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-violet-500/20 blur-[140px]" />
+        <div className="absolute -left-40 top-0 h-72 w-72 rounded-full bg-violet-700/25 blur-[140px]" />
+        <div className="absolute right-0 top-1/4 h-96 w-96 rounded-full bg-cyan-400/18 blur-[160px]" />
+        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-violet-500/18 blur-[140px]" />
       </div>
-      <div className="relative z-10 mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
         <DashboardTopBar role="company_admin" appearance="dark" />
         <div className="lg:grid lg:grid-cols-[260px,1fr] lg:gap-6">
           <DashboardSidebar role="company_admin" />
