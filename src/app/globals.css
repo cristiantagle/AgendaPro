@@ -23,10 +23,13 @@
 }
 
 [data-theme="minimal"] {
-  --background: #0b0b0c;
+  --background: #0c0c0d;
   --foreground: #e5e7eb;
-  --card: #111214;
-  --border: rgba(255, 255, 255, 0.06);
+  --card: #0f1113;
+  --border: rgba(255, 255, 255, 0.08);
+  --ink: #e5e7eb;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
 }
 
 @theme inline {
@@ -98,6 +101,40 @@ select option:hover {
 [data-theme="minimal"] * {
   box-shadow: none !important;
   backdrop-filter: none !important;
+}
+
+[data-theme="minimal"] .bg-white\/5,
+[data-theme="minimal"] .bg-white\/10 {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="minimal"] .border-white\/10,
+[data-theme="minimal"] .border-white\/15,
+[data-theme="minimal"] .border-white\/20,
+[data-theme="minimal"] .border-white\/30 {
+  border-color: var(--border) !important;
+}
+
+[data-theme="minimal"] .text-white,
+[data-theme="minimal"] .text-white\/50,
+[data-theme="minimal"] .text-white\/60,
+[data-theme="minimal"] .text-white\/70,
+[data-theme="minimal"] .text-white\/80,
+[data-theme="minimal"] .text-white\/90 {
+  color: var(--ink) !important;
+}
+
+[data-theme="minimal"] button,
+[data-theme="minimal"] input,
+[data-theme="minimal"] select,
+[data-theme="minimal"] textarea {
+  color: var(--ink) !important;
+  background-image: none !important;
+}
+
+[data-theme="minimal"] a {
+  color: var(--accent);
 }
 
 /* Light theme overrides to restore contraste */
