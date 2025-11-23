@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { AdminReportPanel } from "@/components/dashboard/AdminReportPanel";
 import { KioskPanel } from "@/components/dashboard/KioskPanel";
@@ -8,7 +8,6 @@ import { PaymentsPanel } from "@/components/dashboard/PaymentsPanel";
 import { TimeRecordsManager } from "@/components/dashboard/TimeRecordsManager";
 import { WorkersTable } from "@/components/dashboard/WorkersTable";
 import { DashboardTopBar } from "@/components/navigation/DashboardTopBar";
-import { DashboardSidebar } from "@/components/navigation/DashboardSidebar";
 import { CreateWorkerForm } from "@/components/forms/CreateWorkerForm";
 import { PaySettingsForm } from "@/components/forms/PaySettingsForm";
 import { CompanyLogoUploader } from "@/components/forms/CompanyLogoUploader";
@@ -117,142 +116,149 @@ export function EmpresaDashboardShell({
 }: Props) {
   const [currentSection, setCurrentSection] = useState<(typeof sections)[number]["id"]>("overview");
 
-  const sidebarActive = useMemo(() => currentSection, [currentSection]);
-
   return (
     <div className="relative z-10 mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <DashboardTopBar role="company_admin" appearance="dark" />
-      <div className="lg:grid lg:grid-cols-[120px,1fr] lg:gap-4">
-        <DashboardSidebar
-          role="company_admin"
-          onSelectSection={(id) => setCurrentSection(id as typeof sidebarActive)}
-          activeSection={sidebarActive}
-          itemsOverride={sections.map((section) => ({
-            id: section.id,
-            href: `#${section.id}`,
-            label: section.label,
-          }))}
-        />
-        <div className="space-y-6">
-          {currentSection === "overview" ? (
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  {company.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={company.logoUrl}
-                      alt={`Logo de ${company.name}`}
-                      className="h-16 w-16 rounded-2xl border border-white/15 bg-black/30 object-contain p-2"
-                    />
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-black/30 text-2xl font-bold">
-                      {company.name.charAt(0)}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
-                      Empresa
-                    </p>
-                    <h1 className="text-3xl font-semibold text-white tracking-tight">
-                      {company.name}
-                    </h1>
-                    <p className="text-sm text-gray-400">
-                      Control biométrico, jornadas y reportes centralizados.
-                    </p>
+
+      <div className="no-scrollbar flex gap-3 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-2xl shadow-[0_12px_50px_rgba(0,0,0,0.45)]">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => setCurrentSection(section.id)}
+            className={`flex min-w-[120px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              currentSection === section.id
+                ? "border border-cyan-400/60 bg-cyan-500/15 text-cyan-50 shadow-[0_0_25px_rgba(34,211,238,0.35)]"
+                : "border border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:text-white"
+            }`}
+          >
+            <span className="rounded-lg bg-white/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wide">
+              {section.label.slice(0, 2)}
+            </span>
+            <span>{section.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-6">
+        {currentSection === "overview" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                {company.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={company.logoUrl}
+                    alt={`Logo de ${company.name}`}
+                    className="h-16 w-16 rounded-2xl border border-white/15 bg-black/30 object-contain p-2"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-black/30 text-2xl font-bold">
+                    {company.name.charAt(0)}
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {stats.map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-2xl border border-white/10 bg-black/30 p-3"
-                    >
-                      <p className="text-[11px] font-mono uppercase tracking-[0.35em] text-gray-400">
-                        {item.label}
-                      </p>
-                      <p className="text-3xl font-semibold text-white">{item.value}</p>
-                      <p className="text-xs text-gray-500">{item.hint}</p>
-                    </div>
-                  ))}
+                )}
+                <div>
+                  <p className="text-[11px] font-mono uppercase tracking-[0.4em] text-cyan-300">
+                    Empresa
+                  </p>
+                  <h1 className="text-3xl font-semibold text-white tracking-tight">
+                    {company.name}
+                  </h1>
+                  <p className="text-sm text-gray-400">
+                    Control biométrico, jornadas y reportes centralizados.
+                  </p>
                 </div>
               </div>
-            </section>
-          ) : null}
-
-          {currentSection === "pagos" ? (
-            <div className="space-y-6">
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-                <PaySettingsForm settings={paySettingsForForm} />
-              </section>
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-                <PaymentsPanel
-                  employees={employees.map((employee) => ({
-                    id: employee.id,
-                    nombre: employee.nombreCompleto,
-                  }))}
-                  initialPayments={payments}
-                />
-              </section>
+              <div className="grid grid-cols-2 gap-3">
+                {stats.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-white/10 bg-black/30 p-3"
+                  >
+                    <p className="text-[11px] font-mono uppercase tracking-[0.35em] text-gray-400">
+                      {item.label}
+                    </p>
+                    <p className="text-3xl font-semibold text-white">{item.value}</p>
+                    <p className="text-xs text-gray-500">{item.hint}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : null}
+          </section>
+        ) : null}
 
-          {currentSection === "reportes" ? (
+        {currentSection === "pagos" ? (
+          <div className="space-y-6">
             <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-              <AdminReportPanel
-                workers={employees.map((employee) => ({
+              <PaySettingsForm settings={paySettingsForForm} />
+            </section>
+            <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+              <PaymentsPanel
+                employees={employees.map((employee) => ({
                   id: employee.id,
                   nombre: employee.nombreCompleto,
                 }))}
-                initialWorkerId={employees[0]?.id}
+                initialPayments={payments}
               />
             </section>
-          ) : null}
+          </div>
+        ) : null}
 
-          {currentSection === "kiosco" ? (
+        {currentSection === "reportes" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <AdminReportPanel
+              workers={employees.map((employee) => ({
+                id: employee.id,
+                nombre: employee.nombreCompleto,
+              }))}
+              initialWorkerId={employees[0]?.id}
+            />
+          </section>
+        ) : null}
+
+        {currentSection === "kiosco" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <KioskPanel slug={company.kioskSlug} pin={company.kioskPin} devices={kioskDevices} />
+          </section>
+        ) : null}
+
+        {currentSection === "trabajadores" ? (
+          <div className="space-y-6">
             <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-              <KioskPanel slug={company.kioskSlug} pin={company.kioskPin} devices={kioskDevices} />
+              <CreateWorkerForm />
             </section>
-          ) : null}
-
-          {currentSection === "trabajadores" ? (
-            <div className="space-y-6">
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-                <CreateWorkerForm />
-              </section>
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-                <WorkersTable
-                  sueldoBase={paySettings?.sueldoMensualBase ?? 0}
-                  workers={employees.map((employee) => ({
-                    id: employee.id,
-                    nombre: employee.nombreCompleto,
-                    email: employee.user.email,
-                    isActive: employee.isActive,
-                    sueldoMensual: employee.sueldoMensual,
-                  }))}
-                />
-              </section>
-            </div>
-          ) : null}
-
-          {currentSection === "horarios" ? (
             <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-              <ScheduleForm schedules={schedules} />
+              <WorkersTable
+                sueldoBase={paySettings?.sueldoMensualBase ?? 0}
+                workers={employees.map((employee) => ({
+                  id: employee.id,
+                  nombre: employee.nombreCompleto,
+                  email: employee.user.email,
+                  isActive: employee.isActive,
+                  sueldoMensual: employee.sueldoMensual,
+                }))}
+              />
             </section>
-          ) : null}
+          </div>
+        ) : null}
 
-          {currentSection === "marcaciones" ? (
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-              <TimeRecordsManager records={records} />
-            </section>
-          ) : null}
+        {currentSection === "horarios" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <ScheduleForm schedules={schedules} />
+          </section>
+        ) : null}
 
-          {currentSection === "logo" ? (
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
-              <CompanyLogoUploader initialLogo={company.logoUrl} />
-            </section>
-          ) : null}
-        </div>
+        {currentSection === "marcaciones" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <TimeRecordsManager records={records} />
+          </section>
+        ) : null}
+
+        {currentSection === "logo" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <CompanyLogoUploader initialLogo={company.logoUrl} />
+          </section>
+        ) : null}
       </div>
     </div>
   );
