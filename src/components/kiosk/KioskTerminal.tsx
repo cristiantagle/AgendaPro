@@ -86,6 +86,9 @@ export function KioskTerminal({
   const [adminSessionExpiresAt, setAdminSessionExpiresAt] = useState<number | null>(null);
   const [biometricUnlock, setBiometricUnlock] = useState<{ employeeId: string; expiresAt: number } | null>(null);
   const [liveTime, setLiveTime] = useState(new Date());
+  const [selectedAdminForUnlock, setSelectedAdminForUnlock] = useState("");
+  const [adminUnlockPin, setAdminUnlockPin] = useState("");
+  const [adminUnlocking, setAdminUnlocking] = useState(false);
 
   const BIOMETRIC_UNLOCK_MS = 45 * 1000;
   const ADMIN_SESSION_MS = 3 * 60 * 1000;
@@ -95,6 +98,11 @@ export function KioskTerminal({
     return () => clearInterval(interval);
   }, []);
 
+  const admins = useMemo(
+    () => employees.filter((employee) => employee.role === "company_admin"),
+    [employees],
+  );
+
   const filteredEmployees = useMemo(
     () =>
       employees.filter((employee) =>
@@ -102,6 +110,13 @@ export function KioskTerminal({
       ),
     [employees, filter],
   );
+
+  useEffect(() => {
+    if (!admins.length) return;
+    if (!selectedAdminForUnlock || !admins.some((admin) => admin.id === selectedAdminForUnlock)) {
+      setSelectedAdminForUnlock(admins[0].id);
+    }
+  }, [admins, selectedAdminForUnlock]);
 
   const formatTime = (iso?: string) =>
     iso
@@ -309,7 +324,7 @@ export function KioskTerminal({
     setAuthorizing(true);
     setAuthMessage(null);
     try {
-      const res = await fetch(`/api/company/kiosk/pin`, {
+      const res = await fetch(`/api/kiosk/${slug}/authorize`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -335,6 +350,55 @@ export function KioskTerminal({
       setAuthMessage((error as Error).message);
     } finally {
       setAuthorizing(false);
+    }
+  };
+
+  const unlockAdminWithPin = async () => {
+    const targetAdminId =
+      selectedAdminForUnlock && admins.some((admin) => admin.id === selectedAdminForUnlock)
+        ? selectedAdminForUnlock
+        : admins[0]?.id;
+    if (!targetAdminId) {
+      setStatusMessage("No hay administradores registrados para esta empresa.");
+      return;
+    }
+    if (!authorizedName || !deviceToken) {
+      setStatusMessage("Autoriza el kiosco con el PIN de empresa antes de desbloquear.");
+      return;
+    }
+    if (!adminUnlockPin.trim()) {
+      setStatusMessage("Ingresa el PIN del kiosco para habilitar el modo administrador.");
+      return;
+    }
+    setAdminUnlocking(true);
+    setStatusMessage(null);
+    try {
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${deviceToken}`,
+      };
+      const res = await fetch(`/api/kiosk/${slug}/admin-unlock`, {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify({ employeeId: targetAdminId, pin: adminUnlockPin.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "No se pudo habilitar el modo administrador.");
+      }
+      setSelectedEmployee(targetAdminId);
+      const adminPerson = employees.find((emp) => emp.id === targetAdminId) ?? null;
+      setRecognizedEmployee(adminPerson);
+      setSessionRole("admin");
+      setAdminSessionExpiresAt(Date.now() + ADMIN_SESSION_MS);
+      setBiometricUnlock(null);
+      setStatusMessage("Modo administrador habilitado por PIN. Ahora puedes guardar tu rostro.");
+      setCurrentStep("admin");
+    } catch (error) {
+      setStatusMessage((error as Error).message);
+    } finally {
+      setAdminUnlocking(false);
     }
   };
 
@@ -577,6 +641,54 @@ export function KioskTerminal({
           onStatus={(message) => setStatusMessage(message)}
         />
       </div>
+      {admins.length ? (
+        <div className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4 text-amber-50">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+            <div className="flex-1 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-200">
+                �?oEres administrador y a��n no tienes rostro?
+              </p>
+              <p className="text-sm text-amber-50/90">
+                Desbloquea con el PIN del kiosco y guarda tu rostro sin cambiar roles ni hacer pasos raros.
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <select
+                  value={selectedAdminForUnlock}
+                  onChange={(event) => {
+                    setSelectedAdminForUnlock(event.target.value);
+                    setSelectedEmployee(event.target.value);
+                  }}
+                  className="w-full rounded-xl border border-white/20 bg-black/40 px-3 py-2 text-sm text-white focus:border-amber-300 focus:outline-none"
+                >
+                  {admins.map((admin) => (
+                    <option key={admin.id} value={admin.id}>
+                      {admin.nombreCompleto}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={adminUnlockPin}
+                  onChange={(event) => setAdminUnlockPin(event.target.value)}
+                  placeholder="PIN del kiosco"
+                  type="password"
+                  className="w-full rounded-xl border border-white/20 bg-black/40 px-3 py-2 text-center text-lg tracking-[0.3em] text-white placeholder-amber-200/60 focus:border-amber-300 focus:outline-none"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={unlockAdminWithPin}
+              disabled={adminUnlocking}
+              className="w-full rounded-2xl border border-amber-200/60 bg-gradient-to-r from-amber-500/70 to-emerald-400/70 px-4 py-3 text-sm font-semibold text-white shadow-[0_0_25px_rgba(251,191,36,0.35)] transition hover:scale-[1.01] disabled:opacity-50 md:w-auto"
+            >
+              {adminUnlocking ? "Desbloqueando..." : "Soy admin, desbloquear"}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-amber-50/70">
+            Te daremos acceso al panel por unos minutos s��lo con el PIN para que puedas capturar tu rostro.
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 

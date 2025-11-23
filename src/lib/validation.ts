@@ -44,6 +44,11 @@ export const kioskAuthorizeSchema = z.object({
   deviceName: z.string().min(3).max(50).optional(),
 });
 
+export const kioskAdminUnlockSchema = z.object({
+  pin: z.string().min(4),
+  employeeId: z.string().uuid(),
+});
+
 export const updateWorkerSchema = z.object({
   nombreCompleto: z.string().min(3).optional(),
   rut: z.string().optional().nullable(),
