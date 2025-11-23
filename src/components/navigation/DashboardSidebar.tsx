@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Role = "superadmin" | "company_admin" | "worker";
 
@@ -28,103 +28,133 @@ type Props = {
 
 export function DashboardSidebar({ role }: Props) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openItem, setOpenItem] = useState<string | null>(navItems[0]?.href ?? null);
+
+  const items = useMemo(
+    () => navItems.filter((item) => item.roles.includes(role)),
+    [role],
+  );
 
   useEffect(() => {
     const handler = () => {
       const desktop = window.innerWidth >= 1024;
       setIsDesktop(desktop);
+      setMenuOpen(desktop);
     };
     handler();
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  const items = navItems.filter((item) => item.roles.includes(role));
+  useEffect(() => {
+    if (!items.length) {
+      setOpenItem(null);
+      return;
+    }
+    if (!openItem || !items.some((item) => item.href === openItem)) {
+      setOpenItem(items[0].href);
+    }
+  }, [items, openItem]);
 
   return (
-    <div className="relative z-30">
-      <div className="fixed left-4 top-[88px]">
+    <div className="lg:sticky lg:top-24">
+      <div className="mb-3 lg:hidden">
         <button
           type="button"
           aria-label="Abrir menú"
-          aria-expanded={isOpen}
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="group flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur transition hover:border-white/40"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((prev) => !prev)}
+          className="flex w-full items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur transition hover:border-white/30"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center">
-            <span
-              className={`block h-[2px] w-6 rounded-full bg-white transition-all duration-200 ${
-                isOpen ? "translate-y-[6px] rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`absolute block h-[2px] w-6 rounded-full bg-white transition-all duration-200 ${
-                isOpen ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`block h-[2px] w-6 rounded-full bg-white transition-all duration-200 ${
-                isOpen ? "-translate-y-[6px] -rotate-45" : ""
-              }`}
-            />
-          </span>
-          <span className="hidden sm:block">{isOpen ? "Cerrar" : "Menú"}</span>
+          <span>Menú</span>
+          <span className={`transition ${menuOpen ? "rotate-180" : ""}`}>⌄</span>
         </button>
+      </div>
 
-        {isOpen ? (
-          <div className="mt-2 w-72 rounded-3xl border border-white/10 bg-black/70 p-4 shadow-[0_25px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl animate-fade-in-down">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-cyan-300">
-                  Menú
-                </p>
-                <p className="text-sm text-white/80">Navegación rápida</p>
-              </div>
+      {(menuOpen || isDesktop) && (
+        <aside className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-cyan-300">
+                Menú
+              </p>
+              <p className="text-sm text-white/80">Navegación rápida</p>
+            </div>
+            {!isDesktop ? (
               <button
                 type="button"
                 aria-label="Cerrar menú"
-                onClick={() => setIsOpen(false)}
+                onClick={() => setMenuOpen(false)}
                 className="rounded-xl border border-white/15 bg-white/10 px-2 py-1 text-xs text-white/70 transition hover:border-white/30"
               >
                 Ocultar
               </button>
-            </div>
+            ) : null}
+          </div>
 
-            <div className="mt-4 space-y-2">
-              {items.map((item) => {
-                const isActive = pathname === item.href.split("#")[0];
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition ${
-                      isActive
-                        ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
-                        : "border-white/10 bg-white/5 text-white/80 hover:border-white/30 hover:text-white"
-                    }`}
+          <div className="space-y-2">
+            {items.map((item) => {
+              const isActive = pathname === item.href.split("#")[0];
+              const expanded = openItem === item.href;
+              return (
+                <div
+                  key={item.href}
+                  className="rounded-2xl border border-white/10 bg-black/30 text-white/80 shadow-inner"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenItem((prev) => (prev === item.href ? null : item.href))
+                    }
+                    className="flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left transition hover:border-white/20 hover:bg-white/10"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[11px] font-semibold">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-[11px] font-semibold">
                         {item.icon}
                       </span>
-                      <span>{item.label}</span>
+                      <span className="text-sm font-semibold">{item.label}</span>
                     </div>
-                    <span className="text-xs text-white/50">↘</span>
-                  </Link>
-                );
-              })}
-            </div>
+                    <span
+                      className={`text-sm transition ${
+                        expanded ? "rotate-180 text-cyan-200" : "text-white/60"
+                      }`}
+                    >
+                      ⌄
+                    </span>
+                  </button>
+                  <div
+                    className={`overflow-hidden px-3 transition-[max-height,opacity] duration-200 ${
+                      expanded ? "max-h-24 opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <Link
+                      href={item.href}
+                      onClick={() => {
+                        if (!isDesktop) setMenuOpen(false);
+                      }}
+                      className={`mt-2 flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
+                        isActive
+                          ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
+                          : "border-white/10 bg-white/5 text-white/80 hover:border-white/30 hover:text-white"
+                      }`}
+                    >
+                      <span>Ir a {item.label}</span>
+                      <span className="text-xs">↘</span>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ) : null}
-      </div>
+        </aside>
+      )}
 
-      {!isDesktop && isOpen ? (
+      {!isDesktop && menuOpen ? (
         <div
-          className="fixed inset-0 z-10 bg-black/60 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-10 bg-black/50"
+          onClick={() => setMenuOpen(false)}
         />
       ) : null}
     </div>
