@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -32,6 +31,7 @@ export function DashboardSidebar({ role }: Props) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openItem, setOpenItem] = useState<string | null>(navItems[0]?.href ?? null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   const items = useMemo(
     () => navItems.filter((item) => item.roles.includes(role)),
@@ -54,6 +54,31 @@ export function DashboardSidebar({ role }: Props) {
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
+
+  useEffect(() => {
+    if (!items.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) {
+          setActiveSection(`#${visible[0].target.id}`);
+        }
+      },
+      {
+        rootMargin: "-40% 0px -40% 0px",
+        threshold: [0.2, 0.4, 0.6],
+      },
+    );
+    items.forEach((item) => {
+      const [, hash] = item.href.split("#");
+      if (!hash) return;
+      const el = document.getElementById(hash);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [items]);
 
   return (
     <div className="lg:sticky lg:top-24">
@@ -95,10 +120,15 @@ export function DashboardSidebar({ role }: Props) {
             {items.map((item) => {
               const isActive = pathname === item.href.split("#")[0];
               const expanded = effectiveOpenItem === item.href;
+              const [, hash] = item.href.split("#");
+              const isSectionActive =
+                activeSection === `#${hash}` || (isActive && !activeSection);
               return (
                 <div
                   key={item.href}
-                  className="rounded-2xl border border-white/10 bg-black/30 text-white/80 shadow-inner"
+                  className={`rounded-2xl border border-white/10 bg-black/30 text-white/80 shadow-inner ${
+                    isSectionActive ? "ring-1 ring-cyan-400/60" : ""
+                  }`}
                 >
                   <button
                     type="button"
@@ -123,7 +153,7 @@ export function DashboardSidebar({ role }: Props) {
                   </button>
                   <div
                     className={`overflow-hidden px-3 transition-[max-height,opacity] duration-200 ${
-                      expanded ? "max-h-24 opacity-100" : "max-h-0 opacity-0"
+                      expanded ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
                     <button
@@ -140,14 +170,15 @@ export function DashboardSidebar({ role }: Props) {
                           router.push(item.href);
                         }
                         if (!isDesktop) setMenuOpen(false);
+                        setActiveSection(hash ? `#${hash}` : null);
                       }}
                       className={`mt-2 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
-                        isActive
+                        isSectionActive
                           ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
                           : "border-white/10 bg-white/5 text-white/80 hover:border-white/30 hover:text-white"
                       }`}
                     >
-                      <span>Ver sección</span>
+                      <span>{hash ? `Ir a ${item.label}` : "Ver sección"}</span>
                       <span className="text-xs">↘</span>
                     </button>
                   </div>

@@ -86,7 +86,7 @@ export default async function EmpresaPage() {
       </div>
       <div className="relative z-10 mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
         <DashboardTopBar role="company_admin" appearance="dark" />
-        <div className="lg:grid lg:grid-cols-[260px,1fr] lg:gap-6">
+        <div className="lg:grid lg:grid-cols-[120px,1fr] lg:gap-4">
           <DashboardSidebar role="company_admin" />
           <div className="space-y-6">
             <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
