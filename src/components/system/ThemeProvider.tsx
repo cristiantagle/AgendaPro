@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from "react";
 import { usePathname } from "next/navigation";
 
@@ -42,16 +43,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isKiosk, theme]);
 
-  const setTheme = (value: ThemeName) => {
-    if (isKiosk) return;
-    setThemeState(value);
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-theme", value);
-    }
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, value);
-    }
-  };
+  const setTheme = useCallback(
+    (value: ThemeName) => {
+      if (isKiosk) return;
+      setThemeState(value);
+      if (typeof document !== "undefined") {
+        document.documentElement.setAttribute("data-theme", value);
+      }
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, value);
+      }
+    },
+    [isKiosk],
+  );
 
   const value = useMemo<ThemeContextValue>(
     () => ({
