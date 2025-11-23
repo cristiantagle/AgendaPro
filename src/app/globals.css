@@ -16,7 +16,10 @@
   --background: #f7fafc;
   --foreground: #0f172a;
   --card: #ffffff;
-  --border: rgba(15, 23, 42, 0.08);
+  --border: rgba(15, 23, 42, 0.12);
+  --ink: #0f172a;
+  --muted: #334155;
+  --accent: #0ea5e9;
 }
 
 [data-theme="minimal"] {
@@ -95,6 +98,42 @@ select option:hover {
 [data-theme="minimal"] * {
   box-shadow: none !important;
   backdrop-filter: none !important;
+}
+
+/* Light theme overrides to restore contraste */
+[data-theme="light"] .bg-white\/5 {
+  background-color: var(--card) !important;
+}
+[data-theme="light"] .bg-white\/10 {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/15,
+[data-theme="light"] .border-white\/20,
+[data-theme="light"] .border-white\/30 {
+  border-color: var(--border) !important;
+}
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-white\/50,
+[data-theme="light"] .text-white\/60,
+[data-theme="light"] .text-white\/70,
+[data-theme="light"] .text-white\/80,
+[data-theme="light"] .text-white\/90 {
+  color: var(--ink) !important;
+}
+[data-theme="light"] button,
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color: var(--ink) !important;
+}
+[data-theme="light"] .shadow-\[0_25px_90px_rgba\(0,0,0,0\.55\)\],
+[data-theme="light"] .shadow-\[0_12px_50px_rgba\(0,0,0,0\.45\)\] {
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12) !important;
+}
+[data-theme="light"] a {
+  color: var(--accent);
 }
 
 @keyframes float {
