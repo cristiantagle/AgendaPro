@@ -18,14 +18,11 @@ const DEFAULT_THEME: ThemeName = "dark";
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeName>(DEFAULT_THEME);
 
-  useEffect(() => {
+useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeName | null;
-    if (stored) {
-      setThemeState(stored);
-      document.documentElement.setAttribute("data-theme", stored);
-    } else {
-      document.documentElement.setAttribute("data-theme", DEFAULT_THEME);
-    }
+    const next = stored ?? DEFAULT_THEME;
+    document.documentElement.setAttribute("data-theme", next);
+    setThemeState(next);
   }, []);
 
   const setTheme = (value: ThemeName) => {
