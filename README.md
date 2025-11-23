@@ -13,7 +13,8 @@ Sistema multiempresa para control de asistencia, horas extra y cálculo automát
 - Migración completa a Supabase (DB, Realtime y seed scripts) con despliegue en Vercel funcionando.
 - Kiosco PWA con autorización persistente, bloqueo de botones, contadores en vivo y bitácora de marcaciones recientes.
 - Panel de empresa con creación/edición de trabajadores, actualización de sueldos y ahora activación/desactivación sin eliminar registros.
-- Rediseño completo “glassmorphism” tanto en el dashboard de empresa como en el kiosco, con overlays, ruido y animaciones coherentes en toda la app.
+- Rediseño completo "glassmorphism" tanto en el dashboard de empresa como en el kiosco, con overlays, ruido y animaciones coherentes en toda la app.
+- Selector de tema en dashboard: Cinemático (default), Claro y Minimal (sin blur ni sombras). El kiosco siempre usa el tema cinematográfico para asegurar contraste en tablets.
 
 ## Release estable 1.0
 
@@ -62,6 +63,7 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
 
 - Node.js 20+
 - PostgreSQL 14+
+- Para elegir tema en el dashboard usa el selector en la barra superior. Minimal desactiva blur/sombras para equipos con menos recursos. El kiosco permanece siempre en modo cinematográfico (sin selector).
 
 ## Configuración
 
