@@ -20,10 +20,10 @@
 }
 
 [data-theme="minimal"] {
-  --background: #0a0a0a;
+  --background: #0b0b0c;
   --foreground: #e5e7eb;
-  --card: #111112;
-  --border: rgba(255, 255, 255, 0.08);
+  --card: #111214;
+  --border: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
@@ -90,6 +90,11 @@ select option:hover {
 [data-theme="minimal"] .noise-overlay,
 [data-theme="minimal"] .grid-overlay {
   display: none;
+}
+
+[data-theme="minimal"] * {
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
 
 @keyframes float {
