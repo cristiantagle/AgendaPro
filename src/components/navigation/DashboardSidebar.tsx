@@ -6,13 +6,14 @@ import { useEffect, useMemo, useState } from "react";
 type Role = "superadmin" | "company_admin" | "worker";
 
 type NavItem = {
+  id?: string;
   href: string;
   label: string;
   icon: string;
   roles: Role[];
 };
 
-const navItems: NavItem[] = [
+const defaultNavItems: NavItem[] = [
   { href: "/empresa", label: "Overview", icon: "OV", roles: ["company_admin"] },
   { href: "/empresa#pagos-detalle", label: "Pagos", icon: "$", roles: ["company_admin"] },
   { href: "/empresa#reportes", label: "Reportes", icon: "RP", roles: ["company_admin"] },
@@ -23,26 +24,43 @@ const navItems: NavItem[] = [
 
 type Props = {
   role: Role;
+  onSelectSection?: (id: string) => void;
+  activeSection?: string | null;
+  itemsOverride?: Array<{ id: string; href: string; label: string }>;
 };
 
-export function DashboardSidebar({ role }: Props) {
+export function DashboardSidebar({
+  role,
+  onSelectSection,
+  activeSection: externalActiveSection,
+  itemsOverride,
+}: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [isDesktop, setIsDesktop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openItem, setOpenItem] = useState<string | null>(navItems[0]?.href ?? null);
+  const [openItem, setOpenItem] = useState<string | null>(defaultNavItems[0]?.href ?? null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  const items = useMemo(
-    () => navItems.filter((item) => item.roles.includes(role)),
-    [role],
-  );
+  const items = useMemo(() => {
+    const base =
+      itemsOverride?.map((item) => ({
+        id: item.id,
+        href: item.href,
+        label: item.label,
+        icon: item.label.slice(0, 2).toUpperCase(),
+        roles: [role],
+      })) ?? defaultNavItems;
+    return base.filter((item) => item.roles.includes(role));
+  }, [itemsOverride, role]);
 
   const effectiveOpenItem = useMemo(() => {
     if (!items.length) return null;
     if (openItem && items.some((item) => item.href === openItem)) return openItem;
     return items[0].href;
   }, [items, openItem]);
+
+  const effectiveActive = externalActiveSection ?? activeSection;
 
   useEffect(() => {
     const handler = () => {
@@ -56,7 +74,7 @@ export function DashboardSidebar({ role }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!items.length) return;
+    if (!items.length || onSelectSection) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -78,7 +96,7 @@ export function DashboardSidebar({ role }: Props) {
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [items]);
+  }, [items, onSelectSection]);
 
   return (
     <div className="lg:sticky lg:top-24">
@@ -118,11 +136,33 @@ export function DashboardSidebar({ role }: Props) {
 
           <div className="space-y-2">
             {items.map((item) => {
-              const isActive = pathname === item.href.split("#")[0];
+              const isActivePath = pathname === item.href.split("#")[0];
               const expanded = effectiveOpenItem === item.href;
               const [, hash] = item.href.split("#");
+              const itemId = item.id ?? hash ?? item.href;
               const isSectionActive =
-                activeSection === `#${hash}` || (isActive && !activeSection);
+                effectiveActive === itemId || (isActivePath && !effectiveActive);
+
+              const handleAction = () => {
+                if (onSelectSection) {
+                  onSelectSection(itemId);
+                  if (!isDesktop) setMenuOpen(false);
+                  return;
+                }
+                const [path, localHash] = item.href.split("#");
+                const samePage = pathname === path || (!path && pathname === "/");
+                if (samePage && localHash) {
+                  const target = document.getElementById(localHash);
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                } else if (path) {
+                  router.push(item.href);
+                }
+                if (!isDesktop) setMenuOpen(false);
+                setActiveSection(localHash ? `#${localHash}` : null);
+              };
+
               return (
                 <div
                   key={item.href}
@@ -158,27 +198,14 @@ export function DashboardSidebar({ role }: Props) {
                   >
                     <button
                       type="button"
-                      onClick={() => {
-                        const [path, hash] = item.href.split("#");
-                        const samePage = pathname === path || (!path && pathname === "/");
-                        if (samePage && hash) {
-                          const target = document.getElementById(hash);
-                          if (target) {
-                            target.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }
-                        } else if (path) {
-                          router.push(item.href);
-                        }
-                        if (!isDesktop) setMenuOpen(false);
-                        setActiveSection(hash ? `#${hash}` : null);
-                      }}
+                      onClick={handleAction}
                       className={`mt-2 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
                         isSectionActive
                           ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
                           : "border-white/10 bg-white/5 text-white/80 hover:border-white/30 hover:text-white"
                       }`}
                     >
-                      <span>{hash ? `Ir a ${item.label}` : "Ver sección"}</span>
+                      <span>Ver sección</span>
                       <span className="text-xs">↘</span>
                     </button>
                   </div>
