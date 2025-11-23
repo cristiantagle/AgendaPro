@@ -16,14 +16,19 @@ const STORAGE_KEY = "asistencia-theme";
 const DEFAULT_THEME: ThemeName = "dark";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>(DEFAULT_THEME);
-
-useEffect(() => {
+  const [theme, setThemeState] = useState<ThemeName>(() => {
+    if (typeof window === "undefined") return DEFAULT_THEME;
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeName | null;
     const next = stored ?? DEFAULT_THEME;
     document.documentElement.setAttribute("data-theme", next);
-    setThemeState(next);
-  }, []);
+    return next;
+  });
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }, [theme]);
 
   const setTheme = (value: ThemeName) => {
     setThemeState(value);
