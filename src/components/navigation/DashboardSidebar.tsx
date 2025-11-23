@@ -37,6 +37,12 @@ export function DashboardSidebar({ role }: Props) {
     [role],
   );
 
+  const effectiveOpenItem = useMemo(() => {
+    if (!items.length) return null;
+    if (openItem && items.some((item) => item.href === openItem)) return openItem;
+    return items[0].href;
+  }, [items, openItem]);
+
   useEffect(() => {
     const handler = () => {
       const desktop = window.innerWidth >= 1024;
@@ -47,16 +53,6 @@ export function DashboardSidebar({ role }: Props) {
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
-
-  useEffect(() => {
-    if (!items.length) {
-      setOpenItem(null);
-      return;
-    }
-    if (!openItem || !items.some((item) => item.href === openItem)) {
-      setOpenItem(items[0].href);
-    }
-  }, [items, openItem]);
 
   return (
     <div className="lg:sticky lg:top-24">
@@ -97,7 +93,7 @@ export function DashboardSidebar({ role }: Props) {
           <div className="space-y-2">
             {items.map((item) => {
               const isActive = pathname === item.href.split("#")[0];
-              const expanded = openItem === item.href;
+              const expanded = effectiveOpenItem === item.href;
               return (
                 <div
                   key={item.href}
