@@ -3,6 +3,7 @@
 :root {
   --background: #050507;
   --foreground: #f8fafc;
+  color-scheme: dark;
 }
 
 [data-theme="dark"] {
@@ -10,26 +11,29 @@
   --foreground: #e2e8f0;
   --card: rgba(255, 255, 255, 0.05);
   --border: rgba(255, 255, 255, 0.12);
+  color-scheme: dark;
 }
 
 [data-theme="light"] {
-  --background: #f7fafc;
-  --foreground: #0f172a;
+  --background: #e9eef5;
+  --foreground: #0b1220;
   --card: #ffffff;
-  --border: rgba(15, 23, 42, 0.12);
-  --ink: #0f172a;
-  --muted: #334155;
-  --accent: #0ea5e9;
+  --border: rgba(15, 23, 42, 0.18);
+  --ink: #0b1220;
+  --muted: #1f2937;
+  --accent: #0f9ae8;
+  color-scheme: light;
 }
 
 [data-theme="minimal"] {
-  --background: #0c0c0d;
-  --foreground: #e5e7eb;
-  --card: #0f1113;
-  --border: rgba(255, 255, 255, 0.08);
-  --ink: #e5e7eb;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
+  --background: #0b0f17;
+  --foreground: #e8edf5;
+  --card: #0f1724;
+  --border: rgba(148, 163, 184, 0.18);
+  --ink: #e8edf5;
+  --muted: #cbd5e1;
+  --accent: #7dd3fc;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -137,6 +141,14 @@ select option:hover {
   color: var(--accent);
 }
 
+[data-theme="minimal"] .bg-black\/30,
+[data-theme="minimal"] .bg-black\/40,
+[data-theme="minimal"] .bg-black\/50 {
+  background-color: var(--card) !important;
+  color: var(--ink) !important;
+  border-color: var(--border) !important;
+}
+
 /* Light theme overrides to restore contraste */
 [data-theme="light"] .bg-white\/5 {
   background-color: var(--card) !important;
@@ -164,6 +176,20 @@ select option:hover {
 [data-theme="light"] select,
 [data-theme="light"] textarea {
   color: var(--ink) !important;
+}
+[data-theme="light"] .bg-black\/30 {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+[data-theme="light"] .bg-black\/40 {
+  background-color: rgba(15, 23, 42, 0.12) !important;
+}
+[data-theme="light"] .bg-black\/50 {
+  background-color: rgba(15, 23, 42, 0.2) !important;
+}
+[data-theme="light"] .bg-black\/70,
+[data-theme="light"] .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.42) !important;
+  color: #f8fafc !important;
 }
 [data-theme="light"] .shadow-\[0_25px_90px_rgba\(0,0,0,0\.55\)\],
 [data-theme="light"] .shadow-\[0_12px_50px_rgba\(0,0,0,0\.45\)\] {
