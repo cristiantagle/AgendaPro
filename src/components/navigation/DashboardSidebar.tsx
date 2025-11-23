@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 type Role = "superadmin" | "company_admin" | "worker";
@@ -28,6 +28,7 @@ type Props = {
 
 export function DashboardSidebar({ role }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isDesktop, setIsDesktop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openItem, setOpenItem] = useState<string | null>(navItems[0]?.href ?? null);
@@ -125,20 +126,30 @@ export function DashboardSidebar({ role }: Props) {
                       expanded ? "max-h-24 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
-                    <Link
-                      href={item.href}
+                    <button
+                      type="button"
                       onClick={() => {
+                        const [path, hash] = item.href.split("#");
+                        const samePage = pathname === path || (!path && pathname === "/");
+                        if (samePage && hash) {
+                          const target = document.getElementById(hash);
+                          if (target) {
+                            target.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }
+                        } else if (path) {
+                          router.push(item.href);
+                        }
                         if (!isDesktop) setMenuOpen(false);
                       }}
-                      className={`mt-2 flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
+                      className={`mt-2 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm transition ${
                         isActive
                           ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
                           : "border-white/10 bg-white/5 text-white/80 hover:border-white/30 hover:text-white"
                       }`}
                     >
-                      <span>Ir a {item.label}</span>
+                      <span>Ver sección</span>
                       <span className="text-xs">↘</span>
-                    </Link>
+                    </button>
                   </div>
                 </div>
               );
