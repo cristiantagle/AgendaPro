@@ -201,6 +201,7 @@ export const updateEmployee = async (
   const values: unknown[] = [];
   let index = 1;
   for (const key of Object.keys(data) as Array<keyof typeof data>) {
+    if (typeof data[key] === "undefined") continue;
     fields.push(`"${key}" = $${index++}`);
     values.push(data[key]);
   }
