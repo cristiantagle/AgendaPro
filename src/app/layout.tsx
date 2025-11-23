@@ -6,6 +6,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { PerformancePatch } from "@/components/system/PerformancePatch";
+import { ThemeProvider } from "@/components/system/ThemeProvider";
+import { ThemeSwitcher } from "@/components/system/ThemeSwitcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,6 +70,7 @@ function TagleBrandBar() {
               cristian.gonzalez.gt@gmail.com
             </Link>
           </span>
+          <ThemeSwitcher />
         </div>
       </div>
     </div>
@@ -82,12 +85,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TagleBrandBar />
-        <ServiceWorkerRegister />
-        <PerformancePatch />
-        {children}
+        <ThemeProvider>
+          <TagleBrandBar />
+          <ServiceWorkerRegister />
+          <PerformancePatch />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
