@@ -92,7 +92,7 @@ export default async function EmpresaPage() {
           id: payment.id,
           employeeId: payment.employeeId,
           employeeNombre: payment.employeeNombre,
-          employeeEmail: payment.employeeEmail,
+          employeeEmail: payment.employeeEmail ?? "",
           amount: payment.amount,
           type: payment.type as "adelanto" | "quincena" | "pago",
           note: payment.note,
