@@ -32,6 +32,8 @@ Esta versión en producción queda marcada como **release 1.0** y se considera e
 - **Documentación ampliada:** README y `ai.md` incluyen instrucciones para operar el kiosco, enrolar rostros (incluidos administradores existentes) y reproducir todo el stack sin Prisma.
 - **Exportes con deducciones:** los reportes mensuales (PDF/CSV) ahora muestran monto bruto, adelantos/quincenas y el total neto a pagar; el PDF incluye detalle de pagos deducibles con fecha/tipo/nota.
 - **Dashboard con menú colapsable:** el panel de empresa suma un sidebar hamburguesa (mobile/desktop) con scroll a secciones clave (pagos, kiosco, horarios, reportes) para limpiar la vista principal.
+- **Temas Claro/Minimal mejorados:** se aumentó el contraste en tablas, resúmenes y textos secundarios en el tema Claro, y se afinó el tema Minimal para mantener legibilidad sin sombras ni blur.
+- **Toggle de trabajadores fijo:** el botón Activar/Desactivar ahora actualiza correctamente `isActive` sin tocar otros campos y sin borrar registros.
 
 ## Características
 
