@@ -8,6 +8,7 @@ import { PaymentsPanel } from "@/components/dashboard/PaymentsPanel";
 import { TimeRecordsManager } from "@/components/dashboard/TimeRecordsManager";
 import { WorkersTable } from "@/components/dashboard/WorkersTable";
 import { FuelPanel } from "@/components/dashboard/FuelPanel";
+import { ManualAttendancePanel } from "@/components/dashboard/ManualAttendancePanel";
 import { DashboardTopBar } from "@/components/navigation/DashboardTopBar";
 import { CreateWorkerForm } from "@/components/forms/CreateWorkerForm";
 import { PaySettingsForm } from "@/components/forms/PaySettingsForm";
@@ -95,6 +96,7 @@ type Props = {
 
 const sections = [
   { id: "overview", label: "Overview" },
+  { id: "asistencia", label: "Asistencia Manual" },
   { id: "combustible", label: "Combustible" },
   { id: "pagos", label: "Pagos" },
   { id: "reportes", label: "Reportes" },
@@ -129,8 +131,8 @@ export function EmpresaDashboardShell({
             type="button"
             onClick={() => setCurrentSection(section.id)}
             className={`flex min-w-[120px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${currentSection === section.id
-                ? "border border-cyan-400/60 bg-cyan-500/15 text-cyan-50 shadow-[0_0_25px_rgba(34,211,238,0.35)]"
-                : "border border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:text-white"
+              ? "border border-cyan-400/60 bg-cyan-500/15 text-cyan-50 shadow-[0_0_25px_rgba(34,211,238,0.35)]"
+              : "border border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:text-white"
               }`}
           >
             <span className="rounded-lg bg-white/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wide">
@@ -185,6 +187,18 @@ export function EmpresaDashboardShell({
                 ))}
               </div>
             </div>
+          </section>
+        ) : null}
+
+        {currentSection === "asistencia" ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
+            <h2 className="text-xl font-semibold text-white mb-6">Asistencia Manual</h2>
+            <ManualAttendancePanel
+              employees={employees.map((e) => ({
+                id: e.id,
+                nombreCompleto: e.nombreCompleto,
+              }))}
+            />
           </section>
         ) : null}
 

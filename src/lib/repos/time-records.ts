@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
 import { runQuery, runSingle } from "@/lib/db";
-import type { TimeRecord } from "@/types/database";
+import type { TimeRecord, TipoJornada } from "@/types/database";
 
 const mapTimeRecord = (row: Record<string, unknown>): TimeRecord => ({
   id: row.id as string,
@@ -18,6 +18,7 @@ const mapTimeRecord = (row: Record<string, unknown>): TimeRecord => ({
   horaSalida: row.horaSalida ? new Date(row.horaSalida as string) : null,
   esManual: Boolean(row.esManual),
   notas: (row.notas as string) ?? null,
+  tipoJornada: (row.tipoJornada as TipoJornada) ?? "completa",
 });
 
 export const findTimeRecord = async (where: {
@@ -70,8 +71,7 @@ export const updateTimeRecord = async (
   }
   values.push(id);
   const row = await runSingle<Record<string, unknown>>(
-    `UPDATE "TimeRecord" SET ${fields.join(", ")}, "updatedAt" = NOW() WHERE "id" = $${
-      fields.length + 1
+    `UPDATE "TimeRecord" SET ${fields.join(", ")}, "updatedAt" = NOW() WHERE "id" = $${fields.length + 1
     } RETURNING *`,
     values,
   );
@@ -259,9 +259,9 @@ const resolveLastAction = (row: Record<string, unknown>) => {
   }
   return row.updatedAt
     ? {
-        action: "Marcación",
-        timestamp: new Date(row.updatedAt as string),
-      }
+      action: "Marcación",
+      timestamp: new Date(row.updatedAt as string),
+    }
     : null;
 };
 
@@ -288,3 +288,121 @@ export const listRecentMarksByCompany = async (
     })
     .filter(Boolean) as RecentMark[];
 };
+
+// ============================================
+// MARCACIONES MANUALES
+// ============================================
+
+export type CalendarDay = {
+  fecha: string;
+  tipoJornada: TipoJornada | null;
+  horaEntrada: string | null;
+  horaSalida: string | null;
+  notas: string | null;
+  recordId: string | null;
+};
+
+export const getMonthlyCalendar = async (
+  employeeId: string,
+  year: number,
+  month: number
+): Promise<CalendarDay[]> => {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  const rows = await runQuery<Record<string, unknown>>(
+    `SELECT 
+      "id",
+      DATE("fecha") as "fecha",
+      "tipoJornada",
+      "horaEntrada",
+      "horaSalida",
+      "notas"
+    FROM "TimeRecord" 
+    WHERE "employeeId" = $1 
+      AND "fecha" >= $2 
+      AND "fecha" <= $3
+    ORDER BY "fecha" ASC`,
+    [employeeId, startDate, endDate]
+  );
+
+  // Crear mapa de días con registros
+  const recordMap = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    const dateStr = new Date(row.fecha as string).toISOString().split("T")[0];
+    recordMap.set(dateStr, row);
+  }
+
+  // Generar array de todos los días del mes
+  const days: CalendarDay[] = [];
+  const daysInMonth = endDate.getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month - 1, day);
+    const dateStr = date.toISOString().split("T")[0];
+    const record = recordMap.get(dateStr);
+
+    days.push({
+      fecha: dateStr,
+      tipoJornada: record ? (record.tipoJornada as TipoJornada) : null,
+      horaEntrada: record?.horaEntrada
+        ? new Date(record.horaEntrada as string).toISOString()
+        : null,
+      horaSalida: record?.horaSalida
+        ? new Date(record.horaSalida as string).toISOString()
+        : null,
+      notas: (record?.notas as string) ?? null,
+      recordId: (record?.id as string) ?? null,
+    });
+  }
+
+  return days;
+};
+
+export const upsertManualAttendance = async (data: {
+  employeeId: string;
+  companyId: string;
+  fecha: Date;
+  tipoJornada: TipoJornada;
+  horaEntrada?: Date | null;
+  horaSalida?: Date | null;
+  notas?: string | null;
+}): Promise<TimeRecord | null> => {
+  // Buscar si ya existe un registro para este día
+  const existing = await findTimeRecord({
+    employeeId: data.employeeId,
+    fecha: data.fecha,
+  });
+
+  if (existing) {
+    // Actualizar registro existente
+    return updateTimeRecord(existing.id, {
+      tipoJornada: data.tipoJornada,
+      horaEntrada: data.horaEntrada ?? null,
+      horaSalida: data.horaSalida ?? null,
+      notas: data.notas ?? null,
+      esManual: true,
+    });
+  }
+
+  // Crear nuevo registro
+  const row = await runSingle<Record<string, unknown>>(
+    `INSERT INTO "TimeRecord" 
+      ("id","employeeId","companyId","fecha","tipoJornada","horaEntrada","horaSalida","notas","esManual","createdAt","updatedAt") 
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,NOW(),NOW()) 
+      RETURNING *`,
+    [
+      crypto.randomUUID(),
+      data.employeeId,
+      data.companyId,
+      data.fecha,
+      data.tipoJornada,
+      data.horaEntrada ?? null,
+      data.horaSalida ?? null,
+      data.notas ?? null,
+    ]
+  );
+
+  return row ? mapTimeRecord(row) : null;
+};
+

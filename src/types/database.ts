@@ -63,7 +63,20 @@ export type TimeRecord = {
   horaSalida: Date | null;
   esManual: boolean;
   notas: string | null;
+  tipoJornada: TipoJornada;
 };
+
+// Tipos para marcaciones manuales
+export type TipoJornada =
+  | "completa"           // Jornada completa trabajada
+  | "media"              // Media jornada
+  | "permiso_con_goce"   // Permiso con goce de sueldo
+  | "permiso_sin_goce"   // Permiso sin goce de sueldo
+  | "vacaciones"         // Día de vacaciones
+  | "licencia_medica"    // Licencia médica
+  | "falta";             // Falta injustificada
+
+
 
 // Módulo de Combustible
 export type FuelType = "bencina_93" | "bencina_95" | "bencina_97" | "diesel" | "electrico" | "otro";

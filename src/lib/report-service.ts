@@ -101,6 +101,7 @@ export const getMonthlySummaryForEmployee = async (
       horaSalida: row.horaSalida ? new Date(row.horaSalida) : null,
       esManual: row.esManual,
       notas: row.notas,
+      tipoJornada: row.tipoJornada ?? "completa",
     })),
     employee,
     {
