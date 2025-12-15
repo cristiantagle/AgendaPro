@@ -335,14 +335,14 @@ export const getMonthlyCalendar = async (
     recordMap.set(dateStr, row);
   }
 
-  // Generar array de todos los días del mes
+  // Generar array de todos los días del mes sin usar Date para evitar timezone issues
   const days: CalendarDay[] = [];
-  const daysInMonth = endDate.getDate();
+  // Calcular días del mes manualmente
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month - 1, day);
-    // Usar formato local para evitar desfase de timezone
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    // Generar string de fecha directamente sin usar objeto Date
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const record = recordMap.get(dateStr);
 
     days.push({
