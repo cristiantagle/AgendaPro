@@ -197,6 +197,7 @@ export function EmpresaDashboardShell({
               employees={employees.map((e) => ({
                 id: e.id,
                 nombreCompleto: e.nombreCompleto,
+                sueldoMensual: e.sueldoMensual,
               }))}
             />
           </section>
