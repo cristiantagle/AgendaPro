@@ -64,3 +64,37 @@ export type TimeRecord = {
   esManual: boolean;
   notas: string | null;
 };
+
+// Módulo de Combustible
+export type FuelType = "bencina_93" | "bencina_95" | "bencina_97" | "diesel" | "electrico" | "otro";
+
+export type Vehicle = {
+  id: string;
+  companyId: string;
+  patente: string;
+  marca: string | null;
+  modelo: string | null;
+  anio: number | null;
+  tipoCombustible: FuelType;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type FuelRecord = {
+  id: string;
+  vehicleId: string;
+  companyId: string;
+  employeeId: string | null;
+  fecha: Date;
+  litros: number;
+  kilometraje: number | null;
+  tipoCombustible: FuelType;
+  costoTotal: number | null;
+  precioLitro: number | null;
+  estacion: string | null;
+  observaciones: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+

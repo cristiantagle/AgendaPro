@@ -50,6 +50,7 @@ model Company {
   kioskSlug         String                 @unique @default(uuid())
   kioskPin          String                 @default("000000")
   kioskDevices      KioskDevice[]
+  vehicles          Vehicle[]
 }
 
 model Employee {
@@ -148,3 +149,56 @@ model KioskDevice {
 
   @@index([companyId])
 }
+
+// ============================================
+// MÓDULO DE COMBUSTIBLE
+// ============================================
+
+enum FuelType {
+  bencina_93
+  bencina_95
+  bencina_97
+  diesel
+  electrico
+  otro
+}
+
+model Vehicle {
+  id          String       @id @default(uuid())
+  companyId   String
+  patente     String
+  marca       String?
+  modelo      String?
+  anio        Int?
+  tipoCombustible FuelType @default(bencina_95)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  company     Company      @relation(fields: [companyId], references: [id])
+  fuelRecords FuelRecord[]
+
+  @@unique([companyId, patente])
+  @@index([companyId])
+}
+
+model FuelRecord {
+  id              String    @id @default(uuid())
+  vehicleId       String
+  companyId       String
+  employeeId      String?
+  fecha           DateTime
+  litros          Decimal   @db.Decimal(10, 2)
+  kilometraje     Int?
+  tipoCombustible FuelType
+  costoTotal      Decimal?  @db.Decimal(12, 2)
+  precioLitro     Decimal?  @db.Decimal(10, 2)
+  estacion        String?
+  observaciones   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  vehicle         Vehicle   @relation(fields: [vehicleId], references: [id])
+
+  @@index([companyId, fecha])
+  @@index([vehicleId])
+}
+
