@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2 } from "lucide-react";
 
 type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta";
 
@@ -30,7 +30,7 @@ const tipoJornadaConfig: Record<TipoJornada, { label: string; short: string; col
     falta: { label: "Falta", short: "FA", color: "#ef4444", bgClass: "bg-red-500", paga: false, factor: 0 },
 };
 
-const diasSemana = ["D", "L", "M", "X", "J", "V", "S"];
+const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
 const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 type Props = {
@@ -201,7 +201,34 @@ export function ManualAttendancePanel({ employees }: Props) {
         printWindow.print();
     };
 
-    const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
+    // Ajustar para semana que empieza en Lunes (0=Lunes, 6=Domingo)
+    const firstDayOfMonth = (() => {
+        const d = new Date(year, month - 1, 1).getDay();
+        return d === 0 ? 6 : d - 1; // Convertir: Domingo(0)->6, Lunes(1)->0, etc.
+    })();
+
+    const handleDelete = async () => {
+        if (!selectedDay?.recordId || !selectedEmployee) return;
+        setSaving(true);
+        setError(null);
+        try {
+            const res = await fetch(`/api/time-records/${selectedDay.recordId}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error);
+            }
+            setSuccess("Registro eliminado");
+            setShowModal(false);
+            fetchCalendar();
+            setTimeout(() => setSuccess(null), 3000);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Error al eliminar");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -366,6 +393,15 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                                 Guardar
                             </button>
+                            {selectedDay?.recordId && (
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={saving}
+                                    className="flex items-center justify-center gap-1.5 rounded bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                            )}
                             <button onClick={() => setShowModal(false)} className="rounded bg-white/10 px-3 py-2 text-sm text-gray-300 hover:bg-white/20">
                                 Cancelar
                             </button>
