@@ -329,7 +329,9 @@ export const getMonthlyCalendar = async (
   // Crear mapa de días con registros
   const recordMap = new Map<string, Record<string, unknown>>();
   for (const row of rows) {
-    const dateStr = new Date(row.fecha as string).toISOString().split("T")[0];
+    // Usar formato local para evitar desfase de timezone
+    const d = new Date(row.fecha as string);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     recordMap.set(dateStr, row);
   }
 
@@ -339,7 +341,8 @@ export const getMonthlyCalendar = async (
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day);
-    const dateStr = date.toISOString().split("T")[0];
+    // Usar formato local para evitar desfase de timezone
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const record = recordMap.get(dateStr);
 
     days.push({
