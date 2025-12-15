@@ -293,8 +293,10 @@ export function ManualAttendancePanel({ employees }: Props) {
                         <div className="grid grid-cols-7 gap-0.5">
                             {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`e-${i}`} className="h-10" />)}
                             {calendar.map((day) => {
-                                const dayNum = new Date(day.fecha).getDate();
-                                const isToday = day.fecha === new Date().toISOString().split("T")[0];
+                                // Extraer día directamente del string YYYY-MM-DD para evitar timezone issues
+                                const dayNum = parseInt(day.fecha.split("-")[2], 10);
+                                const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+                                const isToday = day.fecha === todayStr;
                                 const tipo = day.tipoJornada;
                                 const config = tipo ? tipoJornadaConfig[tipo] : null;
 
