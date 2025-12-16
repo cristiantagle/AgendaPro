@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2, FileSpreadsheet } from "lucide-react";
-import { exportAttendanceToExcel } from "@/lib/excel-export";
+import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2, FileText } from "lucide-react";
+import { exportAttendanceToPDF } from "@/lib/pdf-export";
 
 type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta" | "feriado";
 
@@ -377,18 +377,19 @@ export function ManualAttendancePanel({ employees }: Props) {
                             <Printer className="h-4 w-4" /> Imprimir
                         </button>
                         <button
-                            onClick={() => exportAttendanceToExcel(
+                            onClick={() => exportAttendanceToPDF(
                                 selectedEmp?.nombreCompleto ?? "",
                                 meses[month - 1],
                                 year,
                                 rangeLabel,
                                 selectedEmp?.sueldoMensual ?? 0,
                                 filteredCalendar,
-                                resumen
+                                resumen,
+                                firstDayOfMonth
                             )}
-                            className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                            className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500"
                         >
-                            <FileSpreadsheet className="h-4 w-4" /> Excel
+                            <FileText className="h-4 w-4" /> PDF
                         </button>
                     </>
                 )}
