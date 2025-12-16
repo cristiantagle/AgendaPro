@@ -37,6 +37,8 @@ type Props = {
     employees: Employee[];
 };
 
+type RangeMode = "mes" | "quincena1" | "quincena2";
+
 export function ManualAttendancePanel({ employees }: Props) {
     const [selectedEmployee, setSelectedEmployee] = useState<string>("");
     const [year, setYear] = useState(new Date().getFullYear());
@@ -48,11 +50,21 @@ export function ManualAttendancePanel({ employees }: Props) {
     const [success, setSuccess] = useState<string | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
 
+    // Range selector state
+    const [rangeMode, setRangeMode] = useState<RangeMode>("mes");
+
     // Modal state
     const [showModal, setShowModal] = useState(false);
     const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
     const [formTipo, setFormTipo] = useState<TipoJornada>("completa");
     const [formNotas, setFormNotas] = useState("");
+
+    // Bulk selection state
+    const [bulkMode, setBulkMode] = useState(false);
+    const [selectedDays, setSelectedDays] = useState<string[]>([]);
+    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [bulkTipo, setBulkTipo] = useState<TipoJornada>("completa");
+    const [bulkNotas, setBulkNotas] = useState("");
 
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
 
@@ -78,7 +90,21 @@ export function ManualAttendancePanel({ employees }: Props) {
         fetchCalendar();
     }, [selectedEmployee, year, month]);
 
-    // Calcular resumen
+    // Días del mes para cálculo de quincenas
+    const daysInMonth = calendar.length;
+
+    // Filtrar calendario según rango seleccionado
+    const filteredCalendar = useMemo(() => {
+        if (rangeMode === "mes") return calendar;
+        return calendar.filter(day => {
+            const dayNum = parseInt(day.fecha.split("-")[2], 10);
+            if (rangeMode === "quincena1") return dayNum >= 1 && dayNum <= 15;
+            if (rangeMode === "quincena2") return dayNum >= 16;
+            return true;
+        });
+    }, [calendar, rangeMode]);
+
+    // Calcular resumen basado en rango filtrado
     const resumen = useMemo(() => {
         const counts: Record<TipoJornada | "sin_marcar", number> = {
             completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
@@ -86,7 +112,7 @@ export function ManualAttendancePanel({ employees }: Props) {
         };
         let diasPagados = 0;
 
-        calendar.forEach(day => {
+        filteredCalendar.forEach(day => {
             if (day.tipoJornada) {
                 counts[day.tipoJornada]++;
                 diasPagados += tipoJornadaConfig[day.tipoJornada].factor;
@@ -96,18 +122,76 @@ export function ManualAttendancePanel({ employees }: Props) {
         });
 
         const sueldoBase = selectedEmp?.sueldoMensual ?? 0;
-        const diasMes = calendar.length;
-        const valorDia = diasMes > 0 ? sueldoBase / diasMes : 0;
+        // Usar total de días del mes para calcular valor día (sueldo mensual / días del mes)
+        const valorDia = daysInMonth > 0 ? sueldoBase / daysInMonth : 0;
         const sueldoProporcional = valorDia * diasPagados;
+        const diasRango = filteredCalendar.length;
 
-        return { counts, diasPagados, diasMes, sueldoProporcional };
-    }, [calendar, selectedEmp]);
+        return { counts, diasPagados, diasMes: daysInMonth, diasRango, sueldoProporcional };
+    }, [filteredCalendar, selectedEmp, daysInMonth]);
+
+    // Texto del rango para reportes
+    const rangeLabel = useMemo(() => {
+        if (rangeMode === "quincena1") return "1 al 15";
+        if (rangeMode === "quincena2") return `16 al ${daysInMonth}`;
+        return "Mes completo";
+    }, [rangeMode, daysInMonth]);
+
+    // Toggle day selection for bulk mode
+    const toggleDaySelection = (fecha: string) => {
+        setSelectedDays(prev =>
+            prev.includes(fecha)
+                ? prev.filter(d => d !== fecha)
+                : [...prev, fecha]
+        );
+    };
 
     const handleDayClick = (day: CalendarDay) => {
-        setSelectedDay(day);
-        setFormTipo(day.tipoJornada || "completa");
-        setFormNotas(day.notas || "");
-        setShowModal(true);
+        if (bulkMode) {
+            toggleDaySelection(day.fecha);
+        } else {
+            setSelectedDay(day);
+            setFormTipo(day.tipoJornada || "completa");
+            setFormNotas(day.notas || "");
+            setShowModal(true);
+        }
+    };
+
+    // Bulk save handler
+    const handleBulkSave = async () => {
+        if (!selectedEmployee || selectedDays.length === 0) return;
+        setSaving(true);
+        setError(null);
+        try {
+            const res = await fetch("/api/time-records/manual", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    employeeId: selectedEmployee,
+                    fechas: selectedDays,
+                    tipoJornada: bulkTipo,
+                    notas: bulkNotas || undefined,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setSuccess(`${selectedDays.length} marcaciones guardadas`);
+            setShowBulkModal(false);
+            setSelectedDays([]);
+            setBulkMode(false);
+            fetchCalendar();
+            setTimeout(() => setSuccess(null), 3000);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Error al guardar");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // Cancel bulk mode
+    const cancelBulkMode = () => {
+        setBulkMode(false);
+        setSelectedDays([]);
     };
 
     const handleSave = async () => {
@@ -170,7 +254,7 @@ export function ManualAttendancePanel({ employees }: Props) {
       <div class="header">
         <h1>Reporte de Asistencia</h1>
         <p><strong>Trabajador:</strong> ${selectedEmp?.nombreCompleto}</p>
-        <p><strong>Período:</strong> ${meses[month - 1]} ${year}</p>
+        <p><strong>Período:</strong> ${meses[month - 1]} ${year} (${rangeLabel})</p>
         <p><strong>Sueldo Base:</strong> $${(selectedEmp?.sueldoMensual ?? 0).toLocaleString("es-CL")}</p>
       </div>
       <h3>Resumen</h3>
@@ -186,10 +270,10 @@ export function ManualAttendancePanel({ employees }: Props) {
         <p>Días pagados (equivalentes): ${resumen.diasPagados.toFixed(1)}</p>
         <p><strong>Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
       </div>
-      <h3>Detalle del Mes</h3>
+      <h3>Detalle del Período (${rangeLabel})</h3>
       <table>
         <tr><th>Día</th><th>Fecha</th><th>Tipo</th><th>Notas</th></tr>
-        ${calendar.map(day => {
+        ${filteredCalendar.map(day => {
             const d = new Date(day.fecha);
             const tipo = day.tipoJornada ? tipoJornadaConfig[day.tipoJornada].label : "Sin marcar";
             return `<tr><td>${d.getDate()}</td><td>${d.toLocaleDateString("es-CL")}</td><td>${tipo}</td><td>${day.notas || "-"}</td></tr>`;
@@ -263,6 +347,40 @@ export function ManualAttendancePanel({ employees }: Props) {
                 )}
             </div>
 
+            {/* Selector de rango */}
+            {selectedEmployee && (
+                <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-xs text-gray-400">Período:</span>
+                    <button
+                        onClick={() => setRangeMode("mes")}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${rangeMode === "mes"
+                            ? "bg-cyan-600 text-white"
+                            : "bg-white/10 text-gray-300 hover:bg-white/20"
+                            }`}
+                    >
+                        Mes completo
+                    </button>
+                    <button
+                        onClick={() => setRangeMode("quincena1")}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${rangeMode === "quincena1"
+                            ? "bg-cyan-600 text-white"
+                            : "bg-white/10 text-gray-300 hover:bg-white/20"
+                            }`}
+                    >
+                        1 - 15
+                    </button>
+                    <button
+                        onClick={() => setRangeMode("quincena2")}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${rangeMode === "quincena2"
+                            ? "bg-cyan-600 text-white"
+                            : "bg-white/10 text-gray-300 hover:bg-white/20"
+                            }`}
+                    >
+                        16 - {daysInMonth}
+                    </button>
+                </div>
+            )}
+
             {/* Leyenda compacta */}
             <div className="flex flex-wrap gap-2">
                 {Object.entries(tipoJornadaConfig).map(([key, config]) => (
@@ -271,6 +389,39 @@ export function ManualAttendancePanel({ employees }: Props) {
                     </div>
                 ))}
             </div>
+
+            {/* Bulk mode controls */}
+            {selectedEmployee && (
+                <div className="flex flex-wrap gap-2 items-center">
+                    {!bulkMode ? (
+                        <button
+                            onClick={() => setBulkMode(true)}
+                            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-500"
+                        >
+                            ☐ Selección múltiple
+                        </button>
+                    ) : (
+                        <>
+                            <span className="text-xs text-amber-400 font-medium">
+                                {selectedDays.length} días seleccionados
+                            </span>
+                            <button
+                                onClick={() => setShowBulkModal(true)}
+                                disabled={selectedDays.length === 0}
+                                className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Aplicar a selección
+                            </button>
+                            <button
+                                onClick={cancelBulkMode}
+                                className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 hover:bg-white/20"
+                            >
+                                Cancelar
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
 
             <div ref={printRef} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Calendario compacto */}
@@ -299,16 +450,19 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 const isToday = day.fecha === todayStr;
                                 const tipo = day.tipoJornada;
                                 const config = tipo ? tipoJornadaConfig[tipo] : null;
+                                const isSelected = bulkMode && selectedDays.includes(day.fecha);
 
                                 return (
                                     <button
                                         key={day.fecha}
                                         onClick={() => handleDayClick(day)}
-                                        className={`h-10 rounded flex flex-col items-center justify-center transition-all hover:ring-1 hover:ring-cyan-400 ${isToday ? "ring-1 ring-white/50" : ""
+                                        className={`h-10 rounded flex flex-col items-center justify-center transition-all hover:ring-1 hover:ring-cyan-400 ${isSelected ? "ring-2 ring-amber-400" : ""
+                                            } ${isToday ? "ring-1 ring-white/50" : ""
                                             } ${config ? config.bgClass : "bg-white/5"}`}
                                     >
                                         <span className={`text-xs font-bold ${config ? "text-white" : "text-gray-500"}`}>{dayNum}</span>
-                                        {config && <span className="text-[8px] font-bold text-white/80">{config.short}</span>}
+                                        {isSelected && <span className="text-[8px] font-bold text-amber-400">✓</span>}
+                                        {!isSelected && config && <span className="text-[8px] font-bold text-white/80">{config.short}</span>}
                                     </button>
                                 );
                             })}
@@ -319,7 +473,9 @@ export function ManualAttendancePanel({ employees }: Props) {
                 {/* Resumen */}
                 {selectedEmployee && !loading && (
                     <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
-                        <h3 className="text-sm font-semibold text-white">Resumen del Mes</h3>
+                        <h3 className="text-sm font-semibold text-white">
+                            Resumen: {rangeLabel}
+                        </h3>
                         <div className="space-y-1.5">
                             {Object.entries(tipoJornadaConfig).map(([key, config]) => (
                                 <div key={key} className="flex justify-between items-center">
@@ -335,8 +491,8 @@ export function ManualAttendancePanel({ employees }: Props) {
                         </div>
                         <div className="border-t border-white/10 pt-3 space-y-1">
                             <div className="flex justify-between text-xs text-gray-400">
-                                <span>Días del mes:</span>
-                                <span className="text-white">{resumen.diasMes}</span>
+                                <span>Días en período:</span>
+                                <span className="text-white">{resumen.diasRango} de {resumen.diasMes}</span>
                             </div>
                             <div className="flex justify-between text-xs text-gray-400">
                                 <span>Días pagados equiv.:</span>
@@ -405,6 +561,57 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 </button>
                             )}
                             <button onClick={() => setShowModal(false)} className="rounded bg-white/10 px-3 py-2 text-sm text-gray-300 hover:bg-white/20">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Modal */}
+            {showBulkModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-sm rounded-xl bg-gray-900 border border-white/10 p-5 shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-base font-semibold text-white">
+                                Aplicar a {selectedDays.length} días
+                            </h3>
+                            <button onClick={() => setShowBulkModal(false)} className="rounded p-1 hover:bg-white/10">
+                                <X className="h-4 w-4 text-gray-400" />
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-400 mb-4">
+                            Se aplicará el mismo tipo de marcación a todos los días seleccionados.
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5 mb-4">
+                            {Object.entries(tipoJornadaConfig).map(([key, config]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setBulkTipo(key as TipoJornada)}
+                                    className={`rounded px-2 py-1.5 text-xs font-medium transition-all ${bulkTipo === key ? `${config.bgClass} text-white ring-2 ring-white/30` : "bg-white/10 text-gray-300 hover:bg-white/20"
+                                        }`}
+                                >
+                                    {config.label}
+                                </button>
+                            ))}
+                        </div>
+                        <textarea
+                            value={bulkNotas}
+                            onChange={(e) => setBulkNotas(e.target.value)}
+                            rows={2}
+                            placeholder="Notas (opcional)..."
+                            className="w-full rounded bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-500 mb-4"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleBulkSave}
+                                disabled={saving}
+                                className="flex-1 flex items-center justify-center gap-1.5 rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50"
+                            >
+                                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                                Aplicar a {selectedDays.length} días
+                            </button>
+                            <button onClick={() => setShowBulkModal(false)} className="rounded bg-white/10 px-3 py-2 text-sm text-gray-300 hover:bg-white/20">
                                 Cancelar
                             </button>
                         </div>

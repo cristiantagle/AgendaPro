@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { runQuery, runSingle } from "@/lib/db";
 import type { TimeRecord, TipoJornada } from "@/types/database";
+import { logAuditEntry } from "./audit";
 
 const mapTimeRecord = (row: Record<string, unknown>): TimeRecord => ({
   id: row.id as string,
@@ -378,24 +379,51 @@ export const upsertManualAttendance = async (data: {
   });
 
   if (existing) {
+    // Guardar valores anteriores para audit
+    const oldValues = {
+      tipoJornada: existing.tipoJornada,
+      notas: existing.notas,
+      horaEntrada: existing.horaEntrada?.toISOString(),
+      horaSalida: existing.horaSalida?.toISOString(),
+    };
+
     // Actualizar registro existente
-    return updateTimeRecord(existing.id, {
+    const updated = await updateTimeRecord(existing.id, {
       tipoJornada: data.tipoJornada,
       horaEntrada: data.horaEntrada ?? null,
       horaSalida: data.horaSalida ?? null,
       notas: data.notas ?? null,
       esManual: true,
     });
+
+    // Registrar cambio en audit log
+    if (updated) {
+      await logAuditEntry({
+        action: "UPDATE",
+        tableName: "TimeRecord",
+        recordId: existing.id,
+        oldValues,
+        newValues: {
+          tipoJornada: data.tipoJornada,
+          notas: data.notas,
+          horaEntrada: data.horaEntrada?.toISOString(),
+          horaSalida: data.horaSalida?.toISOString(),
+        },
+      });
+    }
+
+    return updated;
   }
 
   // Crear nuevo registro
+  const newId = crypto.randomUUID();
   const row = await runSingle<Record<string, unknown>>(
     `INSERT INTO "TimeRecord" 
       ("id","employeeId","companyId","fecha","tipoJornada","horaEntrada","horaSalida","notas","esManual","createdAt","updatedAt") 
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,NOW(),NOW()) 
       RETURNING *`,
     [
-      crypto.randomUUID(),
+      newId,
       data.employeeId,
       data.companyId,
       data.fecha,
@@ -405,6 +433,20 @@ export const upsertManualAttendance = async (data: {
       data.notas ?? null,
     ]
   );
+
+  // Registrar creación en audit log
+  if (row) {
+    await logAuditEntry({
+      action: "CREATE",
+      tableName: "TimeRecord",
+      recordId: newId,
+      newValues: {
+        tipoJornada: data.tipoJornada,
+        notas: data.notas,
+        fecha: data.fecha.toISOString(),
+      },
+    });
+  }
 
   return row ? mapTimeRecord(row) : null;
 };
