@@ -239,29 +239,29 @@ export function ManualAttendancePanel({ employees }: Props) {
         printWindow.document.write(`
       <html><head><title>Reporte Asistencia - ${selectedEmp?.nombreCompleto} - ${meses[month - 1]} ${year}</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .header { margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header h1 { margin: 0 0 5px 0; font-size: 18px; }
-        .header p { margin: 3px 0; font-size: 12px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .calendar-section { }
-        .summary-section { }
-        .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 2px; }
-        .week-header span { text-align: center; font-weight: bold; font-size: 10px; padding: 4px; background: #f0f0f0; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-        .day-cell { text-align: center; padding: 6px 2px; font-size: 10px; border: 1px solid #ddd; border-radius: 3px; }
-        .day-cell.empty { background: transparent; border: none; }
-        .day-num { font-weight: bold; }
-        .day-type { font-size: 8px; }
-        .summary-table { width: 100%; font-size: 11px; border-collapse: collapse; }
-        .summary-table th, .summary-table td { padding: 4px 6px; border: 1px solid #ddd; text-align: left; }
-        .summary-table th { background: #f5f5f5; }
-        .total-box { margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; font-size: 12px; }
-        .total-box strong { font-size: 14px; }
-        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; }
-        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
-        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        body { font-family: Arial, sans-serif; padding: 15px; max-width: 800px; margin: 0 auto; }
+        .header { margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+        .header h1 { margin: 0 0 4px 0; font-size: 16px; }
+        .header p { margin: 2px 0; font-size: 11px; }
+        .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+        .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-bottom: 1px; }
+        .week-header span { text-align: center; font-weight: bold; font-size: 9px; padding: 3px; border: 1px solid #000; background: #eee; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+        .day-cell { text-align: center; padding: 4px 1px; font-size: 9px; border: 1px solid #999; }
+        .day-cell.empty { border: none; }
+        .day-cell.marked { border: 2px solid #000; font-weight: bold; }
+        .day-cell.unpaid { background: repeating-linear-gradient(45deg, #fff, #fff 2px, #ddd 2px, #ddd 4px); }
+        .day-num { font-size: 11px; font-weight: bold; }
+        .day-type { font-size: 10px; font-weight: bold; margin-top: 1px; }
+        .summary-table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        .summary-table th, .summary-table td { padding: 3px 5px; border: 1px solid #000; text-align: left; }
+        .summary-table th { background: #eee; font-weight: bold; }
+        .total-box { margin-top: 8px; padding: 8px; border: 2px solid #000; font-size: 11px; }
+        .total-box strong { font-size: 13px; }
+        .legend { margin-top: 6px; font-size: 8px; border-top: 1px solid #999; padding-top: 4px; }
+        .legend-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 2px; }
+        .legend-box { width: 10px; height: 10px; border: 1px solid #000; display: inline-flex; align-items: center; justify-content: center; font-size: 6px; font-weight: bold; }
       </style></head><body>
       <div class="header">
         <h1>Reporte de Asistencia</h1>
@@ -278,25 +278,27 @@ export function ManualAttendancePanel({ employees }: Props) {
             ${calendar.map(day => {
             const dayNum = parseInt(day.fecha.split("-")[2], 10);
             const config = day.tipoJornada ? tipoJornadaConfig[day.tipoJornada] : null;
-            const bg = config ? config.color : '#f9f9f9';
-            const text = config ? '#fff' : '#999';
-            return `<div class="day-cell" style="background:${bg};color:${text}">
+            const markedClass = config ? 'marked' : '';
+            const unpaidClass = config && !config.paga ? 'unpaid' : '';
+            return `<div class="day-cell ${markedClass} ${unpaidClass}">
                   <div class="day-num">${dayNum}</div>
-                  <div class="day-type">${config ? config.short : '-'}</div>
+                  <div class="day-type">${config ? config.short : ''}</div>
                 </div>`;
         }).join('')}
           </div>
           <div class="legend">
-            ${Object.entries(tipoJornadaConfig).map(([, cfg]) =>
-            `<div class="legend-item"><div class="legend-color" style="background:${cfg.color}"></div>${cfg.short}: ${cfg.label}</div>`
+            <div class="legend-row">
+              ${Object.entries(tipoJornadaConfig).map(([, cfg]) =>
+            `<span class="legend-item"><span class="legend-box">${cfg.short}</span> ${cfg.label}${cfg.paga ? '' : ' (no paga)'}</span>`
         ).join('')}
+            </div>
           </div>
         </div>
         <div class="summary-section">
           <table class="summary-table">
             <tr><th>Tipo</th><th>Días</th></tr>
             ${Object.entries(tipoJornadaConfig).filter(([key]) => resumen.counts[key as TipoJornada] > 0).map(([key, config]) =>
-            `<tr><td>${config.short} - ${config.label}</td><td>${resumen.counts[key as TipoJornada]}</td></tr>`
+            `<tr><td><strong>${config.short}</strong> ${config.label}</td><td>${resumen.counts[key as TipoJornada]}</td></tr>`
         ).join('')}
             ${resumen.counts.sin_marcar > 0 ? `<tr><td>Sin marcar</td><td>${resumen.counts.sin_marcar}</td></tr>` : ''}
           </table>
