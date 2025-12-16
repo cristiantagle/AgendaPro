@@ -43,11 +43,11 @@ export async function exportAttendanceToPDF(
 ) {
   // Crear el HTML del reporte con colores
   const html = `
-    <div style="font-family: Arial, sans-serif; padding: 15px; max-width: 800px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+    <div style="font-family: Arial, sans-serif; padding: 15px; max-width: 800px; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
       <div style="margin-bottom: 12px; border-bottom: 3px solid #333; padding-bottom: 8px;">
         <h1 style="margin: 0 0 4px 0; font-size: 20px; color: #000;">Reporte de Asistencia</h1>
-        <p style="margin: 3px 0; font-size: 13px;"><strong>${nombreTrabajador}</strong> | ${mes} ${year} (${rangeLabel})</p>
-        <p style="margin: 3px 0; font-size: 13px;">Sueldo Base: <strong>$${sueldoBase.toLocaleString("es-CL")}</strong></p>
+        <p style="margin: 3px 0; font-size: 13px; color: #000;"><strong>${nombreTrabajador}</strong> | ${mes} ${year} (${rangeLabel})</p>
+        <p style="margin: 3px 0; font-size: 13px; color: #000;">Sueldo Base: <strong>$${sueldoBase.toLocaleString("es-CL")}</strong></p>
       </div>
       
       <div style="display: flex; gap: 20px;">
@@ -60,18 +60,18 @@ export async function exportAttendanceToPDF(
             ${calendar.map(day => {
     const dayNum = parseInt(day.fecha.split("-")[2], 10);
     const config = day.tipoJornada ? tipoJornadaConfig[day.tipoJornada] : null;
-    const bgColor = config ? config.color : '#f3f4f6';
-    const textColor = config ? '#ffffff' : '#6b7280';
+    const bgColor = config ? config.color : '#e5e7eb';
+    const textColor = config ? '#ffffff' : '#000000';
     return `<div style="text-align: center; padding: 8px 4px; background-color: ${bgColor}; color: ${textColor}; border-radius: 6px; min-height: 40px;">
                   <div style="font-size: 14px; font-weight: bold;">${dayNum}</div>
                   <div style="font-size: 11px; font-weight: bold; margin-top: 2px;">${config ? config.short : '-'}</div>
                 </div>`;
   }).join('')}
           </div>
-          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #ddd;">
+          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #999;">
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
               ${Object.entries(tipoJornadaConfig).map(([, cfg]) =>
-    `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 9px;">
+    `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 9px; color: #000;">
                   <span style="width: 16px; height: 16px; background-color: ${cfg.color}; border-radius: 3px; display: inline-block;"></span>
                   ${cfg.short}: ${cfg.label}
                 </span>`
@@ -81,26 +81,26 @@ export async function exportAttendanceToPDF(
         </div>
         
         <div style="flex: 1;">
-          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+          <table style="width: 100%; font-size: 12px; border-collapse: collapse; color: #000;">
             <tr>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: #f3f4f6; font-weight: bold;">Tipo</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: center; background-color: #f3f4f6; font-weight: bold;">Días</th>
+              <th style="padding: 8px; border: 1px solid #999; text-align: left; background-color: #e5e7eb; font-weight: bold; color: #000;">Tipo</th>
+              <th style="padding: 8px; border: 1px solid #999; text-align: center; background-color: #e5e7eb; font-weight: bold; color: #000;">Días</th>
             </tr>
             ${Object.entries(tipoJornadaConfig).filter(([key]) => resumen.counts[key as TipoJornada] > 0).map(([key, config]) =>
     `<tr>
-                  <td style="padding: 6px 8px; border: 1px solid #ddd;">
+                  <td style="padding: 6px 8px; border: 1px solid #999; color: #000;">
                     <span style="display: inline-block; width: 12px; height: 12px; background-color: ${config.color}; border-radius: 2px; margin-right: 6px; vertical-align: middle;"></span>
                     ${config.label}
                   </td>
-                  <td style="padding: 6px 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${resumen.counts[key as TipoJornada]}</td>
+                  <td style="padding: 6px 8px; border: 1px solid #999; text-align: center; font-weight: bold; color: #000;">${resumen.counts[key as TipoJornada]}</td>
                 </tr>`
   ).join('')}
-            ${resumen.counts.sin_marcar > 0 ? `<tr><td style="padding: 6px 8px; border: 1px solid #ddd;">Sin marcar</td><td style="padding: 6px 8px; border: 1px solid #ddd; text-align: center;">${resumen.counts.sin_marcar}</td></tr>` : ''}
+            ${resumen.counts.sin_marcar > 0 ? `<tr><td style="padding: 6px 8px; border: 1px solid #999; color: #000;">Sin marcar</td><td style="padding: 6px 8px; border: 1px solid #999; text-align: center; color: #000;">${resumen.counts.sin_marcar}</td></tr>` : ''}
           </table>
-          <div style="margin-top: 12px; padding: 12px; background-color: #ecfdf5; border: 2px solid #10b981; border-radius: 8px;">
-            <p style="margin: 4px 0; font-size: 12px;">Días en período: <strong>${resumen.diasRango}</strong> de ${resumen.diasMes}</p>
-            <p style="margin: 4px 0; font-size: 12px;">Días pagados equiv.: <strong>${resumen.diasPagados.toFixed(1)}</strong></p>
-            <p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold; color: #059669;">Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</p>
+          <div style="margin-top: 12px; padding: 12px; background-color: #d1fae5; border: 2px solid #059669; border-radius: 8px;">
+            <p style="margin: 4px 0; font-size: 12px; color: #000;">Días en período: <strong>${resumen.diasRango}</strong> de ${resumen.diasMes}</p>
+            <p style="margin: 4px 0; font-size: 12px; color: #000;">Días pagados equiv.: <strong>${resumen.diasPagados.toFixed(1)}</strong></p>
+            <p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold; color: #047857;">Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</p>
           </div>
         </div>
       </div>
