@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2, FileSpreadsheet } from "lucide-react";
+import { exportAttendanceToExcel } from "@/lib/excel-export";
 
 type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta" | "feriado";
 
@@ -371,9 +372,25 @@ export function ManualAttendancePanel({ employees }: Props) {
                 </div>
 
                 {selectedEmployee && (
-                    <button onClick={handlePrint} className="flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-500">
-                        <Printer className="h-4 w-4" /> Imprimir
-                    </button>
+                    <>
+                        <button onClick={handlePrint} className="flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-500">
+                            <Printer className="h-4 w-4" /> Imprimir
+                        </button>
+                        <button
+                            onClick={() => exportAttendanceToExcel(
+                                selectedEmp?.nombreCompleto ?? "",
+                                meses[month - 1],
+                                year,
+                                rangeLabel,
+                                selectedEmp?.sueldoMensual ?? 0,
+                                filteredCalendar,
+                                resumen
+                            )}
+                            className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" /> Excel
+                        </button>
+                    </>
                 )}
             </div>
 
