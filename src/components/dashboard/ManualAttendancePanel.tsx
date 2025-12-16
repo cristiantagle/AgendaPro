@@ -48,7 +48,7 @@ type Props = {
     employees: Employee[];
 };
 
-type RangeMode = "mes" | "quincena1" | "quincena2";
+type RangeMode = "mes" | "quincena1" | "quincena2" | "personalizado";
 
 export function ManualAttendancePanel({ employees }: Props) {
     const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -63,6 +63,8 @@ export function ManualAttendancePanel({ employees }: Props) {
 
     // Range selector state
     const [rangeMode, setRangeMode] = useState<RangeMode>("mes");
+    const [customStart, setCustomStart] = useState(1);
+    const [customEnd, setCustomEnd] = useState(15);
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -116,9 +118,12 @@ export function ManualAttendancePanel({ employees }: Props) {
             const dayNum = parseInt(day.fecha.split("-")[2], 10);
             if (rangeMode === "quincena1") return dayNum >= 1 && dayNum <= 15;
             if (rangeMode === "quincena2") return dayNum >= 16;
+            if (rangeMode === "personalizado") {
+                return dayNum >= customStart && dayNum <= customEnd;
+            }
             return true;
         });
-    }, [calendar, rangeMode]);
+    }, [calendar, rangeMode, customStart, customEnd]);
 
     // Calcular resumen basado en rango filtrado
     const resumen = useMemo(() => {
@@ -150,8 +155,9 @@ export function ManualAttendancePanel({ employees }: Props) {
     const rangeLabel = useMemo(() => {
         if (rangeMode === "quincena1") return "1 al 15";
         if (rangeMode === "quincena2") return `16 al ${daysInMonth}`;
+        if (rangeMode === "personalizado") return `${customStart} al ${customEnd}`;
         return "Mes completo";
-    }, [rangeMode, daysInMonth]);
+    }, [rangeMode, daysInMonth, customStart, customEnd]);
 
     // Toggle day selection for bulk mode
     const toggleDaySelection = (fecha: string) => {
@@ -463,6 +469,37 @@ export function ManualAttendancePanel({ employees }: Props) {
                     >
                         16 - {daysInMonth}
                     </button>
+                    <button
+                        onClick={() => setRangeMode("personalizado")}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${rangeMode === "personalizado"
+                            ? "bg-cyan-600 text-white"
+                            : "bg-white/10 text-gray-300 hover:bg-white/20"
+                            }`}
+                    >
+                        Personalizado
+                    </button>
+                    {rangeMode === "personalizado" && (
+                        <div className="flex items-center gap-2 ml-2">
+                            <span className="text-xs text-gray-400">Día</span>
+                            <input
+                                type="number"
+                                min={1}
+                                max={daysInMonth}
+                                value={customStart}
+                                onChange={e => setCustomStart(Math.max(1, Math.min(daysInMonth, Number(e.target.value))))}
+                                className="w-12 rounded bg-white/10 border border-white/20 px-2 py-1 text-xs text-white text-center"
+                            />
+                            <span className="text-xs text-gray-400">al</span>
+                            <input
+                                type="number"
+                                min={1}
+                                max={daysInMonth}
+                                value={customEnd}
+                                onChange={e => setCustomEnd(Math.max(1, Math.min(daysInMonth, Number(e.target.value))))}
+                                className="w-12 rounded bg-white/10 border border-white/20 px-2 py-1 text-xs text-white text-center"
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 
