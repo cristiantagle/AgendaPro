@@ -74,7 +74,8 @@ export type TipoJornada =
   | "permiso_sin_goce"   // Permiso sin goce de sueldo
   | "vacaciones"         // Día de vacaciones
   | "licencia_medica"    // Licencia médica
-  | "falta";             // Falta injustificada
+  | "falta"              // Falta injustificada
+  | "feriado";           // Feriado legal (pagado)
 
 
 

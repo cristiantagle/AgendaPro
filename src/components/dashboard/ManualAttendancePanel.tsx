@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2 } from "lucide-react";
 
-type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta";
+type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta" | "feriado";
 
 type CalendarDay = {
     fecha: string;
@@ -28,6 +28,7 @@ const tipoJornadaConfig: Record<TipoJornada, { label: string; short: string; col
     vacaciones: { label: "Vacaciones", short: "VA", color: "#06b6d4", bgClass: "bg-cyan-500", paga: true, factor: 1 },
     licencia_medica: { label: "Licencia Médica", short: "LM", color: "#f97316", bgClass: "bg-orange-500", paga: true, factor: 1 },
     falta: { label: "Falta", short: "FA", color: "#ef4444", bgClass: "bg-red-500", paga: false, factor: 0 },
+    feriado: { label: "Feriado", short: "FE", color: "#ec4899", bgClass: "bg-pink-500", paga: true, factor: 1 },
 };
 
 const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
@@ -108,7 +109,7 @@ export function ManualAttendancePanel({ employees }: Props) {
     const resumen = useMemo(() => {
         const counts: Record<TipoJornada | "sin_marcar", number> = {
             completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
-            vacaciones: 0, licencia_medica: 0, falta: 0, sin_marcar: 0
+            vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0
         };
         let diasPagados = 0;
 

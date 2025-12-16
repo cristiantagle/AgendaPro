@@ -17,6 +17,7 @@ const singleDateSchema = z.object({
         "vacaciones",
         "licencia_medica",
         "falta",
+        "feriado",
     ]),
     horaEntrada: z.string().transform((val) => new Date(val)).optional(),
     horaSalida: z.string().transform((val) => new Date(val)).optional(),
@@ -35,6 +36,7 @@ const bulkDateSchema = z.object({
         "vacaciones",
         "licencia_medica",
         "falta",
+        "feriado",
     ]),
     notas: z.string().optional(),
 });
