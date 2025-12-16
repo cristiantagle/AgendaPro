@@ -239,29 +239,29 @@ export function ManualAttendancePanel({ employees }: Props) {
         printWindow.document.write(`
       <html><head><title>Reporte Asistencia - ${selectedEmp?.nombreCompleto} - ${meses[month - 1]} ${year}</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 15px; max-width: 800px; margin: 0 auto; }
+        body { font-family: Arial, sans-serif; padding: 15px; max-width: 900px; margin: 0 auto; }
         .header { margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-        .header h1 { margin: 0 0 4px 0; font-size: 16px; }
-        .header p { margin: 2px 0; font-size: 11px; }
-        .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
-        .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-bottom: 1px; }
-        .week-header span { text-align: center; font-weight: bold; font-size: 9px; padding: 3px; border: 1px solid #000; background: #eee; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
-        .day-cell { text-align: center; padding: 4px 1px; font-size: 9px; border: 1px solid #999; }
+        .header h1 { margin: 0 0 4px 0; font-size: 18px; }
+        .header p { margin: 2px 0; font-size: 12px; }
+        .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 15px; }
+        .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 2px; }
+        .week-header span { text-align: center; font-weight: bold; font-size: 11px; padding: 5px; border: 1px solid #000; background: #eee; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .day-cell { text-align: center; padding: 6px 2px; border: 1px solid #999; min-height: 32px; }
         .day-cell.empty { border: none; }
         .day-cell.marked { border: 2px solid #000; font-weight: bold; }
         .day-cell.unpaid { background: repeating-linear-gradient(45deg, #fff, #fff 2px, #ddd 2px, #ddd 4px); }
-        .day-num { font-size: 11px; font-weight: bold; }
-        .day-type { font-size: 10px; font-weight: bold; margin-top: 1px; }
-        .summary-table { width: 100%; font-size: 10px; border-collapse: collapse; }
-        .summary-table th, .summary-table td { padding: 3px 5px; border: 1px solid #000; text-align: left; }
+        .day-num { font-size: 13px; font-weight: bold; }
+        .day-type { font-size: 12px; font-weight: bold; margin-top: 2px; }
+        .summary-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        .summary-table th, .summary-table td { padding: 5px 8px; border: 1px solid #000; text-align: left; }
         .summary-table th { background: #eee; font-weight: bold; }
-        .total-box { margin-top: 8px; padding: 8px; border: 2px solid #000; font-size: 11px; }
-        .total-box strong { font-size: 13px; }
-        .legend { margin-top: 6px; font-size: 8px; border-top: 1px solid #999; padding-top: 4px; }
-        .legend-row { display: flex; flex-wrap: wrap; gap: 8px; }
-        .legend-item { display: flex; align-items: center; gap: 2px; }
-        .legend-box { width: 10px; height: 10px; border: 1px solid #000; display: inline-flex; align-items: center; justify-content: center; font-size: 6px; font-weight: bold; }
+        .total-box { margin-top: 10px; padding: 10px; border: 2px solid #000; font-size: 12px; }
+        .total-box strong { font-size: 15px; }
+        .legend { margin-top: 8px; font-size: 10px; border-top: 1px solid #999; padding-top: 6px; }
+        .legend-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 3px; }
+        .legend-box { width: 14px; height: 14px; border: 1px solid #000; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; }
       </style></head><body>
       <div class="header">
         <h1>Reporte de Asistencia</h1>
