@@ -239,47 +239,74 @@ export function ManualAttendancePanel({ employees }: Props) {
         printWindow.document.write(`
       <html><head><title>Reporte Asistencia - ${selectedEmp?.nombreCompleto} - ${meses[month - 1]} ${year}</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f5f5f5; }
-        .header { margin-bottom: 20px; }
-        .summary { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
-        .summary-item { padding: 10px; background: #f9f9f9; border-radius: 8px; }
-        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .day { padding: 8px; text-align: center; border: 1px solid #eee; border-radius: 4px; }
-        .day.marked { font-weight: bold; }
-        .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; }
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .header { margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .header h1 { margin: 0 0 5px 0; font-size: 18px; }
+        .header p { margin: 3px 0; font-size: 12px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .calendar-section { }
+        .summary-section { }
+        .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 2px; }
+        .week-header span { text-align: center; font-weight: bold; font-size: 10px; padding: 4px; background: #f0f0f0; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .day-cell { text-align: center; padding: 6px 2px; font-size: 10px; border: 1px solid #ddd; border-radius: 3px; }
+        .day-cell.empty { background: transparent; border: none; }
+        .day-num { font-weight: bold; }
+        .day-type { font-size: 8px; }
+        .summary-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        .summary-table th, .summary-table td { padding: 4px 6px; border: 1px solid #ddd; text-align: left; }
+        .summary-table th { background: #f5f5f5; }
+        .total-box { margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; font-size: 12px; }
+        .total-box strong { font-size: 14px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
         @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
       <div class="header">
         <h1>Reporte de Asistencia</h1>
-        <p><strong>Trabajador:</strong> ${selectedEmp?.nombreCompleto}</p>
-        <p><strong>Período:</strong> ${meses[month - 1]} ${year} (${rangeLabel})</p>
-        <p><strong>Sueldo Base:</strong> $${(selectedEmp?.sueldoMensual ?? 0).toLocaleString("es-CL")}</p>
+        <p><strong>${selectedEmp?.nombreCompleto}</strong> | ${meses[month - 1]} ${year} (${rangeLabel})</p>
+        <p>Sueldo Base: $${(selectedEmp?.sueldoMensual ?? 0).toLocaleString("es-CL")}</p>
       </div>
-      <h3>Resumen</h3>
-      <table>
-        <tr><th>Tipo</th><th>Días</th><th>Factor</th></tr>
-        ${Object.entries(tipoJornadaConfig).map(([key, config]) =>
-            `<tr><td>${config.label}</td><td>${resumen.counts[key as TipoJornada]}</td><td>${config.factor}</td></tr>`
-        ).join('')}
-        <tr><td>Sin Marcar</td><td>${resumen.counts.sin_marcar}</td><td>-</td></tr>
-      </table>
-      <div class="total">
-        <p>Días del mes: ${resumen.diasMes}</p>
-        <p>Días pagados (equivalentes): ${resumen.diasPagados.toFixed(1)}</p>
-        <p><strong>Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
-      </div>
-      <h3>Detalle del Período (${rangeLabel})</h3>
-      <table>
-        <tr><th>Día</th><th>Fecha</th><th>Tipo</th><th>Notas</th></tr>
-        ${filteredCalendar.map(day => {
-            const d = new Date(day.fecha);
-            const tipo = day.tipoJornada ? tipoJornadaConfig[day.tipoJornada].label : "Sin marcar";
-            return `<tr><td>${d.getDate()}</td><td>${d.toLocaleDateString("es-CL")}</td><td>${tipo}</td><td>${day.notas || "-"}</td></tr>`;
+      <div class="grid">
+        <div class="calendar-section">
+          <div class="week-header">
+            ${diasSemana.map(d => `<span>${d}</span>`).join('')}
+          </div>
+          <div class="calendar-grid">
+            ${Array.from({ length: firstDayOfMonth }).map(() => '<div class="day-cell empty"></div>').join('')}
+            ${calendar.map(day => {
+            const dayNum = parseInt(day.fecha.split("-")[2], 10);
+            const config = day.tipoJornada ? tipoJornadaConfig[day.tipoJornada] : null;
+            const bg = config ? config.color : '#f9f9f9';
+            const text = config ? '#fff' : '#999';
+            return `<div class="day-cell" style="background:${bg};color:${text}">
+                  <div class="day-num">${dayNum}</div>
+                  <div class="day-type">${config ? config.short : '-'}</div>
+                </div>`;
         }).join('')}
-      </table>
+          </div>
+          <div class="legend">
+            ${Object.entries(tipoJornadaConfig).map(([, cfg]) =>
+            `<div class="legend-item"><div class="legend-color" style="background:${cfg.color}"></div>${cfg.short}: ${cfg.label}</div>`
+        ).join('')}
+          </div>
+        </div>
+        <div class="summary-section">
+          <table class="summary-table">
+            <tr><th>Tipo</th><th>Días</th></tr>
+            ${Object.entries(tipoJornadaConfig).filter(([key]) => resumen.counts[key as TipoJornada] > 0).map(([key, config]) =>
+            `<tr><td>${config.short} - ${config.label}</td><td>${resumen.counts[key as TipoJornada]}</td></tr>`
+        ).join('')}
+            ${resumen.counts.sin_marcar > 0 ? `<tr><td>Sin marcar</td><td>${resumen.counts.sin_marcar}</td></tr>` : ''}
+          </table>
+          <div class="total-box">
+            <p>Días en período: ${resumen.diasRango} de ${resumen.diasMes}</p>
+            <p>Días pagados equiv.: ${resumen.diasPagados.toFixed(1)}</p>
+            <p><strong>Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
+          </div>
+        </div>
+      </div>
       </body></html>
     `);
         printWindow.document.close();
