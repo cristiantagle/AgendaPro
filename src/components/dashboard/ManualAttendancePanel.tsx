@@ -1,8 +1,17 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2, FileText } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2, FileText, History } from "lucide-react";
 import { exportAttendanceToPDF } from "@/lib/pdf-export";
+
+type AuditLogEntry = {
+    id: string;
+    userName: string | null;
+    action: string;
+    createdAt: string;
+    oldValues: Record<string, unknown> | null;
+    newValues: Record<string, unknown> | null;
+};
 
 type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta" | "feriado";
 
@@ -67,6 +76,11 @@ export function ManualAttendancePanel({ employees }: Props) {
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [bulkTipo, setBulkTipo] = useState<TipoJornada>("completa");
     const [bulkNotas, setBulkNotas] = useState("");
+
+    // Audit log state
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
 
@@ -345,6 +359,23 @@ export function ManualAttendancePanel({ employees }: Props) {
         }
     };
 
+    const handleHistory = async () => {
+        if (!selectedEmployee) return;
+        setLoadingHistory(true);
+        setShowHistoryModal(true);
+        try {
+            const res = await fetch(`/api/audit?recordId=${selectedEmployee}`);
+            if (res.ok) {
+                const data = await res.json();
+                setAuditLogs(data.logs || []);
+            }
+        } catch {
+            setAuditLogs([]);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
     return (
         <div className="space-y-4">
             {error && <div className="rounded-lg bg-red-500/20 border border-red-500/40 p-3 text-red-200 text-sm">{error}</div>}
@@ -390,6 +421,12 @@ export function ManualAttendancePanel({ employees }: Props) {
                             className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500"
                         >
                             <FileText className="h-4 w-4" /> PDF
+                        </button>
+                        <button
+                            onClick={handleHistory}
+                            className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-500"
+                        >
+                            <History className="h-4 w-4" /> Historial
                         </button>
                     </>
                 )}
@@ -663,6 +700,51 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 Cancelar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Historial */}
+            {showHistoryModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-gray-900 p-5 shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <History className="h-5 w-5 text-amber-400" />
+                                Historial de Cambios
+                            </h3>
+                            <button onClick={() => setShowHistoryModal(false)} className="rounded-lg bg-white/10 p-1.5 hover:bg-white/20">
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {loadingHistory ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                            </div>
+                        ) : auditLogs.length === 0 ? (
+                            <p className="text-sm text-gray-400 py-8 text-center">No hay cambios registrados para este trabajador.</p>
+                        ) : (
+                            <div className="max-h-80 overflow-y-auto space-y-2">
+                                {auditLogs.map(log => (
+                                    <div key={log.id} className="rounded-lg bg-white/5 border border-white/10 p-3 text-sm">
+                                        <div className="flex justify-between items-start">
+                                            <span className="text-cyan-400 font-medium">{log.action}</span>
+                                            <span className="text-gray-500 text-xs">
+                                                {new Date(log.createdAt).toLocaleString("es-CL")}
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-400 text-xs mt-1">Por: {log.userName || "Sistema"}</p>
+                                        {log.newValues && (
+                                            <div className="mt-2 text-xs text-gray-300">
+                                                <span className="text-gray-500">Cambio: </span>
+                                                {JSON.stringify(log.newValues).slice(0, 100)}...
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
