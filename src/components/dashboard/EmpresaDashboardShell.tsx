@@ -9,6 +9,7 @@ import { TimeRecordsManager } from "@/components/dashboard/TimeRecordsManager";
 import { WorkersTable } from "@/components/dashboard/WorkersTable";
 import { FuelPanel } from "@/components/dashboard/FuelPanel";
 import { ManualAttendancePanel } from "@/components/dashboard/ManualAttendancePanel";
+import { KPIPanel } from "@/components/dashboard/KPIPanel";
 import { DashboardTopBar } from "@/components/navigation/DashboardTopBar";
 import { CreateWorkerForm } from "@/components/forms/CreateWorkerForm";
 import { PaySettingsForm } from "@/components/forms/PaySettingsForm";
@@ -185,6 +186,10 @@ export function EmpresaDashboardShell({
                     <p className="text-xs text-gray-500">{item.hint}</p>
                   </div>
                 ))}
+              </div>
+              {/* KPIs de Asistencia */}
+              <div className="mt-6">
+                <KPIPanel />
               </div>
             </div>
           </section>
