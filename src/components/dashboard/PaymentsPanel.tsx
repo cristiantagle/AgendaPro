@@ -251,18 +251,55 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
           </div>
 
           {/* Filtro Principal */}
-          <div className="w-full lg:w-72">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Filtrar por Trabajador</label>
-            <select
-              value={filterEmployeeId}
-              onChange={(e) => setFilterEmployeeId(e.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-300 transition-all"
-            >
-              <option value="all">Ver Todos</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.nombre}</option>
-              ))}
-            </select>
+          {/* Filtro Principal */}
+          <div className="w-full lg:w-96 flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Filtrar por Trabajador</label>
+            <div className="flex gap-2">
+              <select
+                value={filterEmployeeId}
+                onChange={(e) => setFilterEmployeeId(e.target.value)}
+                className="flex-1 rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-300 transition-all"
+              >
+                <option value="all">Ver Todos</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.nombre}</option>
+                ))}
+              </select>
+
+              {filterEmployeeId !== "all" && (
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={loadingCalendar}
+                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-violet-500 hover:shadow-violet-500/20 disabled:opacity-50 whitespace-nowrap"
+                  title="Descargar Reporte de Asistencia"
+                >
+                  {loadingCalendar ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                  PDF
+                </button>
+              )}
+            </div>
+
+            {filterEmployeeId !== "all" && (
+              <div className="flex justify-end gap-2 text-[10px] text-gray-400 px-1">
+                <span>Periodo:</span>
+                <select
+                  value={month}
+                  onChange={(e) => setMonth(Number(e.target.value))}
+                  className="bg-transparent border-b border-white/20 focus:border-cyan-400 outline-none text-white text-right"
+                >
+                  {meses.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                </select>
+                <select
+                  value={year}
+                  onChange={(e) => setYear(Number(e.target.value))}
+                  className="bg-transparent border-b border-white/20 focus:border-cyan-400 outline-none text-white"
+                >
+                  <option value={2024}>2024</option>
+                  <option value={2025}>2025</option>
+                  <option value={2026}>2026</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
