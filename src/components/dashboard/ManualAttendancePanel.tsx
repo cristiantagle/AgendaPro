@@ -94,10 +94,19 @@ export function ManualAttendancePanel({ employees }: Props) {
             const res = await fetch(
                 `/api/time-records/calendar?employeeId=${selectedEmployee}&year=${year}&month=${month}`
             );
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+
+            const text = await res.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch {
+                throw new Error("Respuesta inválida del servidor: " + text.substring(0, 50));
+            }
+
+            if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
             setCalendar(data.calendar || []);
         } catch (err) {
+            console.error(err);
             setError(err instanceof Error ? err.message : "Error al cargar calendario");
         } finally {
             setLoading(false);
@@ -195,8 +204,16 @@ export function ManualAttendancePanel({ employees }: Props) {
                     notas: bulkNotas || undefined,
                 }),
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+
+            const text = await res.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch {
+                throw new Error("Respuesta inválida al guardar: " + text.substring(0, 50));
+            }
+
+            if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
             setSuccess(`${selectedDays.length} marcaciones guardadas`);
             setShowBulkModal(false);
             setSelectedDays([]);
@@ -231,8 +248,16 @@ export function ManualAttendancePanel({ employees }: Props) {
                     notas: formNotas || undefined,
                 }),
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+
+            const text = await res.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch {
+                throw new Error("Respuesta inválida al guardar: " + text.substring(0, 50));
+            }
+
+            if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
             setSuccess("Marcación guardada");
             setShowModal(false);
             fetchCalendar();
