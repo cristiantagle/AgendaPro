@@ -673,6 +673,84 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                                 Guardar
                             </button>
+
+                            {formTipo === "vacaciones" && (
+                                <button
+                                    onClick={() => {
+                                        const printWindow = window.open('', '_blank');
+                                        if (!printWindow) return;
+                                        const fecha = new Date(selectedDay.fecha);
+                                        const fechaStr = fecha.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+                                        const hoy = new Date().toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+
+                                        printWindow.document.write(`
+                                            <html>
+                                                <head>
+                                                    <title>Papeleta de Vacaciones - ${selectedEmp?.nombreCompleto}</title>
+                                                    <style>
+                                                        body { font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+                                                        .header { text-align: center; margin-bottom: 40px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 20px; }
+                                                        .content { margin-bottom: 60px; text-align: justify; }
+                                                        .info-row { margin-bottom: 15px; }
+                                                        .label { font-weight: bold; }
+                                                        .signatures { display: flex; justify-content: space-between; margin-top: 100px; }
+                                                        .sig-box { border-top: 1px solid #000; width: 40%; text-align: center; padding-top: 10px; }
+                                                        .nota { font-size: 12px; color: #666; margin-top: 40px; border-top: 1px dotted #ccc; padding-top: 10px; }
+                                                    </style>
+                                                </head>
+                                                <body>
+                                                    <div class="header">
+                                                        <h2>Solicitud y Comprobante de Feriado Legal</h2>
+                                                    </div>
+                                                    
+                                                    <div class="content">
+                                                        <div class="info-row">
+                                                            <span class="label">Nombre del Trabajador:</span> ${selectedEmp?.nombreCompleto}
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="label">Fecha de Solicitud:</span> ${hoy}
+                                                        </div>
+                                                        
+                                                        <p style="margin-top: 30px;">
+                                                            Por el presente documento, el trabajador individualizado solicita hacer uso de <strong>1 día</strong> de su feriado legal, correspondiente a la siguiente fecha:
+                                                        </p>
+                                                        
+                                                        <p style="text-align: center; font-size: 18px; margin: 20px 0; font-weight: bold;">
+                                                            ${fechaStr}
+                                                        </p>
+                                                        
+                                                        <p>
+                                                            El empleador autoriza dicho feriado, imputándose al saldo de vacaciones pendientes del trabajador.
+                                                        </p>
+
+                                                        ${formNotas ? `<p><strong>Observaciones:</strong> ${formNotas}</p>` : ''}
+                                                    </div>
+                                                    
+                                                    <div class="signatures">
+                                                        <div class="sig-box">
+                                                            Firma Trabajador
+                                                        </div>
+                                                        <div class="sig-box">
+                                                            Firma Empleador / Jefe Directo
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="nota">
+                                                        Nota: Este comprobante acredita el uso efectivo del feriado legal en la fecha indicada.
+                                                    </div>
+                                                </body>
+                                            </html>
+                                        `);
+                                        printWindow.document.close();
+                                        printWindow.print();
+                                    }}
+                                    className="flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-500"
+                                    title="Imprimir Papeleta de Vacaciones"
+                                >
+                                    <Printer className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+
                             {selectedDay?.recordId && (
                                 <button
                                     onClick={handleDelete}
