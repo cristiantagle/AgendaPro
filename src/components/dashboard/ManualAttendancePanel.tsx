@@ -700,7 +700,7 @@ export function ManualAttendancePanel({ employees }: Props) {
                                                 </head>
                                                 <body>
                                                     <div class="header">
-                                                        <h2>Solicitud y Comprobante de Feriado Legal</h2>
+                                                        <h2>Solicitud y Comprobante de Vacaciones</h2>
                                                     </div>
                                                     
                                                     <div class="content">
@@ -712,7 +712,7 @@ export function ManualAttendancePanel({ employees }: Props) {
                                                         </div>
                                                         
                                                         <p style="margin-top: 30px;">
-                                                            Por el presente documento, el trabajador individualizado solicita hacer uso de <strong>1 día</strong> de su feriado legal, correspondiente a la siguiente fecha:
+                                                            Por el presente documento, el trabajador individualizado solicita hacer uso de <strong>1 día</strong> de sus vacaciones, correspondiente a la siguiente fecha:
                                                         </p>
                                                         
                                                         <p style="text-align: center; font-size: 18px; margin: 20px 0; font-weight: bold;">
@@ -720,7 +720,7 @@ export function ManualAttendancePanel({ employees }: Props) {
                                                         </p>
                                                         
                                                         <p>
-                                                            El empleador autoriza dicho feriado, imputándose al saldo de vacaciones pendientes del trabajador.
+                                                            El empleador autoriza dichas vacaciones, imputándose al saldo pendiente del trabajador.
                                                         </p>
 
                                                         ${formNotas ? `<p><strong>Observaciones:</strong> ${formNotas}</p>` : ''}
@@ -736,7 +736,7 @@ export function ManualAttendancePanel({ employees }: Props) {
                                                     </div>
                                                     
                                                     <div class="nota">
-                                                        Nota: Este comprobante acredita el uso efectivo del feriado legal en la fecha indicada.
+                                                        Nota: Este comprobante acredita el uso efectivo de las vacaciones en la fecha indicada.
                                                     </div>
                                                 </body>
                                             </html>
@@ -811,6 +811,90 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                                 Aplicar a {selectedDays.length} días
                             </button>
+
+                            {bulkTipo === "vacaciones" && selectedDays.length > 0 && (
+                                <button
+                                    onClick={() => {
+                                        const printWindow = window.open('', '_blank');
+                                        if (!printWindow) return;
+
+                                        // Ordenar fechas para encontrar rango
+                                        const fechasOrd = [...selectedDays].sort();
+                                        const fechaIni = new Date(fechasOrd[0]);
+                                        const fechaFin = new Date(fechasOrd[fechasOrd.length - 1]);
+
+                                        const fechaIniStr = fechaIni.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+                                        const fechaFinStr = fechaFin.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+                                        const hoy = new Date().toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+                                        const totalDias = selectedDays.length;
+
+                                        printWindow.document.write(`
+                                            <html>
+                                                <head>
+                                                    <title>Papeleta de Vacaciones - ${selectedEmp?.nombreCompleto}</title>
+                                                    <style>
+                                                        body { font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+                                                        .header { text-align: center; margin-bottom: 40px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 20px; }
+                                                        .content { margin-bottom: 60px; text-align: justify; }
+                                                        .info-row { margin-bottom: 15px; }
+                                                        .label { font-weight: bold; }
+                                                        .signatures { display: flex; justify-content: space-between; margin-top: 100px; }
+                                                        .sig-box { border-top: 1px solid #000; width: 40%; text-align: center; padding-top: 10px; }
+                                                        .nota { font-size: 12px; color: #666; margin-top: 40px; border-top: 1px dotted #ccc; padding-top: 10px; }
+                                                    </style>
+                                                </head>
+                                                <body>
+                                                    <div class="header">
+                                                        <h2>Solicitud y Comprobante de Vacaciones</h2>
+                                                    </div>
+                                                    
+                                                    <div class="content">
+                                                        <div class="info-row">
+                                                            <span class="label">Nombre del Trabajador:</span> ${selectedEmp?.nombreCompleto}
+                                                        </div>
+                                                        <div class="info-row">
+                                                            <span class="label">Fecha de Solicitud:</span> ${hoy}
+                                                        </div>
+                                                        
+                                                        <p style="margin-top: 30px;">
+                                                            Por el presente documento, el trabajador individualizado solicita hacer uso de <strong>${totalDias} días</strong> de sus vacaciones, correspondiente al período:
+                                                        </p>
+                                                        
+                                                        <p style="text-align: center; font-size: 18px; margin: 20px 0; font-weight: bold;">
+                                                            Desde el ${fechaIniStr} hasta el ${fechaFinStr}
+                                                        </p>
+                                                        
+                                                        <p>
+                                                            El empleador autoriza dichas vacaciones, imputándose al saldo pendiente del trabajador.
+                                                        </p>
+
+                                                        ${bulkNotas ? `<p><strong>Observaciones:</strong> ${bulkNotas}</p>` : ''}
+                                                    </div>
+                                                    
+                                                    <div class="signatures">
+                                                        <div class="sig-box">
+                                                            Firma Trabajador
+                                                        </div>
+                                                        <div class="sig-box">
+                                                            Firma Empleador / Jefe Directo
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="nota">
+                                                        Nota: Este comprobante acredita el uso efectivo de las vacaciones en las fechas indicadas.
+                                                    </div>
+                                                </body>
+                                            </html>
+                                        `);
+                                        printWindow.document.close();
+                                        printWindow.print();
+                                    }}
+                                    className="flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-500"
+                                    title="Imprimir Papeleta de Vacaciones (Rango)"
+                                >
+                                    <Printer className="h-3.5 w-3.5" />
+                                </button>
+                            )}
                             <button onClick={() => setShowBulkModal(false)} className="rounded bg-white/10 px-3 py-2 text-sm text-gray-300 hover:bg-white/20">
                                 Cancelar
                             </button>
