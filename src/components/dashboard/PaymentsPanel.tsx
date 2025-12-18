@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Printer } from "lucide-react";
 import { exportAttendanceToPDF } from "@/lib/pdf-export";
 
 type EmployeeOption = {
@@ -236,6 +236,122 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
     }
   };
 
+  const handlePrint = () => {
+    const emp = employees.find(e => e.id === filterEmployeeId);
+    if (!emp) return;
+
+    const daysInMonth = calendar.length;
+    const counts: Record<TipoJornada | "sin_marcar", number> = {
+      completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
+      vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0
+    };
+    let diasPagados = 0;
+
+    calendar.forEach(day => {
+      if (day.tipoJornada) {
+        const tipo = day.tipoJornada as TipoJornada;
+        if (counts[tipo] !== undefined) {
+          counts[tipo]++;
+          diasPagados += tipoJornadaConfig[tipo].factor;
+        }
+      } else {
+        counts.sin_marcar++;
+      }
+    });
+
+    const sueldoBase = emp.sueldoMensual ?? 0;
+    const valorDia = daysInMonth > 0 ? sueldoBase / daysInMonth : 0;
+    const sueldoProporcional = valorDia * diasPagados;
+
+    const diasRango = calendar.length;
+    const rangeLabel = "Mes completo";
+    const firstDayOfMonth = (() => {
+      const d = new Date(year, month - 1, 1).getDay();
+      return d === 0 ? 6 : d - 1;
+    })();
+    const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html><head><title>Reporte Asistencia - ${emp.nombre} - ${meses[month - 1]} ${year}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 15px; max-width: 900px; margin: 0 auto; }
+        .header { margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+        .header h1 { margin: 0 0 4px 0; font-size: 18px; }
+        .header p { margin: 2px 0; font-size: 12px; }
+        .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 15px; }
+        .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 2px; }
+        .week-header span { text-align: center; font-weight: bold; font-size: 11px; padding: 5px; border: 1px solid #000; background: #eee; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .day-cell { text-align: center; padding: 6px 2px; border: 1px solid #999; min-height: 32px; }
+        .day-cell.empty { border: none; }
+        .day-cell.marked { border: 2px solid #000; font-weight: bold; }
+        .day-cell.unpaid { background: repeating-linear-gradient(45deg, #fff, #fff 2px, #ddd 2px, #ddd 4px); }
+        .day-num { font-size: 13px; font-weight: bold; }
+        .day-type { font-size: 12px; font-weight: bold; margin-top: 2px; }
+        .summary-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        .summary-table th, .summary-table td { padding: 5px 8px; border: 1px solid #000; text-align: left; }
+        .summary-table th { background: #eee; font-weight: bold; }
+        .total-box { margin-top: 10px; padding: 10px; border: 2px solid #000; font-size: 12px; }
+        .total-box strong { font-size: 15px; }
+        .legend { margin-top: 8px; font-size: 10px; border-top: 1px solid #999; padding-top: 6px; }
+        .legend-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 3px; }
+        .legend-box { width: 14px; height: 14px; border: 1px solid #000; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; }
+      </style></head><body>
+      <div class="header">
+        <h1>Reporte de Asistencia</h1>
+        <p><strong>${emp.nombre}</strong> | ${meses[month - 1]} ${year} (${rangeLabel})</p>
+        <p>Sueldo Base: $${(emp.sueldoMensual ?? 0).toLocaleString("es-CL")}</p>
+      </div>
+      <div class="grid">
+        <div class="calendar-section">
+          <div class="week-header">
+            ${diasSemana.map(d => `<span>${d}</span>`).join('')}
+          </div>
+          <div class="calendar-grid">
+            ${Array.from({ length: firstDayOfMonth }).map(() => '<div class="day-cell empty"></div>').join('')}
+            ${calendar.map(day => {
+      const dayNum = parseInt(day.fecha.split("-")[2], 10);
+      const config = day.tipoJornada ? tipoJornadaConfig[day.tipoJornada] : null;
+      const markedClass = config ? 'marked' : '';
+      const unpaidClass = config && !config.paga ? 'unpaid' : '';
+      return `<div class="day-cell ${markedClass} ${unpaidClass}">
+                  <div class="day-num">${dayNum}</div>
+                  <div class="day-type">${config ? config.short : ''}</div>
+                </div>`;
+    }).join('')}
+          </div>
+          <div class="legend">
+            <div class="legend-row">
+              ${Object.entries(tipoJornadaConfig).map(([, cfg]) =>
+      `<span class="legend-item"><span class="legend-box">${cfg.short}</span> ${cfg.label}${cfg.paga ? '' : ' (no paga)'}</span>`
+    ).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="summary-section">
+          <table class="summary-table">
+            <tr><th>Tipo</th><th>Días</th></tr>
+            ${Object.entries(tipoJornadaConfig).filter(([key]) => counts[key as TipoJornada] > 0).map(([key, config]) =>
+      `<tr><td><strong>${config.short}</strong> ${config.label}</td><td>${counts[key as TipoJornada]}</td></tr>`
+    ).join('')}
+            ${counts.sin_marcar > 0 ? `<tr><td>Sin marcar</td><td>${counts.sin_marcar}</td></tr>` : ''}
+          </table>
+          <div class="total-box">
+            <p>Días en período: ${diasRango} de ${daysInMonth}</p>
+            <p>Días pagados equiv.: ${diasPagados.toFixed(1)}</p>
+            <p><strong>Sueldo Proporcional: $${sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
+          </div>
+        </div>
+      </div>
+      </body></html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <section className="space-y-6">
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-gray-100 backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,0.55)]">
@@ -250,54 +366,63 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
             </p>
           </div>
 
-          {/* Filtro Principal */}
-          {/* Filtro Principal */}
-          <div className="w-full lg:w-96 flex flex-col gap-1">
+          {/* Filtro Principal + Herramientas */}
+          <div className="w-full lg:w-96 flex flex-col gap-3">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Filtrar por Trabajador</label>
-            <div className="flex gap-2">
-              <select
-                value={filterEmployeeId}
-                onChange={(e) => setFilterEmployeeId(e.target.value)}
-                className="flex-1 rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-300 transition-all"
-              >
-                <option value="all">Ver Todos</option>
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>{emp.nombre}</option>
-                ))}
-              </select>
 
-              {filterEmployeeId !== "all" && (
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={loadingCalendar}
-                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-violet-500 hover:shadow-violet-500/20 disabled:opacity-50 whitespace-nowrap"
-                  title="Descargar Reporte de Asistencia"
-                >
-                  {loadingCalendar ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                  PDF
-                </button>
-              )}
-            </div>
+            <select
+              value={filterEmployeeId}
+              onChange={(e) => setFilterEmployeeId(e.target.value)}
+              className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-300 transition-all"
+            >
+              <option value="all">Ver Todos</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.nombre}</option>
+              ))}
+            </select>
 
             {filterEmployeeId !== "all" && (
-              <div className="flex justify-end gap-2 text-[10px] text-gray-400 px-1">
-                <span>Periodo:</span>
-                <select
-                  value={month}
-                  onChange={(e) => setMonth(Number(e.target.value))}
-                  className="bg-transparent border-b border-white/20 focus:border-cyan-400 outline-none text-white text-right"
-                >
-                  {meses.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                </select>
-                <select
-                  value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}
-                  className="bg-transparent border-b border-white/20 focus:border-cyan-400 outline-none text-white"
-                >
-                  <option value={2024}>2024</option>
-                  <option value={2025}>2025</option>
-                  <option value={2026}>2026</option>
-                </select>
+              <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10 mt-1">
+                {/* Selectores de Fecha */}
+                <div className="flex gap-2 items-center text-[10px]">
+                  <select
+                    value={month}
+                    onChange={(e) => setMonth(Number(e.target.value))}
+                    className="bg-transparent border-b border-white/20 focus:border-cyan-400 outline-none text-white text-right py-1"
+                  >
+                    {meses.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                  </select>
+                  <select
+                    value={year}
+                    onChange={(e) => setYear(Number(e.target.value))}
+                    className="bg-transparent border-b border-white/20 focus:border-cyan-400 outline-none text-white py-1"
+                  >
+                    <option value={2024}>2024</option>
+                    <option value={2025}>2025</option>
+                    <option value={2026}>2026</option>
+                  </select>
+                </div>
+
+                {/* Botones de Acción */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePrint}
+                    disabled={loadingCalendar}
+                    className="flex items-center gap-1.5 rounded-lg bg-orange-600/80 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow transition-all hover:bg-orange-500 hover:scale-105 disabled:opacity-50"
+                    title="Imprimir Reporte"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={loadingCalendar}
+                    className="flex items-center gap-1.5 rounded-lg bg-violet-600/80 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow transition-all hover:bg-violet-500 hover:scale-105 disabled:opacity-50"
+                    title="Descargar PDF"
+                  >
+                    {loadingCalendar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                    PDF
+                  </button>
+                </div>
               </div>
             )}
           </div>
