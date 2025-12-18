@@ -224,6 +224,7 @@ export function EmpresaDashboardShell({
                 employees={employees.map((employee) => ({
                   id: employee.id,
                   nombre: employee.nombreCompleto,
+                  sueldoMensual: employee.sueldoMensual,
                 }))}
                 initialPayments={payments}
               />
