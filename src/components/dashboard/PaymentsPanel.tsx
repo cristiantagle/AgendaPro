@@ -266,16 +266,37 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
     const emp = employees.find(e => e.id === filterEmployeeId);
     if (!emp) return;
 
-    const daysInMonth = calendar.length;
-    const counts: Record<TipoJornada | "sin_marcar", number> = {
+    // Crear mapa de días marcados
+    const calendarMap = new Map<string, CalendarDay>();
+    calendar.forEach(day => {
+      calendarMap.set(day.fecha, day);
+    });
+
+    // Determinar hasta qué día calcular
+    const today = new Date();
+    const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+    const lastDayToCount = isCurrentMonth ? today.getDate() : new Date(year, month, 0).getDate();
+
+    const counts: Record<TipoJornada | "sin_marcar" | "fin_semana", number> = {
       completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
-      vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0
+      vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0, fin_semana: 0
     };
     let diasPagados = 0;
 
-    calendar.forEach(day => {
-      if (day.tipoJornada) {
-        const tipo = day.tipoJornada as TipoJornada;
+    // Iterar por TODOS los días del período
+    for (let dia = 1; dia <= lastDayToCount; dia++) {
+      const date = new Date(year, month - 1, dia);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayOfWeek = date.getDay();
+      const esFinDeSemana = dayOfWeek === 0 || dayOfWeek === 6;
+
+      const dayData = calendarMap.get(dateStr);
+
+      if (esFinDeSemana) {
+        counts.fin_semana++;
+        diasPagados += 1;
+      } else if (dayData?.tipoJornada) {
+        const tipo = dayData.tipoJornada as TipoJornada;
         if (counts[tipo] !== undefined) {
           counts[tipo]++;
           diasPagados += tipoJornadaConfig[tipo].factor;
@@ -283,11 +304,11 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
       } else {
         counts.sin_marcar++;
       }
-    });
+    }
 
     const sueldoBase = emp.sueldoMensual ?? 0;
-    const valorDia = daysInMonth > 0 ? sueldoBase / daysInMonth : 0;
-    const sueldoProporcional = valorDia * diasPagados;
+    const valorDia = sueldoBase / 30;
+    const sueldoProporcional = Math.round(valorDia * diasPagados);
 
     const diasRango = calendar.length;
     const rangeLabel = "Mes completo";
@@ -366,7 +387,7 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
             ${counts.sin_marcar > 0 ? `<tr><td>Sin marcar</td><td>${counts.sin_marcar}</td></tr>` : ''}
           </table>
           <div class="total-box">
-            <p>Días en período: ${diasRango} de ${daysInMonth}</p>
+            <p>Días en período: ${diasRango} de ${lastDayToCount}</p>
             <p>Días pagados equiv.: ${diasPagados.toFixed(1)}</p>
             <p><strong>Sueldo Proporcional: $${sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
           </div>
