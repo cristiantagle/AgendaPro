@@ -384,12 +384,41 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
             ${Object.entries(tipoJornadaConfig).filter(([key]) => counts[key as TipoJornada] > 0).map(([key, config]) =>
       `<tr><td><strong>${config.short}</strong> ${config.label}</td><td>${counts[key as TipoJornada]}</td></tr>`
     ).join('')}
+            ${counts.fin_semana > 0 ? `<tr><td>Fines de semana</td><td>${counts.fin_semana}</td></tr>` : ''}
             ${counts.sin_marcar > 0 ? `<tr><td>Sin marcar</td><td>${counts.sin_marcar}</td></tr>` : ''}
           </table>
           <div class="total-box">
             <p>Días en período: ${diasRango} de ${lastDayToCount}</p>
-            <p>Días pagados equiv.: ${diasPagados.toFixed(1)}</p>
+            <p>Días pagados equiv.: ${diasPagados.toFixed(1)} (${counts.fin_semana} fines de semana)</p>
             <p><strong>Sueldo Proporcional: $${sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
+            ${(() => {
+        // Filtrar pagos del empleado en el mes actual
+        const pagosDelMes = payments.filter(p => {
+          const paidDate = new Date(p.paidAt);
+          return p.employeeId === filterEmployeeId &&
+            paidDate.getFullYear() === year &&
+            paidDate.getMonth() + 1 === month;
+        });
+        const totalAdelantos = pagosDelMes
+          .filter(p => p.type === 'adelanto')
+          .reduce((sum, p) => sum + p.amount, 0);
+        const totalQuincenas = pagosDelMes
+          .filter(p => p.type === 'quincena')
+          .reduce((sum, p) => sum + p.amount, 0);
+        const totalDescuentos = totalAdelantos + totalQuincenas;
+        const saldoAPagar = sueldoProporcional - totalDescuentos;
+
+        if (totalDescuentos === 0) return '';
+
+        return `
+              <hr style="margin: 8px 0; border-top: 1px dashed #999;">
+              <p style="font-size: 11px;">Descuentos del mes:</p>
+              ${totalAdelantos > 0 ? `<p style="font-size: 11px; color: #c00;">(-) Adelantos: $${totalAdelantos.toLocaleString("es-CL")}</p>` : ''}
+              ${totalQuincenas > 0 ? `<p style="font-size: 11px; color: #c00;">(-) Quincenas: $${totalQuincenas.toLocaleString("es-CL")}</p>` : ''}
+              <p style="font-size: 14px; font-weight: bold; margin-top: 8px; padding-top: 8px; border-top: 2px solid #000;">
+                SALDO A PAGAR: $${saldoAPagar.toLocaleString("es-CL", { maximumFractionDigits: 0 })}
+              </p>`;
+      })()}
           </div>
         </div>
       </div>
