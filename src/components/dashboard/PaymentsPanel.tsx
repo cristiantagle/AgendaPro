@@ -119,29 +119,40 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
     if (!emp) return;
 
     // Calculate Summary
-    const daysInMonth = calendar.length;
-    const counts: Record<TipoJornada | "sin_marcar", number> = {
+    // LÓGICA: Sueldo / 30 días. Sábados y domingos se pagan siempre.
+    // Solo se descuenta si falta en día hábil (lunes a viernes).
+    const counts: Record<TipoJornada | "sin_marcar" | "fin_semana", number> = {
       completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
-      vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0
+      vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0, fin_semana: 0
     };
     let diasPagados = 0;
 
     calendar.forEach(day => {
-      if (day.tipoJornada) {
-        // Safe cast or check if key exists
+      const date = new Date(day.fecha);
+      const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
+      const esFinDeSemana = dayOfWeek === 0 || dayOfWeek === 6;
+
+      if (esFinDeSemana) {
+        // Fines de semana SIEMPRE se pagan (aunque no marquen)
+        counts.fin_semana++;
+        diasPagados += 1;
+      } else if (day.tipoJornada) {
+        // Día hábil con marcaje
         const tipo = day.tipoJornada as TipoJornada;
         if (counts[tipo] !== undefined) {
           counts[tipo]++;
           diasPagados += tipoJornadaConfig[tipo].factor;
         }
       } else {
+        // Día hábil sin marcar = falta (no se paga)
         counts.sin_marcar++;
       }
     });
 
     const sueldoBase = emp.sueldoMensual ?? 0;
-    const valorDia = daysInMonth > 0 ? sueldoBase / daysInMonth : 0;
-    const sueldoProporcional = valorDia * diasPagados;
+    // FIJO: dividir por 30 días (no por días del mes)
+    const valorDia = sueldoBase / 30;
+    const sueldoProporcional = Math.round(valorDia * diasPagados);
 
     const firstDayOfMonth = (() => {
       const d = new Date(year, month - 1, 1).getDay();
@@ -150,7 +161,7 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
 
     const resumen = {
       counts,
-      diasMes: daysInMonth,
+      diasMes: calendar.length,
       diasRango: calendar.length,
       diasPagados,
       sueldoProporcional
