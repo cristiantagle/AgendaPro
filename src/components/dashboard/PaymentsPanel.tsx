@@ -127,18 +127,33 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
     };
     let diasPagados = 0;
 
+    // Crear mapa de días marcados para búsqueda rápida
+    const calendarMap = new Map<string, CalendarDay>();
     calendar.forEach(day => {
-      const date = new Date(day.fecha);
+      calendarMap.set(day.fecha, day);
+    });
+
+    // Determinar hasta qué día calcular (hasta hoy si es mes actual, o fin de mes si es pasado)
+    const today = new Date();
+    const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+    const lastDayToCount = isCurrentMonth ? today.getDate() : new Date(year, month, 0).getDate();
+
+    // Iterar por TODOS los días del período (no solo los marcados)
+    for (let dia = 1; dia <= lastDayToCount; dia++) {
+      const date = new Date(year, month - 1, dia);
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
       const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
       const esFinDeSemana = dayOfWeek === 0 || dayOfWeek === 6;
+
+      const dayData = calendarMap.get(dateStr);
 
       if (esFinDeSemana) {
         // Fines de semana SIEMPRE se pagan (aunque no marquen)
         counts.fin_semana++;
         diasPagados += 1;
-      } else if (day.tipoJornada) {
+      } else if (dayData?.tipoJornada) {
         // Día hábil con marcaje
-        const tipo = day.tipoJornada as TipoJornada;
+        const tipo = dayData.tipoJornada as TipoJornada;
         if (counts[tipo] !== undefined) {
           counts[tipo]++;
           diasPagados += tipoJornadaConfig[tipo].factor;
@@ -147,7 +162,7 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
         // Día hábil sin marcar = falta (no se paga)
         counts.sin_marcar++;
       }
-    });
+    }
 
     const sueldoBase = emp.sueldoMensual ?? 0;
     // FIJO: dividir por 30 días (no por días del mes)
