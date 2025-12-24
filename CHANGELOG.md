@@ -4,7 +4,16 @@ Todos los cambios notables del proyecto están documentados aquí.
 
 ---
 
-## [2025-12-15] - Módulo Combustible + Asistencia Manual
+## [2025-12-24] - Migración a Supabase TagleLabs
+ 
+ ### 🔧 Infraestructura
+ 
+ - **Cambio de Proyecto Supabase:**
+   - Migrado de proyecto pausado (`lylo...`) a proyecto activo (`vsqdssbf...`).
+   - Actualizadas credenciales de conexión y endpoints.
+   - **Nota:** Requiere actualización manual de variables de entorno en Vercel.
+ 
+ ## [2025-12-15] - Módulo Combustible + Asistencia Manual
 
 ### ✨ Nuevas Funcionalidades
 
