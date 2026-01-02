@@ -30,6 +30,14 @@ type Employee = {
     sueldoMensual?: number | null;
 };
 
+type Payment = {
+    id: string;
+    fecha: string;
+    amount: number;
+    type: "adelanto" | "quincena" | "pago";
+    note?: string | null;
+};
+
 const tipoJornadaConfig: Record<TipoJornada, { label: string; short: string; color: string; bgClass: string; paga: boolean; factor: number }> = {
     completa: { label: "Jornada Completa", short: "JC", color: "#22c55e", bgClass: "bg-green-500", paga: true, factor: 1 },
     media: { label: "Media Jornada", short: "MJ", color: "#eab308", bgClass: "bg-yellow-500", paga: true, factor: 0.5 },
@@ -84,6 +92,9 @@ export function ManualAttendancePanel({ employees }: Props) {
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
+    // Payments state
+    const [payments, setPayments] = useState<Payment[]>([]);
+
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
 
     const fetchCalendar = async () => {
@@ -113,8 +124,27 @@ export function ManualAttendancePanel({ employees }: Props) {
         }
     };
 
+    const fetchPayments = async () => {
+        if (!selectedEmployee) return;
+        try {
+            const res = await fetch(`/api/payments?employeeId=${selectedEmployee}`);
+            if (res.ok) {
+                const data = await res.json();
+                // Filtrar pagos del mes actual
+                const pagosDelMes = (data.payments || []).filter((p: Payment) => {
+                    const fechaPago = new Date(p.fecha);
+                    return fechaPago.getMonth() + 1 === month && fechaPago.getFullYear() === year;
+                });
+                setPayments(pagosDelMes);
+            }
+        } catch (err) {
+            console.error("Error al cargar pagos:", err);
+        }
+    };
+
     useEffect(() => {
         fetchCalendar();
+        fetchPayments();
     }, [selectedEmployee, year, month]);
 
     // Días del mes para cálculo de quincenas
@@ -143,22 +173,44 @@ export function ManualAttendancePanel({ employees }: Props) {
         let diasPagados = 0;
 
         filteredCalendar.forEach(day => {
+            const fecha = new Date(day.fecha);
+            const diaSemana = fecha.getDay(); // 0=Dom, 6=Sab
+            const esFinDeSemana = diaSemana === 0 || diaSemana === 6;
+
             if (day.tipoJornada) {
                 counts[day.tipoJornada]++;
                 diasPagados += tipoJornadaConfig[day.tipoJornada].factor;
+            } else if (esFinDeSemana) {
+                // Fines de semana sin marcar cuentan como día pagado (acompañan)
+                diasPagados += 1;
             } else {
                 counts.sin_marcar++;
             }
         });
 
         const sueldoBase = selectedEmp?.sueldoMensual ?? 0;
-        // Usar total de días del mes para calcular valor día (sueldo mensual / días del mes)
-        const valorDia = daysInMonth > 0 ? sueldoBase / daysInMonth : 0;
-        const sueldoProporcional = valorDia * diasPagados;
+
+        // En Chile se usa siempre 30 días para el cálculo
+        const DIAS_MES_CALCULO = 30;
+        const valorDia = sueldoBase / DIAS_MES_CALCULO;
+        const sueldoProporcional = Math.round(valorDia * diasPagados);
         const diasRango = filteredCalendar.length;
 
-        return { counts, diasPagados, diasMes: daysInMonth, diasRango, sueldoProporcional };
-    }, [filteredCalendar, selectedEmp, daysInMonth]);
+        // Calcular totales de pagos del mes
+        const totalAdelantos = payments
+            .filter(p => p.type === "adelanto")
+            .reduce((sum, p) => sum + p.amount, 0);
+        const totalQuincenas = payments
+            .filter(p => p.type === "quincena")
+            .reduce((sum, p) => sum + p.amount, 0);
+        const totalDescuentos = totalAdelantos + totalQuincenas;
+        const saldoAPagar = sueldoProporcional - totalDescuentos;
+
+        return {
+            counts, diasPagados, diasMes: daysInMonth, diasRango, sueldoProporcional,
+            totalAdelantos, totalQuincenas, totalDescuentos, saldoAPagar
+        };
+    }, [filteredCalendar, selectedEmp, daysInMonth, payments]);
 
     // Texto del rango para reportes
     const rangeLabel = useMemo(() => {
@@ -351,7 +403,11 @@ export function ManualAttendancePanel({ employees }: Props) {
           <div class="total-box">
             <p>Días en período: ${resumen.diasRango} de ${resumen.diasMes}</p>
             <p>Días pagados equiv.: ${resumen.diasPagados.toFixed(1)}</p>
-            <p><strong>Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</strong></p>
+            <p>Sueldo Base: $${(selectedEmp?.sueldoMensual ?? 0).toLocaleString("es-CL")}</p>
+            <p><strong>Sueldo Proporcional: $${resumen.sueldoProporcional.toLocaleString("es-CL")}</strong></p>
+            ${resumen.totalAdelantos > 0 ? `<p style="color: #c00;">(-) Adelantos: $${resumen.totalAdelantos.toLocaleString("es-CL")}</p>` : ''}
+            ${resumen.totalQuincenas > 0 ? `<p style="color: #c00;">(-) Quincenas: $${resumen.totalQuincenas.toLocaleString("es-CL")}</p>` : ''}
+            <p style="font-size: 16px; font-weight: bold; color: #047857; border-top: 2px solid #000; padding-top: 8px; margin-top: 8px;">SALDO A PAGAR: $${resumen.saldoAPagar.toLocaleString("es-CL")}</p>
           </div>
         </div>
       </div>
@@ -649,9 +705,31 @@ export function ManualAttendancePanel({ employees }: Props) {
                                 <span className="text-gray-300">Sueldo Base:</span>
                                 <span className="text-white">${(selectedEmp?.sueldoMensual ?? 0).toLocaleString("es-CL")}</span>
                             </div>
-                            <div className="flex justify-between text-sm font-bold">
+                            <div className="flex justify-between text-sm">
                                 <span className="text-cyan-400">Sueldo Proporcional:</span>
-                                <span className="text-cyan-300">${resumen.sueldoProporcional.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</span>
+                                <span className="text-cyan-300">${resumen.sueldoProporcional.toLocaleString("es-CL")}</span>
+                            </div>
+                            {/* Descuentos */}
+                            {(resumen.totalAdelantos > 0 || resumen.totalQuincenas > 0) && (
+                                <div className="border-t border-white/10 pt-2 mt-2 space-y-1">
+                                    {resumen.totalAdelantos > 0 && (
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-red-400">(-) Adelantos:</span>
+                                            <span className="text-red-300">${resumen.totalAdelantos.toLocaleString("es-CL")}</span>
+                                        </div>
+                                    )}
+                                    {resumen.totalQuincenas > 0 && (
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-red-400">(-) Quincenas:</span>
+                                            <span className="text-red-300">${resumen.totalQuincenas.toLocaleString("es-CL")}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {/* Saldo a pagar */}
+                            <div className="flex justify-between text-sm font-bold border-t border-white/10 pt-2 mt-2">
+                                <span className="text-green-400">SALDO A PAGAR:</span>
+                                <span className="text-green-300">${resumen.saldoAPagar.toLocaleString("es-CL")}</span>
                             </div>
                         </div>
                     </div>
