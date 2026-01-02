@@ -32,7 +32,7 @@ type Employee = {
 
 type Payment = {
     id: string;
-    fecha: string;
+    paidAt: string;
     amount: number;
     type: "adelanto" | "quincena" | "pago";
     note?: string | null;
@@ -132,7 +132,7 @@ export function ManualAttendancePanel({ employees }: Props) {
                 const data = await res.json();
                 // Filtrar pagos del mes actual
                 const pagosDelMes = (data.payments || []).filter((p: Payment) => {
-                    const fechaPago = new Date(p.fecha);
+                    const fechaPago = new Date(p.paidAt);
                     return fechaPago.getMonth() + 1 === month && fechaPago.getFullYear() === year;
                 });
                 setPayments(pagosDelMes);
