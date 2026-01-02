@@ -119,13 +119,13 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
     if (!emp) return;
 
     // Calculate Summary
-    // LÓGICA: Sueldo / 30 días. Sábados y domingos se pagan siempre.
-    // Solo se descuenta si falta en día hábil (lunes a viernes).
+    // LÓGICA: Sueldo base - descuento por días no trabajados
+    // Solo se descuenta si falta, permiso sin goce, o día hábil sin marcar
     const counts: Record<TipoJornada | "sin_marcar" | "fin_semana", number> = {
       completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
       vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0, fin_semana: 0
     };
-    let diasPagados = 0;
+    let diasNoPagados = 0;
 
     // Crear mapa de días marcados para búsqueda rápida
     const calendarMap = new Map<string, CalendarDay>();
@@ -141,33 +141,40 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
     // Iterar por TODOS los días del período (no solo los marcados)
     for (let dia = 1; dia <= lastDayToCount; dia++) {
       const date = new Date(year, month - 1, dia);
-      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
       const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
       const esFinDeSemana = dayOfWeek === 0 || dayOfWeek === 6;
 
       const dayData = calendarMap.get(dateStr);
 
       if (esFinDeSemana) {
-        // Fines de semana SIEMPRE se pagan (aunque no marquen)
+        // Fines de semana SIEMPRE se pagan (no afectan el cálculo)
         counts.fin_semana++;
-        diasPagados += 1;
       } else if (dayData?.tipoJornada) {
         // Día hábil con marcaje
         const tipo = dayData.tipoJornada as TipoJornada;
         if (counts[tipo] !== undefined) {
           counts[tipo]++;
-          diasPagados += tipoJornadaConfig[tipo].factor;
+          // Solo descontar si es permiso sin goce, falta o media jornada
+          if (tipo === "permiso_sin_goce" || tipo === "falta") {
+            diasNoPagados += 1;
+          } else if (tipo === "media") {
+            diasNoPagados += 0.5;
+          }
         }
       } else {
-        // Día hábil sin marcar = falta (no se paga)
+        // Día hábil sin marcar = no se paga
         counts.sin_marcar++;
+        diasNoPagados += 1;
       }
     }
 
     const sueldoBase = emp.sueldoMensual ?? 0;
     // FIJO: dividir por 30 días (no por días del mes)
     const valorDia = sueldoBase / 30;
-    const sueldoProporcional = Math.round(valorDia * diasPagados);
+    const descuentoPorDias = Math.round(valorDia * diasNoPagados);
+    const sueldoProporcional = Math.max(sueldoBase - descuentoPorDias, 0);
+    const diasPagados = 30 - diasNoPagados;
 
     const firstDayOfMonth = (() => {
       const d = new Date(year, month - 1, 1).getDay();
@@ -281,12 +288,12 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
       completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
       vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0, fin_semana: 0
     };
-    let diasPagados = 0;
+    let diasNoPagados = 0;
 
     // Iterar por TODOS los días del período
     for (let dia = 1; dia <= lastDayToCount; dia++) {
       const date = new Date(year, month - 1, dia);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
       const dayOfWeek = date.getDay();
       const esFinDeSemana = dayOfWeek === 0 || dayOfWeek === 6;
 
@@ -294,21 +301,29 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
 
       if (esFinDeSemana) {
         counts.fin_semana++;
-        diasPagados += 1;
+        // Fines de semana no afectan el cálculo
       } else if (dayData?.tipoJornada) {
         const tipo = dayData.tipoJornada as TipoJornada;
         if (counts[tipo] !== undefined) {
           counts[tipo]++;
-          diasPagados += tipoJornadaConfig[tipo].factor;
+          // Solo descontar si es permiso sin goce, falta o media jornada
+          if (tipo === "permiso_sin_goce" || tipo === "falta") {
+            diasNoPagados += 1;
+          } else if (tipo === "media") {
+            diasNoPagados += 0.5;
+          }
         }
       } else {
         counts.sin_marcar++;
+        diasNoPagados += 1;
       }
     }
 
     const sueldoBase = emp.sueldoMensual ?? 0;
     const valorDia = sueldoBase / 30;
-    const sueldoProporcional = Math.round(valorDia * diasPagados);
+    const descuentoPorDias = Math.round(valorDia * diasNoPagados);
+    const sueldoProporcional = Math.max(sueldoBase - descuentoPorDias, 0);
+    const diasPagados = 30 - diasNoPagados;
 
     const diasRango = calendar.length;
     const rangeLabel = "Mes completo";

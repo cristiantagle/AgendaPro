@@ -170,21 +170,34 @@ export function ManualAttendancePanel({ employees }: Props) {
             completa: 0, media: 0, permiso_con_goce: 0, permiso_sin_goce: 0,
             vacaciones: 0, licencia_medica: 0, falta: 0, feriado: 0, sin_marcar: 0
         };
-        let diasPagados = 0;
+
+        // Contar días que NO pagan (faltas, permisos sin goce, días hábiles sin marcar)
+        let diasNoPagados = 0;
+        let finesDeSemana = 0;
 
         filteredCalendar.forEach(day => {
-            const fecha = new Date(day.fecha);
+            // Parsear fecha correctamente sin problemas de timezone
+            const [, , dayStr] = day.fecha.split("-");
+            const dayNum = parseInt(dayStr, 10);
+            const fecha = new Date(year, month - 1, dayNum);
             const diaSemana = fecha.getDay(); // 0=Dom, 6=Sab
             const esFinDeSemana = diaSemana === 0 || diaSemana === 6;
 
-            if (day.tipoJornada) {
+            if (esFinDeSemana) {
+                finesDeSemana++;
+                // Fines de semana no afectan el cálculo (siempre pagan como parte del mes)
+            } else if (day.tipoJornada) {
                 counts[day.tipoJornada]++;
-                diasPagados += tipoJornadaConfig[day.tipoJornada].factor;
-            } else if (esFinDeSemana) {
-                // Fines de semana sin marcar cuentan como día pagado (acompañan)
-                diasPagados += 1;
+                // Solo descontar si es permiso sin goce o falta
+                if (day.tipoJornada === "permiso_sin_goce" || day.tipoJornada === "falta") {
+                    diasNoPagados += 1;
+                } else if (day.tipoJornada === "media") {
+                    diasNoPagados += 0.5; // Media jornada = medio día de descuento
+                }
             } else {
+                // Día hábil sin marcar = no pagado
                 counts.sin_marcar++;
+                diasNoPagados += 1;
             }
         });
 
@@ -193,8 +206,12 @@ export function ManualAttendancePanel({ employees }: Props) {
         // En Chile se usa siempre 30 días para el cálculo
         const DIAS_MES_CALCULO = 30;
         const valorDia = sueldoBase / DIAS_MES_CALCULO;
-        const sueldoProporcional = Math.round(valorDia * diasPagados);
+
+        // Sueldo proporcional = Sueldo base - descuentos por días no trabajados
+        const descuentoPorDias = Math.round(valorDia * diasNoPagados);
+        const sueldoProporcional = Math.max(sueldoBase - descuentoPorDias, 0);
         const diasRango = filteredCalendar.length;
+        const diasPagados = DIAS_MES_CALCULO - diasNoPagados;
 
         // Calcular totales de pagos del mes
         const totalAdelantos = payments
@@ -207,10 +224,10 @@ export function ManualAttendancePanel({ employees }: Props) {
         const saldoAPagar = sueldoProporcional - totalDescuentos;
 
         return {
-            counts, diasPagados, diasMes: daysInMonth, diasRango, sueldoProporcional,
-            totalAdelantos, totalQuincenas, totalDescuentos, saldoAPagar
+            counts, diasPagados, diasNoPagados, finesDeSemana, diasMes: daysInMonth, diasRango,
+            sueldoProporcional, descuentoPorDias, totalAdelantos, totalQuincenas, totalDescuentos, saldoAPagar
         };
-    }, [filteredCalendar, selectedEmp, daysInMonth, payments]);
+    }, [filteredCalendar, selectedEmp, daysInMonth, payments, year, month]);
 
     // Texto del rango para reportes
     const rangeLabel = useMemo(() => {
