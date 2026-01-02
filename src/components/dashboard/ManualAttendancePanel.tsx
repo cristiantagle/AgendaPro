@@ -130,8 +130,11 @@ export function ManualAttendancePanel({ employees }: Props) {
             const res = await fetch(`/api/payments?employeeId=${selectedEmployee}`);
             if (res.ok) {
                 const data = await res.json();
-                // Filtrar pagos del mes actual
-                const pagosDelMes = (data.payments || []).filter((p: Payment) => {
+                // Filtrar pagos del empleado Y del mes actual
+                const pagosDelMes = (data.payments || []).filter((p: Payment & { employeeId?: string }) => {
+                    // Filtrar por empleado
+                    if (p.employeeId && p.employeeId !== selectedEmployee) return false;
+                    // Filtrar por mes
                     const fechaPago = new Date(p.paidAt);
                     return fechaPago.getMonth() + 1 === month && fechaPago.getFullYear() === year;
                 });
