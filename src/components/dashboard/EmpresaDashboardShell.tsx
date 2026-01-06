@@ -15,6 +15,8 @@ import { CreateWorkerForm } from "@/components/forms/CreateWorkerForm";
 import { PaySettingsForm } from "@/components/forms/PaySettingsForm";
 import { CompanyLogoUploader } from "@/components/forms/CompanyLogoUploader";
 import { ScheduleForm } from "@/components/forms/ScheduleForm";
+import { useRouter } from "next/navigation";
+import { BulkWorkerImport } from "@/components/dashboard/BulkWorkerImport";
 
 type CompanyInfo = {
   id: string;
@@ -119,6 +121,7 @@ export function EmpresaDashboardShell({
   records,
   payments,
 }: Props) {
+  const router = useRouter();
   const [currentSection, setCurrentSection] = useState<(typeof sections)[number]["id"]>("overview");
 
   return (
@@ -252,6 +255,9 @@ export function EmpresaDashboardShell({
 
         {currentSection === "trabajadores" ? (
           <div className="space-y-6">
+            <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)] flex justify-end">
+              <BulkWorkerImport onSuccess={() => router.refresh()} />
+            </section>
             <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.55)]">
               <CreateWorkerForm />
             </section>
