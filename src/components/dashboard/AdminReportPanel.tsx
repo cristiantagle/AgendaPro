@@ -49,6 +49,10 @@ export function AdminReportPanel({
   const [error, setError] = useState<string | null>(null);
   const cacheRef = useMemo(() => new Map<string, ReportSummary>(), []);
 
+  // Estado para selección de trabajadores en reporte cotizaciones
+  const [showPayrollSelect, setShowPayrollSelect] = useState(false);
+  const [selectedWorkers, setSelectedWorkers] = useState<Set<string>>(new Set(workers.map(w => w.id)));
+
   const loadSummary = async () => {
     if (!employeeId) return;
     const cacheKey = `${employeeId}-${year}-${month}`;
@@ -188,7 +192,72 @@ export function AdminReportPanel({
             >
               Exportar CSV
             </button>
+            <button
+              type="button"
+              onClick={() => setShowPayrollSelect(!showPayrollSelect)}
+              className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-200"
+            >
+              📋 COTIZACIONES
+            </button>
           </div>
+
+          {/* Panel de selección para Cotizaciones */}
+          {showPayrollSelect && (
+            <div className="rounded-2xl border border-amber-400/20 bg-amber-900/20 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-amber-200">Seleccionar trabajadores:</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWorkers(new Set(workers.map(w => w.id)))}
+                    className="text-xs text-cyan-300 hover:underline"
+                  >
+                    Todos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWorkers(new Set())}
+                    className="text-xs text-gray-400 hover:underline"
+                  >
+                    Ninguno
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                {workers.map(worker => (
+                  <label key={worker.id} className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer hover:text-white">
+                    <input
+                      type="checkbox"
+                      checked={selectedWorkers.has(worker.id)}
+                      onChange={(e) => {
+                        const newSet = new Set(selectedWorkers);
+                        if (e.target.checked) {
+                          newSet.add(worker.id);
+                        } else {
+                          newSet.delete(worker.id);
+                        }
+                        setSelectedWorkers(newSet);
+                      }}
+                      className="rounded"
+                    />
+                    {worker.nombre}
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const ids = Array.from(selectedWorkers).join(",");
+                  const url = `/api/reports/payroll?month=${month}&year=${year}${ids ? `&employees=${ids}` : ""}`;
+                  window.open(url, "_blank");
+                }}
+                disabled={selectedWorkers.size === 0}
+                className="w-full rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-black hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                📥 GENERAR PDF ({selectedWorkers.size} trabajadores)
+              </button>
+            </div>
+          )}
           <div className="overflow-x-auto rounded-2xl border border-white/10">
             <table className="min-w-full text-sm">
               <thead>

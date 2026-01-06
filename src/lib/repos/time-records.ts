@@ -451,3 +451,23 @@ export const upsertManualAttendance = async (data: {
   return row ? mapTimeRecord(row) : null;
 };
 
+
+export const deleteTimeRecord = async (id: string) => {
+  const existing = await getTimeRecordById(id);
+  if (!existing) return null;
+
+  await runSingle('DELETE FROM "TimeRecord" WHERE "id" = $1', [id]);
+
+  await logAuditEntry({
+    action: "DELETE",
+    tableName: "TimeRecord",
+    recordId: id,
+    oldValues: {
+      tipoJornada: existing.tipoJornada,
+      notas: existing.notas,
+      fecha: existing.fecha.toISOString(),
+    },
+  });
+
+  return existing;
+};

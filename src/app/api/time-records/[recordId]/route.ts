@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { assertRole, getSession } from "@/lib/auth";
 import { startOfDayUtc } from "@/lib/datetime";
-import { getTimeRecordById, updateTimeRecord } from "@/lib/repos/time-records";
+import { deleteTimeRecord, getTimeRecordById, updateTimeRecord } from "@/lib/repos/time-records";
 import { timeRecordCorrectionSchema } from "@/lib/validation";
 
 const paramsSchema = z.object({
@@ -46,4 +46,23 @@ export async function PATCH(
   });
 
   return NextResponse.json({ record: updated ?? record });
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ recordId: string }> },
+) {
+  const session = await getSession();
+  assertRole(session, ["company_admin"]);
+
+  const { recordId } = paramsSchema.parse(await context.params);
+  const record = await getTimeRecordById(recordId);
+
+  if (!record || record.companyId !== session.companyId) {
+    return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+  }
+
+  await deleteTimeRecord(record.id);
+
+  return NextResponse.json({ success: true });
 }
