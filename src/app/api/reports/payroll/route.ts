@@ -83,8 +83,8 @@ export async function GET(request: NextRequest) {
 
                 doc.fillColor("#333333").text(emp.rut || "-", colRut, y, { width: 95 });
                 doc.fillColor("#000000").text(emp.nombreCompleto, colName, y, { width: 175 });
-                doc.fillColor("#666666").text("________", colAfp, y);
-                doc.fillColor("#666666").text("________", colSalud, y);
+                doc.fillColor("#333333").text(emp.afp || "-", colAfp, y, { width: 75 });
+                doc.fillColor("#333333").text(emp.salud || "-", colSalud, y, { width: 85 });
 
                 if (emp.diasFalta === 0) {
                     doc.fillColor("#22c55e").text("Mes Completo", colFaltas, y);

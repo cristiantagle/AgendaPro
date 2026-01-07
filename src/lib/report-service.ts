@@ -126,6 +126,8 @@ export interface PayrollReportRow {
   diasHabiles: number;
   diasFalta: number;
   mesCompleto: boolean;
+  afp: string | null;
+  salud: string | null;
   isActive: boolean;
 }
 
@@ -172,7 +174,7 @@ export const getPayrollReportForCompany = async (
   const diasHabilesMes = calcularDiasHabiles(year, month);
 
   // Obtener empleados (filtrados si se especifican IDs)
-  let employeeQuery = 'SELECT id, "nombreCompleto", rut, "isActive" FROM "Employee" WHERE "companyId" = $1';
+  let employeeQuery = 'SELECT id, "nombreCompleto", rut, "afp", "salud", "isActive" FROM "Employee" WHERE "companyId" = $1';
   const params: (string | string[])[] = [companyId];
 
   if (employeeIds && employeeIds.length > 0) {
@@ -250,7 +252,10 @@ export const getPayrollReportForCompany = async (
       diasTrabajados,
       diasHabiles: diasHabilesMes,
       diasFalta: diasFalta,
+      diasFalta: diasFalta,
       mesCompleto: diasFalta === 0,
+      afp: (emp.afp as string) || null,
+      salud: (emp.salud as string) || null,
       isActive: emp.isActive as boolean,
     });
   }

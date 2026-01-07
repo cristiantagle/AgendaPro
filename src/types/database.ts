@@ -41,6 +41,8 @@ export type Employee = {
   rut: string | null;
   valorHoraBase: number | null;
   sueldoMensual: number | null;
+  afp: string | null;
+  salud: string | null;
   isActive: boolean;
 };
 

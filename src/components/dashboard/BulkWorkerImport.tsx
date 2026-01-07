@@ -60,9 +60,11 @@ export function BulkWorkerImport({ onSuccess }: { onSuccess: () => void }) {
                 const rut = getVal(["RUT", "IDENTIFICADOR", "R.U.T."]);
                 const email = getVal(["EMAIL", "CORREO", "MAIL", "CORREO ELECTRONICO"]);
                 const sueldo = getVal(["SUELDO", "SUELDO BASE", "SUELDO MENSUAL"]);
+                const afp = getVal(["AFP", "PREVISION", "A.F.P."]);
+                const salud = getVal(["SALUD", "ISAPRE", "FONASA", "PREVISION SALUD"]);
 
                 if (nombre || email) {
-                    workers.push({ nombre, rut, email, sueldo });
+                    workers.push({ nombre, rut, email, sueldo, afp, salud });
                 }
             }
 

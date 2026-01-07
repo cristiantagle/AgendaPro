@@ -61,6 +61,8 @@ model Employee {
   rut            String?
   valorHoraBase  Decimal?        @db.Decimal(10, 2)
   sueldoMensual  Decimal?        @db.Decimal(12, 2)
+  afp            String?
+  salud          String?
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt

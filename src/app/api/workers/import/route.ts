@@ -42,6 +42,8 @@ export async function POST(request: Request) {
                 const updates: any = {};
                 if (item.rut) updates.rut = item.rut;
                 if (item.sueldo) updates.sueldoMensual = Number(item.sueldo);
+                if (item.afp) updates.afp = item.afp;
+                if (item.salud) updates.salud = item.salud;
 
                 if (Object.keys(updates).length > 0) {
                     await updateEmployee(match.id, updates);

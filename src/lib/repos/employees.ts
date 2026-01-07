@@ -17,6 +17,8 @@ const mapEmployee = (row: Record<string, unknown>): Employee => ({
   rut: (row.rut as string) ?? null,
   valorHoraBase: row.valorHoraBase ? Number(row.valorHoraBase) : null,
   sueldoMensual: row.sueldoMensual ? Number(row.sueldoMensual) : null,
+  afp: (row.afp as string) ?? null,
+  salud: (row.salud as string) ?? null,
   isActive: Boolean(row.isActive),
 });
 
@@ -170,10 +172,12 @@ export const createEmployee = async (data: {
   rut?: string | null;
   valorHoraBase?: number | null;
   sueldoMensual?: number | null;
+  afp?: string | null;
+  salud?: string | null;
 }) => {
   const id = data.id ?? crypto.randomUUID();
   const row = await runSingle<Record<string, unknown>>(
-    'INSERT INTO "Employee" ("id","companyId","userId","nombreCompleto","rut","valorHoraBase","sueldoMensual","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,true,NOW(),NOW()) RETURNING *',
+    'INSERT INTO "Employee" ("id","companyId","userId","nombreCompleto","rut","valorHoraBase","sueldoMensual","afp","salud","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true,NOW(),NOW()) RETURNING *',
     [
       id,
       data.companyId,
@@ -182,6 +186,8 @@ export const createEmployee = async (data: {
       data.rut ?? null,
       data.valorHoraBase ?? null,
       data.sueldoMensual ?? null,
+      data.afp ?? null,
+      data.salud ?? null,
     ],
   );
   return row ? mapEmployee(row) : null;
@@ -194,6 +200,8 @@ export const updateEmployee = async (
     rut: string | null;
     sueldoMensual: number | null;
     valorHoraBase: number | null;
+    afp: string | null;
+    salud: string | null;
     isActive: boolean;
   }>,
 ) => {
@@ -210,8 +218,7 @@ export const updateEmployee = async (
   }
   values.push(id);
   const row = await runSingle<Record<string, unknown>>(
-    `UPDATE "Employee" SET ${fields.join(", ")}, "updatedAt" = NOW() WHERE "id" = $${
-      fields.length + 1
+    `UPDATE "Employee" SET ${fields.join(", ")}, "updatedAt" = NOW() WHERE "id" = $${fields.length + 1
     } RETURNING *`,
     values,
   );
