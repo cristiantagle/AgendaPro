@@ -252,7 +252,6 @@ export const getPayrollReportForCompany = async (
       diasTrabajados,
       diasHabiles: diasHabilesMes,
       diasFalta: diasFalta,
-      diasFalta: diasFalta,
       mesCompleto: diasFalta === 0,
       afp: (emp.afp as string) || null,
       salud: (emp.salud as string) || null,
