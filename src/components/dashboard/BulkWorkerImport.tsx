@@ -18,7 +18,7 @@ export function BulkWorkerImport({ onSuccess }: { onSuccess: () => void }) {
             const sheet = workbook.Sheets[sheetName];
 
             // Leer como array de arrays para buscar headers
-            const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
+            const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as unknown[][];
 
             // Buscar fila de encabezados
             let headerRowIndex = -1;

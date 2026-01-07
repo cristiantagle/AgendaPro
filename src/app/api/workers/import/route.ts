@@ -39,7 +39,12 @@ export async function POST(request: Request) {
 
             if (match) {
                 // Actualizar campos si vienen
-                const updates: any = {};
+                const updates: Partial<{
+                    rut: string;
+                    sueldoMensual: number;
+                    afp: string | null;
+                    salud: string | null;
+                }> = {};
                 if (item.rut) updates.rut = item.rut;
                 if (item.sueldo) updates.sueldoMensual = Number(item.sueldo);
                 if (item.afp) updates.afp = item.afp;
