@@ -49,19 +49,33 @@ export function BulkWorkerImport({ onSuccess }: { onSuccess: () => void }) {
                 const row = rawData[i];
                 if (!row || row.length === 0) continue;
 
-                const getVal = (keys: string[]) => {
-                    for (const k of keys) {
-                        if (headerMap[k] !== undefined) return row[headerMap[k]];
+                // Helper to find column index by keywords (substring match)
+                const findColIdx = (keywords: string[]) => {
+                    // keys in headerMap are already UPPERCASE and trimmed
+                    const headerNames = Object.keys(headerMap);
+                    for (const h of headerNames) {
+                        if (keywords.some(k => h.includes(k))) {
+                            return headerMap[h];
+                        }
                     }
-                    return undefined;
+                    return -1;
                 };
 
-                const nombre = getVal(["NOMBRE", "NOMBRE COMPLETO", "TRABAJADOR", "NOMBRES"]);
-                const rut = getVal(["RUT", "IDENTIFICADOR", "R.U.T."]);
-                const email = getVal(["EMAIL", "CORREO", "MAIL", "CORREO ELECTRONICO"]);
-                const sueldo = getVal(["SUELDO", "SUELDO BASE", "SUELDO MENSUAL"]);
-                const afp = getVal(["AFP", "PREVISION", "A.F.P."]);
-                const salud = getVal(["SALUD", "ISAPRE", "FONASA", "PREVISION SALUD"]);
+                const idxNombre = findColIdx(["NOMBRE", "TRABAJADOR"]);
+                const idxRut = findColIdx(["RUT", "IDENTIFICADOR"]);
+                const idxEmail = findColIdx(["EMAIL", "CORREO", "MAIL"]);
+                const idxSueldo = findColIdx(["SUELDO"]);
+                const idxAfp = findColIdx(["AFP", "PREVISION"]);
+                const idxSalud = findColIdx(["SALUD", "ISAPRE", "FONASA"]);
+
+                const getValAt = (idx: number) => (idx >= 0 ? row[idx] : undefined);
+
+                const nombre = getValAt(idxNombre);
+                const rut = getValAt(idxRut);
+                const email = getValAt(idxEmail);
+                const sueldo = getValAt(idxSueldo);
+                const afp = getValAt(idxAfp);
+                const salud = getValAt(idxSalud);
 
                 if (nombre || email) {
                     workers.push({ nombre, rut, email, sueldo, afp, salud });
