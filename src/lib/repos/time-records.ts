@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
+import { formatInTimeZone } from "date-fns-tz";
 
 import { runQuery, runSingle } from "@/lib/db";
 import type { TimeRecord, TipoJornada } from "@/types/database";
 import { logAuditEntry } from "./audit";
+import { CHILE_TIMEZONE } from "../timezone";
 
 const mapTimeRecord = (row: Record<string, unknown>): TimeRecord => ({
   id: row.id as string,
@@ -330,9 +332,11 @@ export const getMonthlyCalendar = async (
   // Crear mapa de días con registros
   const recordMap = new Map<string, Record<string, unknown>>();
   for (const row of rows) {
-    // Usar formato local para evitar desfase de timezone
-    const d = new Date(row.fecha as string);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const dateStr = formatInTimeZone(
+      new Date(row.fecha as string),
+      CHILE_TIMEZONE,
+      "yyyy-MM-dd",
+    );
     recordMap.set(dateStr, row);
   }
 

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "node:crypto";
 
-import { runSingle } from "@/lib/db";
+import { withTransaction } from "@/lib/db";
 
 // Validar API key desde headers
 const validateApiKey = (request: Request): boolean => {
@@ -27,7 +27,7 @@ const companySchema = z.object({
 
 export async function POST(request: Request) {
     try {
-        // Validar autenticación
+        // Validar autenticaciИn
         if (!validateApiKey(request)) {
             return NextResponse.json({ error: "No autorizado" }, { status: 401 });
         }
@@ -35,62 +35,68 @@ export async function POST(request: Request) {
         const body = await request.json();
         const data = companySchema.parse(body);
 
-        // Buscar si ya existe la empresa por externalId o nombre
-        const existing = await runSingle<{ id: string }>(
-            `SELECT id FROM "Company" WHERE "name" = $1`,
-            [data.name]
-        );
-
-        if (existing) {
-            // Actualizar empresa existente
-            await runSingle(
-                `UPDATE "Company" SET 
-                    "rut" = COALESCE($1, "rut"),
-                    "emailContacto" = COALESCE($2, "emailContacto"),
-                    "telefonoContacto" = COALESCE($3, "telefonoContacto"),
-                    "updatedAt" = NOW()
-                 WHERE "id" = $4`,
-                [data.rut, data.emailContacto, data.telefonoContacto, existing.id]
+        const result = await withTransaction(async (client) => {
+            // Buscar si ya existe la empresa por externalId o nombre
+            const existing = await client.query<{ id: string }>(
+                `SELECT id FROM "Company" WHERE "name" = $1`,
+                [data.name]
             );
 
-            return NextResponse.json({
+            if (existing.rows.length > 0) {
+                const companyId = existing.rows[0].id;
+
+                // Actualizar empresa existente
+                await client.query(
+                    `UPDATE "Company" SET 
+                        "rut" = COALESCE($1, "rut"),
+                        "emailContacto" = COALESCE($2, "emailContacto"),
+                        "telefonoContacto" = COALESCE($3, "telefonoContacto"),
+                        "updatedAt" = NOW()
+                     WHERE "id" = $4`,
+                    [data.rut, data.emailContacto, data.telefonoContacto, companyId]
+                );
+
+                return {
+                    success: true,
+                    action: "updated" as const,
+                    companyId
+                };
+            }
+
+            // Crear nueva empresa
+            const newId = crypto.randomUUID();
+            const kioskSlug = data.name.toLowerCase().replace(/\s+/g, "-").slice(0, 50);
+            const kioskPin = Math.floor(1000 + Math.random() * 9000).toString();
+
+            await client.query(
+                `INSERT INTO "Company" 
+                    ("id", "name", "rut", "emailContacto", "telefonoContacto", "isActive", "kioskSlug", "kioskPin", "createdAt", "updatedAt")
+                 VALUES ($1, $2, $3, $4, $5, true, $6, $7, NOW(), NOW())`,
+                [newId, data.name, data.rut, data.emailContacto, data.telefonoContacto, kioskSlug, kioskPin]
+            );
+
+            // Crear configuraciИn de pagos por defecto
+            await client.query(
+                `INSERT INTO "CompanyPaySetting" 
+                    ("id", "companyId", "valorHoraBaseGlobal", "sueldoMensualBase", "factorExtraSemana", "weekendDayRate", "weekendExtraHourRate", "createdAt", "updatedAt")
+                 VALUES ($1, $2, 4500, 500000, 1.5, 60000, 8000, NOW(), NOW())`,
+                [crypto.randomUUID(), newId]
+            );
+
+            return {
                 success: true,
-                action: "updated",
-                companyId: existing.id
-            });
-        }
-
-        // Crear nueva empresa
-        const newId = crypto.randomUUID();
-        const kioskSlug = data.name.toLowerCase().replace(/\s+/g, "-").slice(0, 50);
-        const kioskPin = Math.floor(1000 + Math.random() * 9000).toString();
-
-        await runSingle(
-            `INSERT INTO "Company" 
-                ("id", "name", "rut", "emailContacto", "telefonoContacto", "isActive", "kioskSlug", "kioskPin", "createdAt", "updatedAt")
-             VALUES ($1, $2, $3, $4, $5, true, $6, $7, NOW(), NOW())`,
-            [newId, data.name, data.rut, data.emailContacto, data.telefonoContacto, kioskSlug, kioskPin]
-        );
-
-        // Crear configuración de pagos por defecto
-        await runSingle(
-            `INSERT INTO "CompanyPaySetting" 
-                ("id", "companyId", "valorHoraBaseGlobal", "sueldoMensualBase", "factorExtraSemana", "weekendDayRate", "weekendExtraHourRate", "createdAt", "updatedAt")
-             VALUES ($1, $2, 4500, 500000, 1.5, 60000, 8000, NOW(), NOW())`,
-            [crypto.randomUUID(), newId]
-        );
-
-        return NextResponse.json({
-            success: true,
-            action: "created",
-            companyId: newId,
-            kioskSlug,
-            kioskPin
+                action: "created" as const,
+                companyId: newId,
+                kioskSlug,
+                kioskPin
+            };
         });
+
+        return NextResponse.json(result);
 
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: "Datos inválidos", details: error.issues }, { status: 400 });
+            return NextResponse.json({ error: "Datos invケlidos", details: error.issues }, { status: 400 });
         }
         console.error("Error en sync/company:", error);
         return NextResponse.json({ error: "Error al sincronizar empresa" }, { status: 500 });

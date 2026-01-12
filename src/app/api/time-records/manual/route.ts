@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { ZodError, z } from "zod";
+import { fromZonedTime } from "date-fns-tz";
 
 import { assertRole, getSession } from "@/lib/auth";
 import { upsertManualAttendance } from "@/lib/repos/time-records";
 import { getEmployeeById } from "@/lib/repos/employees";
+import { CHILE_TIMEZONE } from "@/lib/timezone";
+
+const parseDateLabel = (label: string) =>
+    fromZonedTime(`${label}T00:00:00`, CHILE_TIMEZONE);
 
 // Schema for single date
 const singleDateSchema = z.object({
     employeeId: z.string().uuid(),
-    fecha: z.string().transform((val) => new Date(val)),
+    fecha: z.string().transform(parseDateLabel),
     tipoJornada: z.enum([
         "completa",
         "media",
@@ -66,7 +71,7 @@ export async function POST(request: Request) {
 
             const results = [];
             for (const fechaStr of data.fechas) {
-                const fecha = new Date(fechaStr);
+                const fecha = parseDateLabel(fechaStr);
                 const record = await upsertManualAttendance({
                     employeeId: data.employeeId,
                     companyId: session.companyId!,

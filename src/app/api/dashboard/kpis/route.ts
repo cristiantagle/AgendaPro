@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { startOfMonth, endOfMonth, subDays } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 
 import { assertRole, getSession } from "@/lib/auth";
-import { runQuery, runSingle } from "@/lib/db";
+import { runQuery } from "@/lib/db";
+import { nowInTimezone } from "@/lib/datetime";
+import { CHILE_TIMEZONE } from "@/lib/timezone";
 
 type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta" | "feriado";
 
@@ -16,10 +19,9 @@ export async function GET() {
             return NextResponse.json({ error: "Empresa no encontrada" }, { status: 400 });
         }
 
-        const now = new Date();
+        const now = nowInTimezone();
         const monthStart = startOfMonth(now);
         const monthEnd = endOfMonth(now);
-        const daysInMonth = monthEnd.getDate();
         const todayDay = now.getDate();
 
         // Obtener todos los empleados activos
@@ -79,11 +81,15 @@ export async function GET() {
         const tendenciaSemanal: { dia: string; asistencia: number; faltas: number }[] = [];
         for (let i = 6; i >= 0; i--) {
             const fecha = subDays(now, i);
-            const fechaStr = fecha.toISOString().split("T")[0];
+            const fechaStr = formatInTimeZone(fecha, CHILE_TIMEZONE, "yyyy-MM-dd");
             const diasSemana = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-            const diaLabel = diasSemana[fecha.getDay()];
+            const isoDay = Number(formatInTimeZone(fecha, CHILE_TIMEZONE, "i"));
+            const diaLabel = diasSemana[isoDay % 7];
 
-            const recordsDia = records.filter(r => r.fecha.toString().startsWith(fechaStr));
+            const recordsDia = records.filter(
+                r =>
+                    formatInTimeZone(new Date(r.fecha), CHILE_TIMEZONE, "yyyy-MM-dd") === fechaStr
+            );
             const asistencia = recordsDia.filter(r => tiposPresentismo.includes(r.tipoJornada)).length;
             const faltas = recordsDia.filter(r => r.tipoJornada === "falta").length;
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Calendar, ChevronLeft, ChevronRight, Loader2, Save, X, Printer, Trash2, FileText, History } from "lucide-react";
-import { exportAttendanceToPDF } from "@/lib/pdf-export";
 
 type AuditLogEntry = {
     id: string;
@@ -97,7 +96,7 @@ export function ManualAttendancePanel({ employees }: Props) {
 
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
 
-    const fetchCalendar = async () => {
+    const fetchCalendar = useCallback(async () => {
         if (!selectedEmployee) return;
         setLoading(true);
         setError(null);
@@ -122,9 +121,9 @@ export function ManualAttendancePanel({ employees }: Props) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedEmployee, year, month]);
 
-    const fetchPayments = async () => {
+    const fetchPayments = useCallback(async () => {
         if (!selectedEmployee) return;
         try {
             const res = await fetch(`/api/payments?employeeId=${selectedEmployee}`);
@@ -143,12 +142,12 @@ export function ManualAttendancePanel({ employees }: Props) {
         } catch (err) {
             console.error("Error al cargar pagos:", err);
         }
-    };
+    }, [selectedEmployee, month, year]);
 
     useEffect(() => {
         fetchCalendar();
         fetchPayments();
-    }, [selectedEmployee, year, month]);
+    }, [fetchCalendar, fetchPayments]);
 
     // Días del mes para cálculo de quincenas
     const daysInMonth = calendar.length;
@@ -515,16 +514,19 @@ export function ManualAttendancePanel({ employees }: Props) {
                             <Printer className="h-4 w-4" /> Imprimir
                         </button>
                         <button
-                            onClick={() => exportAttendanceToPDF(
-                                selectedEmp?.nombreCompleto ?? "",
-                                meses[month - 1],
-                                year,
-                                rangeLabel,
-                                selectedEmp?.sueldoMensual ?? 0,
-                                filteredCalendar,
-                                resumen,
-                                firstDayOfMonth
-                            )}
+                            onClick={async () => {
+                                const { exportAttendanceToPDF } = await import("@/lib/pdf-export");
+                                await exportAttendanceToPDF(
+                                    selectedEmp?.nombreCompleto ?? "",
+                                    meses[month - 1],
+                                    year,
+                                    rangeLabel,
+                                    selectedEmp?.sueldoMensual ?? 0,
+                                    filteredCalendar,
+                                    resumen,
+                                    firstDayOfMonth
+                                );
+                            }}
                             className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500"
                         >
                             <FileText className="h-4 w-4" /> PDF

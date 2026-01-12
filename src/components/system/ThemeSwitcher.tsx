@@ -1,15 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTheme, type ThemeName } from "./ThemeProvider";
 
 const labels: Record<ThemeName, string> = {
-  dark: "Cinemático",
+  dark: "Cinematico",
   light: "Claro",
   minimal: "Minimal",
 };
 
 export function ThemeSwitcher() {
   const { theme, setTheme, options } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 backdrop-blur">
+        <span className="font-semibold uppercase tracking-[0.2em] text-white/60">Tema</span>
+        <div className="flex gap-1">
+          {options.map((option) => (
+            <span
+              key={option}
+              className="rounded-lg px-3 py-1 font-semibold border border-white/10 text-white/60"
+            >
+              {labels[option]}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 backdrop-blur">

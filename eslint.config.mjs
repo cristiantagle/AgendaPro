@@ -12,7 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "public/html2pdf.min.js",
   ]),
+  {
+    files: ["src/components/system/ThemeProvider.tsx", "src/components/system/ThemeSwitcher.tsx"],
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

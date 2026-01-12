@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "node:crypto";
+import { hash } from "bcryptjs";
 
-import { runSingle, runQuery } from "@/lib/db";
+import { runSingle } from "@/lib/db";
 
 // Validar API key desde headers
 const validateApiKey = (request: Request): boolean => {
@@ -58,11 +59,12 @@ export async function POST(request: Request) {
             // Crear usuario
             const userId = crypto.randomUUID();
             const defaultPassword = crypto.randomBytes(16).toString("hex"); // Temporal
+            const passwordHash = await hash(defaultPassword, 10);
 
             await runSingle(
                 `INSERT INTO "User" ("id", "email", "passwordHash", "role", "createdAt", "updatedAt")
                  VALUES ($1, $2, $3, 'worker', NOW(), NOW())`,
-                [userId, data.email, defaultPassword]
+                [userId, data.email, passwordHash]
             );
 
             user = { id: userId };

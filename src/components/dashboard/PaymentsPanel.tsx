@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { FileText, Loader2, Printer } from "lucide-react";
-import { exportAttendanceToPDF } from "@/lib/pdf-export";
 
 type EmployeeOption = {
   id: string;
@@ -84,7 +83,7 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
   const [message, setMessage] = useState<string | null>(null);
 
   // Fetch calendar when employee or date changes
-  useMemo(() => {
+  useEffect(() => {
     const fetchCalendar = async () => {
       if (filterEmployeeId === "all") return;
       setLoadingCalendar(true);
@@ -189,6 +188,7 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
       sueldoProporcional
     };
 
+    const { exportAttendanceToPDF } = await import("@/lib/pdf-export");
     await exportAttendanceToPDF(
       emp.nombre,
       meses[month - 1],
@@ -202,16 +202,11 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
   };
 
   // Auto-select employee in form when filter changes (if specific employee selected)
-  useMemo(() => {
+  useEffect(() => {
     if (filterEmployeeId !== "all") {
       setForm(prev => ({ ...prev, employeeId: filterEmployeeId }));
     }
   }, [filterEmployeeId]);
-
-  const selectedEmployee = useMemo(
-    () => employees.find((emp) => emp.id === form.employeeId),
-    [employees, form.employeeId],
-  );
 
   // Filter payments
   const filteredPayments = useMemo(() => {
@@ -526,17 +521,17 @@ export function PaymentsPanel({ employees, initialPayments }: Props) {
             <p className="text-2xl font-bold text-white">{currency.format(summary.total)}</p>
             <p className="text-[10px] text-gray-500 mt-1">{filteredPayments.length} registros</p>
           </div>
-          <div className="rounded-2xl bg-cyan-500/10 border border-cyan-500/20 p-4">
-            <p className="text-xs text-cyan-300 uppercase tracking-wider mb-1">Adelantos</p>
-            <p className="text-xl font-bold text-cyan-100">{currency.format(summary.adelanto)}</p>
+          <div className="rounded-2xl bg-cyan-600/20 border border-cyan-400/40 p-4">
+            <p className="text-xs text-cyan-400 uppercase tracking-wider mb-1 font-semibold">Adelantos</p>
+            <p className="text-xl font-bold text-cyan-300">{currency.format(summary.adelanto)}</p>
           </div>
-          <div className="rounded-2xl bg-yellow-500/10 border border-yellow-500/20 p-4">
-            <p className="text-xs text-yellow-300 uppercase tracking-wider mb-1">Quincenas</p>
-            <p className="text-xl font-bold text-yellow-100">{currency.format(summary.quincena)}</p>
+          <div className="rounded-2xl bg-amber-600/20 border border-amber-400/40 p-4">
+            <p className="text-xs text-amber-400 uppercase tracking-wider mb-1 font-semibold">Quincenas</p>
+            <p className="text-xl font-bold text-amber-300">{currency.format(summary.quincena)}</p>
           </div>
-          <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4">
-            <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">Pagos</p>
-            <p className="text-xl font-bold text-emerald-100">{currency.format(summary.pago)}</p>
+          <div className="rounded-2xl bg-emerald-600/20 border border-emerald-400/40 p-4">
+            <p className="text-xs text-emerald-400 uppercase tracking-wider mb-1 font-semibold">Pagos</p>
+            <p className="text-xl font-bold text-emerald-300">{currency.format(summary.pago)}</p>
           </div>
         </div>
 

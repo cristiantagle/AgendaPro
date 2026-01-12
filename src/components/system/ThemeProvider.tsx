@@ -26,13 +26,19 @@ const DEFAULT_THEME: ThemeName = "dark";
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isKiosk = pathname?.startsWith("/terminal");
-  const [theme, setThemeState] = useState<ThemeName>(() => {
-    if (typeof window === "undefined") return DEFAULT_THEME;
+  const [theme, setThemeState] = useState<ThemeName>(DEFAULT_THEME);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isKiosk) {
+      setThemeState(DEFAULT_THEME);
+      return;
+    }
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeName | null;
-    const next = stored ?? DEFAULT_THEME;
-    document.documentElement.setAttribute("data-theme", next);
-    return next;
-  });
+    if (stored && stored !== theme) {
+      setThemeState(stored);
+    }
+  }, [isKiosk, theme]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;

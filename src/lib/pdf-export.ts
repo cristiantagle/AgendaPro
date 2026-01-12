@@ -1,7 +1,5 @@
 "use client";
 
-import html2pdf from "html2pdf.js";
-
 type TipoJornada = "completa" | "media" | "permiso_con_goce" | "permiso_sin_goce" | "vacaciones" | "licencia_medica" | "falta" | "feriado";
 
 type CalendarDay = {
@@ -41,6 +39,15 @@ export async function exportAttendanceToPDF(
   resumen: Resumen,
   firstDayOfMonth: number
 ) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const html2pdf = await loadHtml2Pdf();
+  if (!html2pdf) {
+    console.error("html2pdf no disponible. Reinicia el servidor de desarrollo.");
+    return;
+  }
   // Crear el HTML del reporte con colores
   const html = `
     <div style="font-family: Arial, sans-serif; padding: 15px; max-width: 800px; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
@@ -129,3 +136,53 @@ export async function exportAttendanceToPDF(
   // Limpiar
   document.body.removeChild(container);
 }
+
+type Html2PdfFactory = () => {
+  set: (options: Record<string, unknown>) => {
+    from: (element: HTMLElement) => { save: () => Promise<void> };
+  };
+};
+
+let html2pdfPromise: Promise<Html2PdfFactory | null> | null = null;
+
+const loadHtml2Pdf = async () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const cached = (window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf;
+  if (cached) {
+    return cached;
+  }
+
+  if (!html2pdfPromise) {
+    html2pdfPromise = new Promise((resolve) => {
+      const existing = document.querySelector<HTMLScriptElement>(
+        'script[data-html2pdf="true"]',
+      );
+      if (existing) {
+        existing.addEventListener("load", () => {
+          resolve((window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf ?? null);
+        });
+        existing.addEventListener("error", () => resolve(null));
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "/html2pdf.min.js";
+      script.async = true;
+      script.dataset.html2pdf = "true";
+      script.onload = () =>
+        resolve((window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf ?? null);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+  }
+
+  const html2pdf = await html2pdfPromise;
+  if (html2pdf) {
+    (window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf = html2pdf;
+  }
+
+  return html2pdf;
+};

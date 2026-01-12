@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Fuel, Truck, Plus, Loader2, Calendar, DollarSign } from "lucide-react";
+import { Fuel, Truck, Plus, Loader2, DollarSign } from "lucide-react";
 
 type FuelType = "bencina_93" | "bencina_95" | "bencina_97" | "diesel" | "electrico" | "otro";
 

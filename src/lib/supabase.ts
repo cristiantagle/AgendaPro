@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { Pool } from "pg";
 
+// Force Node.js to ignore SSL certificate errors in development
+if (process.env.NODE_ENV !== "production") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -17,25 +22,24 @@ export const supabasePublic = createClient(supabaseUrl, supabaseAnonKey);
 
 export const supabaseAdmin = supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
   : null;
 
-if (!process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-}
+// In development, completely disable SSL verification
+const isProduction = process.env.NODE_ENV === "production";
 
 export const supabasePool = supabaseDbUrl
   ? new Pool({
-      connectionString: supabaseDbUrl,
-      max: 10,
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    })
+    connectionString: supabaseDbUrl,
+    max: 10,
+    ssl: isProduction
+      ? { rejectUnauthorized: true }
+      : { rejectUnauthorized: false },
+  })
   : null;
 
 export const getDbClient = async () => {

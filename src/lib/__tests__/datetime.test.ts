@@ -4,28 +4,6 @@ import { formatInTimeZone } from "date-fns-tz";
 import { startOfDayUtc, endOfDayUtc, nowInTimezone } from "@/lib/datetime";
 import { CHILE_TIMEZONE } from "@/lib/timezone";
 
-const getTimeZoneOffsetMinutes = (timeZone: string, date: Date) => {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    timeZoneName: "shortOffset",
-  }).formatToParts(date);
-
-  const offsetToken = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
-  const match = /^GMT(?<sign>[+-])(?<hours>\d{1,2})(?::(?<minutes>\d{2}))?$/.exec(
-    offsetToken,
-  );
-
-  if (!match?.groups) {
-    throw new Error(`Unsupported offset token: "${offsetToken}"`);
-  }
-
-  const sign = match.groups.sign === "-" ? -1 : 1;
-  const hours = Number(match.groups.hours);
-  const minutes = Number(match.groups.minutes ?? "0");
-
-  return sign * (hours * 60 + minutes);
-};
-
 describe("datetime helpers", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -99,4 +77,3 @@ describe("datetime helpers", () => {
     expect(nowInTimezone().getTime()).toBe(nowInTimezone(CHILE_TIMEZONE).getTime());
   });
 });
-
