@@ -112,6 +112,7 @@ model TimeRecord {
   horaSalida         DateTime?
   esManual           Boolean   @default(false)
   notas              String?
+  horasExtra         Decimal?  @db.Decimal(4, 1)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   employee           Employee  @relation(fields: [employeeId], references: [id])

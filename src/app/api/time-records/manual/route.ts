@@ -27,6 +27,7 @@ const singleDateSchema = z.object({
     horaEntrada: z.string().transform((val) => new Date(val)).optional(),
     horaSalida: z.string().transform((val) => new Date(val)).optional(),
     notas: z.string().optional(),
+    horasExtra: z.number().min(0).optional(),
 });
 
 // Schema for bulk dates
@@ -44,6 +45,7 @@ const bulkDateSchema = z.object({
         "feriado",
     ]),
     notas: z.string().optional(),
+    horasExtra: z.number().min(0).optional(),
 });
 
 export async function POST(request: Request) {
@@ -78,6 +80,7 @@ export async function POST(request: Request) {
                     fecha,
                     tipoJornada: data.tipoJornada,
                     notas: data.notas,
+                    horasExtra: data.horasExtra,
                 });
                 results.push(record);
             }
@@ -104,6 +107,7 @@ export async function POST(request: Request) {
                 horaEntrada: data.horaEntrada,
                 horaSalida: data.horaSalida,
                 notas: data.notas,
+                horasExtra: data.horasExtra,
             });
 
             return NextResponse.json({ record });

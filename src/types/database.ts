@@ -65,6 +65,7 @@ export type TimeRecord = {
   horaSalida: Date | null;
   esManual: boolean;
   notas: string | null;
+  horasExtra?: number | null;
   tipoJornada: TipoJornada;
 };
 

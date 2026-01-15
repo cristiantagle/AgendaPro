@@ -21,6 +21,7 @@ type CalendarDay = {
     horaSalida: string | null;
     notas: string | null;
     recordId: string | null;
+    horasExtra: number;
 };
 
 type Employee = {
@@ -78,6 +79,7 @@ export function ManualAttendancePanel({ employees }: Props) {
     const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
     const [formTipo, setFormTipo] = useState<TipoJornada>("completa");
     const [formNotas, setFormNotas] = useState("");
+    const [formHorasExtra, setFormHorasExtra] = useState("0");
 
     // Bulk selection state
     const [bulkMode, setBulkMode] = useState(false);
@@ -225,9 +227,15 @@ export function ManualAttendancePanel({ employees }: Props) {
         const totalDescuentos = totalAdelantos + totalQuincenas;
         const saldoAPagar = sueldoProporcional - totalDescuentos;
 
+
+
+        // Calcular total horas extra
+        const totalHorasExtra = filteredCalendar.reduce((sum, day) => sum + (day.horasExtra || 0), 0);
+
         return {
             counts, diasPagados, diasNoPagados, finesDeSemana, diasMes: daysInMonth, diasRango,
-            sueldoProporcional, descuentoPorDias, totalAdelantos, totalQuincenas, totalDescuentos, saldoAPagar
+            sueldoProporcional, descuentoPorDias, totalAdelantos, totalQuincenas, totalDescuentos, saldoAPagar,
+            totalHorasExtra
         };
     }, [filteredCalendar, selectedEmp, daysInMonth, payments, year, month]);
 
@@ -253,8 +261,10 @@ export function ManualAttendancePanel({ employees }: Props) {
             toggleDaySelection(day.fecha);
         } else {
             setSelectedDay(day);
+
             setFormTipo(day.tipoJornada || "completa");
             setFormNotas(day.notas || "");
+            setFormHorasExtra(day.horasExtra ? String(day.horasExtra) : "0");
             setShowModal(true);
         }
     };
@@ -316,7 +326,9 @@ export function ManualAttendancePanel({ employees }: Props) {
                     employeeId: selectedEmployee,
                     fecha: selectedDay.fecha,
                     tipoJornada: formTipo,
+
                     notas: formNotas || undefined,
+                    horasExtra: Number(formHorasExtra) || 0,
                 }),
             });
 
@@ -399,7 +411,9 @@ export function ManualAttendancePanel({ employees }: Props) {
             const unpaidClass = config && !config.paga ? 'unpaid' : '';
             return `<div class="day-cell ${markedClass} ${unpaidClass}">
                   <div class="day-num">${dayNum}</div>
+
                   <div class="day-type">${config ? config.short : ''}</div>
+                  ${day.horasExtra > 0 ? `<div style="background: #ef4444; color: white; font-size: 9px; padding: 1px 3px; border-radius: 4px; position: absolute; top: 1px; right: 1px;">+${day.horasExtra}h</div>` : ''}
                 </div>`;
         }).join('')}
           </div>
@@ -420,6 +434,8 @@ export function ManualAttendancePanel({ employees }: Props) {
             ${resumen.counts.sin_marcar > 0 ? `<tr><td>Sin marcar</td><td>${resumen.counts.sin_marcar}</td></tr>` : ''}
           </table>
           <div class="total-box">
+            <p><strong>Total Horas Extra Manuales: ${resumen.totalHorasExtra}</strong></p>
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 8px 0;" />
             <p>Días en período: ${resumen.diasRango} de ${resumen.diasMes}</p>
             <p>Días pagados equiv.: ${resumen.diasPagados.toFixed(1)}</p>
             <p>Sueldo Base: $${(selectedEmp?.sueldoMensual ?? 0).toLocaleString("es-CL")}</p>
@@ -681,11 +697,12 @@ export function ManualAttendancePanel({ employees }: Props) {
                                     <button
                                         key={day.fecha}
                                         onClick={() => handleDayClick(day)}
-                                        className={`h-10 rounded flex flex-col items-center justify-center transition-all hover:ring-1 hover:ring-cyan-400 ${isSelected ? "ring-2 ring-amber-400" : ""
+                                        className={`relative h-10 rounded flex flex-col items-center justify-center transition-all hover:ring-1 hover:ring-cyan-400 ${isSelected ? "ring-2 ring-amber-400" : ""
                                             } ${isToday ? "ring-1 ring-white/50" : ""
                                             } ${config ? config.bgClass : "bg-white/5"}`}
                                     >
                                         <span className={`text-xs font-bold ${config ? "text-white" : "text-gray-500"}`}>{dayNum}</span>
+                                        {day.horasExtra > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] px-1 rounded-full shadow-sm">+{day.horasExtra}h</span>}
                                         {isSelected && <span className="text-[8px] font-bold text-amber-400">✓</span>}
                                         {!isSelected && config && <span className="text-[8px] font-bold text-white/80">{config.short}</span>}
                                     </button>
@@ -718,6 +735,10 @@ export function ManualAttendancePanel({ employees }: Props) {
                             <div className="flex justify-between text-xs text-gray-400">
                                 <span>Días en período:</span>
                                 <span className="text-white">{resumen.diasRango} de {resumen.diasMes}</span>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-400">
+                                <span>Horas Extra Manuales:</span>
+                                <span className="text-white font-bold">{resumen.totalHorasExtra}</span>
                             </div>
                             <div className="flex justify-between text-xs text-gray-400">
                                 <span>Días pagados equiv.:</span>
@@ -789,6 +810,17 @@ export function ManualAttendancePanel({ employees }: Props) {
                             placeholder="Notas..."
                             className="w-full rounded bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-500 mb-4"
                         />
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-sm text-gray-300 w-1/3">Horas Extra:</span>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                value={formHorasExtra}
+                                onChange={(e) => setFormHorasExtra(e.target.value)}
+                                className="flex-1 rounded bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-500"
+                            />
+                        </div>
                         <div className="flex gap-2">
                             <button
                                 onClick={handleSave}

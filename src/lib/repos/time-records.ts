@@ -22,6 +22,7 @@ const mapTimeRecord = (row: Record<string, unknown>): TimeRecord => ({
   esManual: Boolean(row.esManual),
   notas: (row.notas as string) ?? null,
   tipoJornada: (row.tipoJornada as TipoJornada) ?? "completa",
+  horasExtra: row.horasExtra ? Number(row.horasExtra) : 0,
 });
 
 export const findTimeRecord = async (where: {
@@ -303,6 +304,7 @@ export type CalendarDay = {
   horaSalida: string | null;
   notas: string | null;
   recordId: string | null;
+  horasExtra: number;
 };
 
 export const getMonthlyCalendar = async (
@@ -320,7 +322,8 @@ export const getMonthlyCalendar = async (
       "tipoJornada",
       "horaEntrada",
       "horaSalida",
-      "notas"
+      "notas",
+      "horasExtra"
     FROM "TimeRecord" 
     WHERE "employeeId" = $1 
       AND "fecha" >= $2 
@@ -361,6 +364,7 @@ export const getMonthlyCalendar = async (
         : null,
       notas: (record?.notas as string) ?? null,
       recordId: (record?.id as string) ?? null,
+      horasExtra: record?.horasExtra ? Number(record.horasExtra) : 0,
     });
   }
 
@@ -375,6 +379,7 @@ export const upsertManualAttendance = async (data: {
   horaEntrada?: Date | null;
   horaSalida?: Date | null;
   notas?: string | null;
+  horasExtra?: number;
 }): Promise<TimeRecord | null> => {
   // Buscar si ya existe un registro para este día
   const existing = await findTimeRecord({
@@ -389,6 +394,7 @@ export const upsertManualAttendance = async (data: {
       notas: existing.notas,
       horaEntrada: existing.horaEntrada?.toISOString(),
       horaSalida: existing.horaSalida?.toISOString(),
+      horasExtra: existing.horasExtra,
     };
 
     // Actualizar registro existente
@@ -398,6 +404,7 @@ export const upsertManualAttendance = async (data: {
       horaSalida: data.horaSalida ?? null,
       notas: data.notas ?? null,
       esManual: true,
+      horasExtra: data.horasExtra ?? 0,
     });
 
     // Registrar cambio en audit log
@@ -412,6 +419,7 @@ export const upsertManualAttendance = async (data: {
           notas: data.notas,
           horaEntrada: data.horaEntrada?.toISOString(),
           horaSalida: data.horaSalida?.toISOString(),
+          horasExtra: data.horasExtra,
         },
       });
     }
@@ -423,8 +431,8 @@ export const upsertManualAttendance = async (data: {
   const newId = crypto.randomUUID();
   const row = await runSingle<Record<string, unknown>>(
     `INSERT INTO "TimeRecord" 
-      ("id","employeeId","companyId","fecha","tipoJornada","horaEntrada","horaSalida","notas","esManual","createdAt","updatedAt") 
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,NOW(),NOW()) 
+      ("id","employeeId","companyId","fecha","tipoJornada","horaEntrada","horaSalida","notas","horasExtra","esManual","createdAt","updatedAt") 
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true,NOW(),NOW()) 
       RETURNING *`,
     [
       newId,
@@ -435,6 +443,7 @@ export const upsertManualAttendance = async (data: {
       data.horaEntrada ?? null,
       data.horaSalida ?? null,
       data.notas ?? null,
+      data.horasExtra ?? 0,
     ]
   );
 
@@ -448,6 +457,7 @@ export const upsertManualAttendance = async (data: {
         tipoJornada: data.tipoJornada,
         notas: data.notas,
         fecha: data.fecha.toISOString(),
+        horasExtra: data.horasExtra,
       },
     });
   }
