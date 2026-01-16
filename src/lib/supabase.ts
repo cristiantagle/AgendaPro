@@ -29,16 +29,12 @@ export const supabaseAdmin = supabaseServiceKey
   })
   : null;
 
-// In development, completely disable SSL verification
-const isProduction = process.env.NODE_ENV === "production";
 
 export const supabasePool = supabaseDbUrl
   ? new Pool({
     connectionString: supabaseDbUrl,
     max: 10,
-    ssl: isProduction
-      ? { rejectUnauthorized: true }
-      : { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false },
   })
   : null;
 
