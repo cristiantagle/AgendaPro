@@ -30,7 +30,7 @@ export const findTimeRecord = async (where: {
   fecha: Date;
 }) => {
   const row = await runSingle<Record<string, unknown>>(
-    'SELECT * FROM "TimeRecord" WHERE "employeeId" = $1 AND "fecha" = $2',
+    'SELECT * FROM "TimeRecord" WHERE "employeeId" = $1 AND DATE("fecha") = DATE($2)',
     [where.employeeId, where.fecha],
   );
   return row ? mapTimeRecord(row) : null;
