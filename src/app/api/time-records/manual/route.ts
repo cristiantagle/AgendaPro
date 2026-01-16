@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { ZodError, z } from "zod";
-import { fromZonedTime } from "date-fns-tz";
 
 import { assertRole, getSession } from "@/lib/auth";
 import { upsertManualAttendance } from "@/lib/repos/time-records";
 import { getEmployeeById } from "@/lib/repos/employees";
-import { CHILE_TIMEZONE } from "@/lib/timezone";
 
-const parseDateLabel = (label: string) =>
-    fromZonedTime(`${label}T00:00:00`, CHILE_TIMEZONE);
+// Parse date label as UTC noon to avoid timezone day shifts
+const parseDateLabel = (label: string) => new Date(`${label}T12:00:00Z`);
+
 
 // Schema for single date
 const singleDateSchema = z.object({

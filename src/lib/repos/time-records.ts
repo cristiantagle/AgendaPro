@@ -332,15 +332,12 @@ export const getMonthlyCalendar = async (
     [employeeId, startDate, endDate]
   );
 
-  // Crear mapa de días con registros
+  // Crear mapa de días con registros - usar la fecha directa de la BD
   const recordMap = new Map<string, Record<string, unknown>>();
   for (const row of rows) {
-    const dateStr = formatInTimeZone(
-      new Date(row.fecha as string),
-      CHILE_TIMEZONE,
-      "yyyy-MM-dd",
-    );
-    recordMap.set(dateStr, row);
+    // La BD retorna DATE como string YYYY-MM-DD, usarlo directamente
+    const fechaStr = String(row.fecha).substring(0, 10);
+    recordMap.set(fechaStr, row);
   }
 
   // Generar array de todos los días del mes sin usar Date para evitar timezone issues
