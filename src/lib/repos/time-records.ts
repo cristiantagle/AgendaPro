@@ -335,8 +335,11 @@ export const getMonthlyCalendar = async (
   // Crear mapa de días con registros - usar la fecha directa de la BD
   const recordMap = new Map<string, Record<string, unknown>>();
   for (const row of rows) {
-    // La BD retorna DATE como string YYYY-MM-DD, usarlo directamente
-    const fechaStr = String(row.fecha).substring(0, 10);
+    // Manejar tanto Date object como string para robustez
+    const val = row.fecha;
+    const fechaStr = (val instanceof Date)
+      ? val.toISOString().split('T')[0]
+      : String(val).substring(0, 10);
     recordMap.set(fechaStr, row);
   }
 
