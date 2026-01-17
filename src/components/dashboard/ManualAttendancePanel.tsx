@@ -785,7 +785,11 @@ export function ManualAttendancePanel({ employees }: Props) {
                     <div className="w-full max-w-sm rounded-xl bg-gray-900 border border-white/10 p-5 shadow-2xl">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-semibold text-white">
-                                {new Date(selectedDay.fecha).toLocaleDateString("es-CL", { weekday: "short", day: "numeric", month: "short" })}
+                                {(() => {
+                                    const [y, m, d] = selectedDay.fecha.split('-').map(Number);
+                                    const localDate = new Date(y, m - 1, d, 12, 0, 0);
+                                    return localDate.toLocaleDateString("es-CL", { weekday: "short", day: "numeric", month: "short" });
+                                })()}
                             </h3>
                             <button onClick={() => setShowModal(false)} className="rounded p-1 hover:bg-white/10">
                                 <X className="h-4 w-4 text-gray-400" />
