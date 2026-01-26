@@ -485,31 +485,101 @@ select option:hover {
   color: #06B6D4 !important;
 }
 
-/* Pop Art Header/Nav Hover - Changed to Cyan */
+/* Pop Art Header/Navbar - Transparent to show yellow bg */
+[data-theme="popart"] header,
+[data-theme="popart"] nav,
+[data-theme="popart"] .fixed.top-0,
+[data-theme="popart"] .border-b {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Force text visibility in header - Black */
+[data-theme="popart"] header *,
+[data-theme="popart"] nav *,
+[data-theme="popart"] .fixed.top-0 * {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
 [data-theme="popart"] header a:hover,
 [data-theme="popart"] nav a:hover {
-  color: #22D3EE !important;
+  color: #F43F5E !important;
+  /* Rose Red like SST */
 }
 
-/* Pop Art Active Tab - Changed to Cyan */
+/* Pop Art Navigation Tabs - SST Style (Pills) */
+[data-theme="popart"] .overflow-x-auto,
+[data-theme="popart"] .scrollbar-hide {
+  background: transparent !important;
+  border: none !important;
+  padding: 8px !important;
+}
+
+/* Tab Items - Compacted for better fit */
+[data-theme="popart"] .overflow-x-auto button,
+[data-theme="popart"] [role="tab"],
+[data-theme="popart"] .scrollbar-hide button {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 2px solid #0f172a !important;
+  /* Reduced from 3px */
+  border-radius: 9999px !important;
+  /* Full rounded pill */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+  margin-right: 8px !important;
+  /* Reduced from 12px */
+  padding: 6px 16px !important;
+  /* Reduced padding */
+  box-shadow: 3px 3px 0 #0f172a !important;
+  /* Slightly smaller shadow */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  opacity: 1 !important;
+  height: auto !important;
+  min-height: 36px !important;
+  /* Reduced height */
+  font-size: 0.85rem !important;
+  /* Ensure text fits */
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* Icons inside tabs */
+[data-theme="popart"] .overflow-x-auto button svg,
+[data-theme="popart"] [role="tab"] svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke-width: 2.5px !important;
+}
+
+/* Active Tab - VIBRANT SST RED/CORAL */
 [data-theme="popart"] .overflow-x-auto button[data-state="active"],
 [data-theme="popart"] [role="tab"][aria-selected="true"] {
-  background-color: #22D3EE !important;
+  background-color: #FB7185 !important;
+  /* Rose-400 (SST Coral) */
   color: #0f172a !important;
   transform: translate(2px, 2px) !important;
-  box-shadow: 2px 2px 0 #000000 !important;
+  box-shadow: 2px 2px 0 #0f172a !important;
 }
 
-/* Fixed: Removed generic .bg-white/10 override that turned everything pink */
-/* Only overrides strictly active tabs/buttons */
-
-/* Tab Hover - Changed to Violet */
+/* Tab Hover - VIBRANT CYAN */
 [data-theme="popart"] .overflow-x-auto button:hover,
 [data-theme="popart"] [role="tab"]:hover {
-  background-color: #A78BFA !important;
-  color: white !important;
-  transform: translate(-1px, -1px) !important;
-  box-shadow: 5px 5px 0 #000000 !important;
+  background-color: #22D3EE !important;
+  /* Cyan-400 */
+  color: #0f172a !important;
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 6px 6px 0 #0f172a !important;
+}
+
+/* Tab Container Background fix */
+[data-theme="popart"] div[class*="border-b"] {
+  border-bottom: none !important;
+  background-color: transparent !important;
 }
 
 @keyframes float {
