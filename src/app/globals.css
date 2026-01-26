@@ -280,7 +280,7 @@ select option:hover {
   display: none;
 }
 
-/* Pop Art Cards - Thick black borders, white bg, comic shadow */
+/* Pop Art Cards - Thick black borders, white bg, VIBRANT VIOLET SHADOW */
 [data-theme="popart"] .bg-white\/5,
 [data-theme="popart"] .bg-white\/10,
 [data-theme="popart"] .bg-black\/30,
@@ -289,8 +289,11 @@ select option:hover {
   background-color: #ffffff !important;
   border: 3px solid #0f172a !important;
   border-radius: 16px !important;
-  box-shadow: 6px 6px 0 #0f172a !important;
+  box-shadow: 8px 8px 0 #7C3AED !important;
+  /* VIOLET SHADOW instead of black */
 }
+
+/* Alternate Shadow for some elements if needed (can be added later) */
 
 /* Pop Art Text Colors */
 [data-theme="popart"] .text-white,
