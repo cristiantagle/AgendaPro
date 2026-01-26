@@ -7,6 +7,7 @@ const labels: Record<ThemeName, string> = {
   dark: "Cinematico",
   light: "Claro",
   minimal: "Minimal",
+  popart: "Pop Art",
 };
 
 export function ThemeSwitcher() {
@@ -44,11 +45,10 @@ export function ThemeSwitcher() {
             key={option}
             type="button"
             onClick={() => setTheme(option)}
-            className={`rounded-lg px-3 py-1 font-semibold transition ${
-              theme === option
+            className={`rounded-lg px-3 py-1 font-semibold transition ${theme === option
                 ? "bg-cyan-500/20 text-cyan-100 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.35)]"
                 : "border border-white/10 text-white/70 hover:border-white/30 hover:text-white"
-            }`}
+              }`}
           >
             {labels[option]}
           </button>
