@@ -10,7 +10,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 
-export type ThemeName = "dark" | "light" | "minimal";
+export type ThemeName = "dark" | "light" | "minimal" | "popart";
 
 type ThemeContextValue = {
   theme: ThemeName;
@@ -67,7 +67,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     () => ({
       theme: isKiosk ? DEFAULT_THEME : theme,
       setTheme,
-      options: ["dark", "light", "minimal"],
+      options: ["dark", "light", "minimal", "popart"],
     }),
     [isKiosk, setTheme, theme],
   );
