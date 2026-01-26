@@ -324,36 +324,86 @@ select option:hover {
 }
 
 /* Pop Art Buttons - Vibrant colors with thick borders */
-[data-theme="popart"] button {
+/* Pop Art Buttons - Vibrant colors with thick borders */
+[data-theme="popart"] button:not([role="option"]) {
   color: #0f172a !important;
   border: 2px solid #0f172a !important;
   border-radius: 12px !important;
   font-weight: 700 !important;
 }
 
-[data-theme="popart"] button:hover {
+[data-theme="popart"] button:not([role="option"]):hover {
   transform: translate(-2px, -2px);
   box-shadow: 4px 4px 0 #0f172a !important;
 }
 
-/* Pop Art Primary Buttons - Hot Pink */
+/* Disable transform on selects and their options */
+[data-theme="popart"] select,
+[data-theme="popart"] select:hover,
+[data-theme="popart"] option,
+[data-theme="popart"] option:hover {
+  transform: none !important;
+}
+
+/* Pop Art Primary Actions - Cyan/Blue (Changed from Pink) */
 [data-theme="popart"] .bg-emerald-500,
 [data-theme="popart"] .bg-emerald-600,
 [data-theme="popart"] .bg-green-500,
 [data-theme="popart"] .bg-green-600 {
-  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%) !important;
-  color: white !important;
+  background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%) !important; /* Cyan Gradient */
+  color: black !important;
   border: 3px solid #0f172a !important;
   box-shadow: 4px 4px 0 #0f172a !important;
 }
 
-/* Pop Art Secondary Actions - Cyan */
+/* Pop Art Secondary Actions - Violet (Changed from Cyan) */
 [data-theme="popart"] .bg-blue-500,
 [data-theme="popart"] .bg-blue-600,
 [data-theme="popart"] .bg-cyan-500 {
-  background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%) !important;
-  color: #0f172a !important;
+  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%) !important; /* Violet Gradient */
+  color: white !important;
   border: 3px solid #0f172a !important;
+}
+
+/* Restore Specific Button Type Colors (Attendance Types) */
+/* Permit with pay - Purple -> Yellow */
+[data-theme="popart"] .bg-violet-500,
+[data-theme="popart"] .bg-purple-500 {
+  background: #FDE047 !important; /* Yellow */
+  color: black !important;
+}
+
+/* Permit without pay - Indigo -> Orange */
+[data-theme="popart"] .bg-indigo-500 {
+  background: #FB923C !important; /* Orange */
+  color: black !important;
+}
+
+/* Vacation - Cyan -> Sky Blue */
+[data-theme="popart"] .bg-cyan-500 {
+  background: #7DD3FC !important; /* Sky Blue */
+  color: black !important;
+}
+
+/* Medical License - Orange -> Red */
+[data-theme="popart"] .bg-orange-500,
+[data-theme="popart"] .bg-amber-500 {
+  background: #F87171 !important; /* Red */
+  color: black !important;
+}
+
+/* Absence - Red -> Rose */
+[data-theme="popart"] .bg-red-500,
+[data-theme="popart"] .bg-rose-500 {
+  background: #FB7185 !important; /* Rose */
+  color: white !important;
+}
+
+/* Holiday - Pink -> Fuchsia (Kept distinct) */
+[data-theme="popart"] .bg-pink-500,
+[data-theme="popart"] .bg-fuchsia-500 {
+  background: #E879F9 !important; /* Fuchsia */
+  color: white !important;
 }
 
 /* Pop Art Inputs */
