@@ -350,7 +350,8 @@ select option:hover {
 [data-theme="popart"] .bg-emerald-600,
 [data-theme="popart"] .bg-green-500,
 [data-theme="popart"] .bg-green-600 {
-  background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%) !important; /* Cyan Gradient */
+  background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%) !important;
+  /* Cyan Gradient */
   color: black !important;
   border: 3px solid #0f172a !important;
   box-shadow: 4px 4px 0 #0f172a !important;
@@ -360,60 +361,94 @@ select option:hover {
 [data-theme="popart"] .bg-blue-500,
 [data-theme="popart"] .bg-blue-600,
 [data-theme="popart"] .bg-cyan-500 {
-  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%) !important; /* Violet Gradient */
+  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%) !important;
+  /* Violet Gradient */
   color: white !important;
   border: 3px solid #0f172a !important;
 }
 
-/* Restore Specific Button Type Colors (Attendance Types) */
-/* Permit with pay - Purple -> Yellow */
+/* Restore Specific Button Type Colors - ALWAYS VISIBLE */
+/* Permit with pay - Yellow */
 [data-theme="popart"] .bg-violet-500,
 [data-theme="popart"] .bg-purple-500 {
-  background: #FDE047 !important; /* Yellow */
-  color: black !important;
+  background: #FDE047 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* Permit without pay - Indigo -> Orange */
+/* Permit without pay - Orange */
 [data-theme="popart"] .bg-indigo-500 {
-  background: #FB923C !important; /* Orange */
-  color: black !important;
+  background: #FB923C !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* Vacation - Cyan -> Sky Blue */
+/* Vacation - Cyan */
 [data-theme="popart"] .bg-cyan-500 {
-  background: #7DD3FC !important; /* Sky Blue */
-  color: black !important;
+  background: #67E8F9 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* Medical License - Orange -> Red */
+/* Medical License - Red */
 [data-theme="popart"] .bg-orange-500,
 [data-theme="popart"] .bg-amber-500 {
-  background: #F87171 !important; /* Red */
-  color: black !important;
+  background: #FCA5A5 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* Absence - Red -> Rose */
+/* Absence - Rose */
 [data-theme="popart"] .bg-red-500,
 [data-theme="popart"] .bg-rose-500 {
-  background: #FB7185 !important; /* Rose */
-  color: white !important;
+  background: #FDA4AF !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* Holiday - Pink -> Fuchsia (Kept distinct) */
+/* Jornada Completa - Green */
+[data-theme="popart"] .bg-green-500,
+[data-theme="popart"] .bg-emerald-500 {
+  background: #86EFAC !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Media Jornada - Amber */
+[data-theme="popart"] .bg-yellow-500,
+[data-theme="popart"] .bg-amber-500 {
+  background: #FCD34D !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Feriado - Pink (Kept as distinct type) */
 [data-theme="popart"] .bg-pink-500,
 [data-theme="popart"] .bg-fuchsia-500 {
-  background: #E879F9 !important; /* Fuchsia */
-  color: white !important;
+  background: #F0ABFC !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* Pop Art Inputs */
+/* ACTIVE STATE for these buttons - Inset Shadow + Lower */
+[data-theme="popart"] button[class*="bg-"]:active,
+[data-theme="popart"] button[class*="bg-"][aria-pressed="true"],
+[data-theme="popart"] button[class*="bg-"].ring-2 {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0 #000000 !important;
+  filter: brightness(1.1);
+  border-width: 3px !important;
+}
+
+/* Pop Art Inputs - Clean White default */
 [data-theme="popart"] input,
 [data-theme="popart"] select,
 [data-theme="popart"] textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  border: 2px solid #0f172a !important;
+  border: 3px solid #0f172a !important;
   border-radius: 12px !important;
+  box-shadow: 4px 4px 0 #000000 !important;
 }
 
 /* Login Submit Button - Changed to Cyan/Blue */
