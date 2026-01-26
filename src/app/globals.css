@@ -411,29 +411,26 @@ select option:hover {
   font-weight: 800 !important;
 }
 
-/* Pop Art Header/Navbar - White with colorful accents */
+/* Pop Art Header/Navbar - AGGRESSIVE OVERRIDE */
 [data-theme="popart"] header,
 [data-theme="popart"] nav,
-[data-theme="popart"] [class*="bg-black"],
-[data-theme="popart"] .bg-slate-900,
-[data-theme="popart"] .bg-slate-800,
-[data-theme="popart"] .bg-gray-900,
-[data-theme="popart"] .bg-gray-800 {
-  background: linear-gradient(135deg, #ffffff 0%, #FFF9DB 100%) !important;
-  color: #0f172a !important;
+[data-theme="popart"] .fixed.top-0,
+[data-theme="popart"] .bg-background\/80,
+[data-theme="popart"] .backdrop-blur-md,
+[data-theme="popart"] .border-b {
+  background: white !important;
+  background-color: white !important;
   border-bottom: 3px solid #0f172a !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 0 #0f172a !important;
 }
 
-/* Pop Art Header Text Visibility */
+/* Force text visibility in header */
 [data-theme="popart"] header *,
-[data-theme="popart"] nav * {
+[data-theme="popart"] nav *,
+[data-theme="popart"] .fixed.top-0 * {
   color: #0f172a !important;
-}
-
-[data-theme="popart"] header a,
-[data-theme="popart"] nav a {
-  color: #0f172a !important;
-  font-weight: 600;
+  text-shadow: none !important;
 }
 
 [data-theme="popart"] header a:hover,
@@ -441,47 +438,48 @@ select option:hover {
   color: #EC4899 !important;
 }
 
-/* Pop Art Navigation Tabs - Colorful buttons */
-[data-theme="popart"] [role="tablist"] button,
-[data-theme="popart"] nav button {
-  background: #ffffff !important;
+/* Pop Art Navigation Tabs - AGGRESSIVE OVERRIDE */
+[data-theme="popart"] .overflow-x-auto button,
+[data-theme="popart"] [role="tab"],
+[data-theme="popart"] .scrollbar-hide button {
+  background-color: white !important;
   color: #0f172a !important;
   border: 2px solid #0f172a !important;
   border-radius: 12px !important;
-  font-weight: 700 !important;
-  transition: all 0.15s ease !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-right: 8px !important;
+  padding: 8px 16px !important;
+  box-shadow: 4px 4px 0 #000000 !important;
+  transition: transform 0.1s !important;
+  opacity: 1 !important;
 }
 
-/* Tab hover effects with different colors */
-[data-theme="popart"] [role="tablist"] button:hover,
-[data-theme="popart"] nav button:hover {
-  background: #22D3EE !important;
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 #0f172a !important;
-}
-
-/* Active/Selected Tab - Hot Pink */
-[data-theme="popart"] [role="tablist"] button[data-state="active"],
-[data-theme="popart"] [role="tablist"] button.active,
-[data-theme="popart"] [role="tablist"] button[aria-selected="true"],
-[data-theme="popart"] nav button.active {
-  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%) !important;
+/* Active Tab */
+[data-theme="popart"] .overflow-x-auto button[data-state="active"],
+[data-theme="popart"] [role="tab"][aria-selected="true"],
+[data-theme="popart"] .bg-white\/10 {
+  background-color: #F472B6 !important;
   color: white !important;
-  border: 3px solid #0f172a !important;
-  box-shadow: 4px 4px 0 #0f172a !important;
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0 #000000 !important;
 }
 
-/* Alternating tab colors for visual interest */
-[data-theme="popart"] [role="tablist"] button:nth-child(2n) {
-  border-color: #EC4899 !important;
+/* Tab Hover */
+[data-theme="popart"] .overflow-x-auto button:hover,
+[data-theme="popart"] [role="tab"]:hover {
+  background-color: #22D3EE !important;
+  color: #0f172a !important;
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 5px 5px 0 #000000 !important;
 }
 
-[data-theme="popart"] [role="tablist"] button:nth-child(3n) {
-  border-color: #06B6D4 !important;
-}
-
-[data-theme="popart"] [role="tablist"] button:nth-child(4n) {
-  border-color: #A78BFA !important;
+/* Remove default background from scroll container */
+[data-theme="popart"] .overflow-x-auto,
+[data-theme="popart"] .scrollbar-hide {
+  background: transparent !important;
+  border: none !important;
 }
 
 @keyframes float {
