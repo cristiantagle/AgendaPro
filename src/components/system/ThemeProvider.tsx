@@ -21,7 +21,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const STORAGE_KEY = "asistencia-theme";
-const DEFAULT_THEME: ThemeName = "dark";
+const DEFAULT_THEME: ThemeName = "popart";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
