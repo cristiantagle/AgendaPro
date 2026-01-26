@@ -416,182 +416,10 @@ select option:hover {
   border-radius: 12px !important;
 }
 
-[data-theme="popart"] input:focus,
-[data-theme="popart"] select:focus,
-[data-theme="popart"] textarea:focus {
-  outline: none !important;
-  border-color: #F472B6 !important;
-  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.3) !important;
-}
-
-/* Pop Art Links */
-[data-theme="popart"] a {
-  color: #EC4899 !important;
-  font-weight: 600;
-}
-
-[data-theme="popart"] a:hover {
-  color: #06B6D4 !important;
-}
-
-/* Pop Art Shadows - Comic book style */
-[data-theme="popart"] [class*="shadow-"] {
-  box-shadow: 4px 4px 0 #0f172a !important;
-}
-
-/* Pop Art Status Colors */
-[data-theme="popart"] .bg-emerald-400,
-[data-theme="popart"] .text-emerald-400,
-[data-theme="popart"] .text-emerald-500 {
-  color: #4ADE80 !important;
-}
-
-[data-theme="popart"] .bg-red-400,
-[data-theme="popart"] .text-red-400,
-[data-theme="popart"] .text-red-500 {
-  color: #F87171 !important;
-}
-
-/* Pop Art Bold Headings */
-[data-theme="popart"] h1,
-[data-theme="popart"] h2,
-[data-theme="popart"] h3 {
-  color: #0f172a !important;
-  text-shadow: 2px 2px 0 #F472B6 !important;
-  font-weight: 800 !important;
-}
-
-/* Pop Art Header/Navbar - AGGRESSIVE OVERRIDE */
-[data-theme="popart"] header,
-[data-theme="popart"] nav,
-[data-theme="popart"] .fixed.top-0,
-[data-theme="popart"] .bg-background\/80,
-[data-theme="popart"] .backdrop-blur-md,
-[data-theme="popart"] .border-b {
-  background: white !important;
-  background-color: white !important;
-  border-bottom: 3px solid #0f172a !important;
-  color: #0f172a !important;
-  box-shadow: 0 4px 0 #0f172a !important;
-}
-
-/* Force text visibility in header */
-[data-theme="popart"] header *,
-[data-theme="popart"] nav *,
-[data-theme="popart"] .fixed.top-0 * {
-  color: #0f172a !important;
-  text-shadow: none !important;
-}
-
-[data-theme="popart"] header a:hover,
-[data-theme="popart"] nav a:hover {
-  color: #EC4899 !important;
-}
-
-/* Pop Art Navigation Tabs - AGGRESSIVE OVERRIDE */
-[data-theme="popart"] .overflow-x-auto button,
-[data-theme="popart"] [role="tab"],
-[data-theme="popart"] .scrollbar-hide button {
-  background-color: white !important;
-  color: #0f172a !important;
-  border: 2px solid #0f172a !important;
-  border-radius: 12px !important;
-  font-weight: 700 !important;
-  /* Reduced from 800 to prevent overflow */
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  margin-right: 8px !important;
-  padding: 8px 16px !important;
-  box-shadow: 4px 4px 0 #000000 !important;
-  transition: transform 0.1s !important;
-  opacity: 1 !important;
-  white-space: nowrap !important;
-  /* Force single line */
-  flex-shrink: 0 !important;
-  height: auto !important;
-  min-height: 44px !important;
-}
-
-/* Active Tab */
-[data-theme="popart"] .overflow-x-auto button[data-state="active"],
-[data-theme="popart"] [role="tab"][aria-selected="true"],
-[data-theme="popart"] .bg-white\/10 {
-  background-color: #F472B6 !important;
-  color: white !important;
-  transform: translate(2px, 2px) !important;
-  box-shadow: 2px 2px 0 #000000 !important;
-}
-
-/* Tab Hover */
-[data-theme="popart"] .overflow-x-auto button:hover,
-[data-theme="popart"] [role="tab"]:hover {
-  background-color: #22D3EE !important;
-  color: #0f172a !important;
-  transform: translate(-1px, -1px) !important;
-  box-shadow: 5px 5px 0 #000000 !important;
-}
-
-/* Remove default background from scroll container */
-[data-theme="popart"] .overflow-x-auto,
-[data-theme="popart"] .scrollbar-hide {
-  background: transparent !important;
-  border: none !important;
-}
-
-/* ============================================ */
-/* 🎨 POP ART LOGIN PAGE OVERRIDES */
-/* ============================================ */
-
-/* Force Login Background */
-[data-theme="popart"] main[class*="bg-[#050507]"] {
-  background: linear-gradient(135deg, #FFE066 0%, #FFF9DB 50%, #FFD43B 100%) !important;
-}
-
-/* Hide Login Blobs/Decorations */
-[data-theme="popart"] .noise-overlay,
-[data-theme="popart"] main .pointer-events-none.absolute.inset-0 {
-  display: none !important;
-}
-
-/* Login Card Container */
-[data-theme="popart"] .backdrop-blur-2xl,
-[data-theme="popart"] .bg-white\/5,
-[data-theme="popart"] .bg-black\/40 {
-  background-color: white !important;
-  border: 4px solid #0f172a !important;
-  box-shadow: 12px 12px 0 #0f172a !important;
-  backdrop-filter: none !important;
-  border-radius: 24px !important;
-}
-
-/* Login Inputs */
-[data-theme="popart"] input {
-  background-color: white !important;
-  color: #0f172a !important;
-  border: 2px solid #0f172a !important;
-}
-
-[data-theme="popart"] input::placeholder {
-  color: #64748b !important;
-}
-
-/* Login Texts */
-[data-theme="popart"] .text-slate-50,
-[data-theme="popart"] .text-slate-100,
-[data-theme="popart"] .text-slate-200,
-[data-theme="popart"] .text-slate-300 {
-  color: #0f172a !important;
-}
-
-[data-theme="popart"] .text-slate-200\/80,
-[data-theme="popart"] .text-slate-200\/90 {
-  color: #334155 !important;
-}
-
-/* Login Submit Button */
+/* Login Submit Button - Changed to Cyan/Blue */
 [data-theme="popart"] button[type="submit"] {
-  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%) !important;
-  color: white !important;
+  background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%) !important;
+  color: #0f172a !important;
   border: 3px solid #0f172a !important;
   box-shadow: 6px 6px 0 #0f172a !important;
 }
@@ -599,6 +427,54 @@ select option:hover {
 [data-theme="popart"] button[type="submit"]:hover {
   transform: translate(-2px, -2px) !important;
   box-shadow: 8px 8px 0 #0f172a !important;
+}
+
+/* ... Animations ... */
+
+/* Pop Art Input Focus - Changed to Cyan */
+[data-theme="popart"] input:focus,
+[data-theme="popart"] select:focus,
+[data-theme="popart"] textarea:focus {
+  outline: none !important;
+  border-color: #22D3EE !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.3) !important;
+}
+
+/* Pop Art Links - Changed to Violet -> Cyan */
+[data-theme="popart"] a {
+  color: #8B5CF6 !important;
+  font-weight: 600;
+}
+
+[data-theme="popart"] a:hover {
+  color: #06B6D4 !important;
+}
+
+/* Pop Art Header/Nav Hover - Changed to Cyan */
+[data-theme="popart"] header a:hover,
+[data-theme="popart"] nav a:hover {
+  color: #22D3EE !important;
+}
+
+/* Pop Art Active Tab - Changed to Cyan */
+[data-theme="popart"] .overflow-x-auto button[data-state="active"],
+[data-theme="popart"] [role="tab"][aria-selected="true"] {
+  background-color: #22D3EE !important;
+  color: #0f172a !important;
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0 #000000 !important;
+}
+
+/* Fixed: Removed generic .bg-white/10 override that turned everything pink */
+/* Only overrides strictly active tabs/buttons */
+
+/* Tab Hover - Changed to Violet */
+[data-theme="popart"] .overflow-x-auto button:hover,
+[data-theme="popart"] [role="tab"]:hover {
+  background-color: #A78BFA !important;
+  color: white !important;
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 5px 5px 0 #000000 !important;
 }
 
 @keyframes float {
