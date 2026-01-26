@@ -411,6 +411,79 @@ select option:hover {
   font-weight: 800 !important;
 }
 
+/* Pop Art Header/Navbar - White with colorful accents */
+[data-theme="popart"] header,
+[data-theme="popart"] nav,
+[data-theme="popart"] [class*="bg-black"],
+[data-theme="popart"] .bg-slate-900,
+[data-theme="popart"] .bg-slate-800,
+[data-theme="popart"] .bg-gray-900,
+[data-theme="popart"] .bg-gray-800 {
+  background: linear-gradient(135deg, #ffffff 0%, #FFF9DB 100%) !important;
+  color: #0f172a !important;
+  border-bottom: 3px solid #0f172a !important;
+}
+
+/* Pop Art Header Text Visibility */
+[data-theme="popart"] header *,
+[data-theme="popart"] nav * {
+  color: #0f172a !important;
+}
+
+[data-theme="popart"] header a,
+[data-theme="popart"] nav a {
+  color: #0f172a !important;
+  font-weight: 600;
+}
+
+[data-theme="popart"] header a:hover,
+[data-theme="popart"] nav a:hover {
+  color: #EC4899 !important;
+}
+
+/* Pop Art Navigation Tabs - Colorful buttons */
+[data-theme="popart"] [role="tablist"] button,
+[data-theme="popart"] nav button {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 2px solid #0f172a !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease !important;
+}
+
+/* Tab hover effects with different colors */
+[data-theme="popart"] [role="tablist"] button:hover,
+[data-theme="popart"] nav button:hover {
+  background: #22D3EE !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #0f172a !important;
+}
+
+/* Active/Selected Tab - Hot Pink */
+[data-theme="popart"] [role="tablist"] button[data-state="active"],
+[data-theme="popart"] [role="tablist"] button.active,
+[data-theme="popart"] [role="tablist"] button[aria-selected="true"],
+[data-theme="popart"] nav button.active {
+  background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%) !important;
+  color: white !important;
+  border: 3px solid #0f172a !important;
+  box-shadow: 4px 4px 0 #0f172a !important;
+}
+
+/* Alternating tab colors for visual interest */
+[data-theme="popart"] [role="tablist"] button:nth-child(2n) {
+  border-color: #EC4899 !important;
+}
+
+[data-theme="popart"] [role="tablist"] button:nth-child(3n) {
+  border-color: #06B6D4 !important;
+}
+
+[data-theme="popart"] [role="tablist"] button:nth-child(4n) {
+  border-color: #A78BFA !important;
+}
+
 @keyframes float {
   0% {
     transform: translateY(0px);
