@@ -313,7 +313,8 @@ export const getMonthlyCalendar = async (
   month: number
 ): Promise<CalendarDay[]> => {
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  // Use start of next month for exclusive upper bound to include all times on the last day
+  const endDate = new Date(year, month, 1);
 
   const rows = await runQuery<Record<string, unknown>>(
     `SELECT 
@@ -327,7 +328,7 @@ export const getMonthlyCalendar = async (
     FROM "TimeRecord" 
     WHERE "employeeId" = $1 
       AND "fecha" >= $2 
-      AND "fecha" <= $3
+      AND "fecha" < $3
     ORDER BY "fecha" ASC`,
     [employeeId, startDate, endDate]
   );
