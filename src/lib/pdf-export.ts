@@ -145,14 +145,18 @@ type Html2PdfFactory = () => {
 
 let html2pdfPromise: Promise<Html2PdfFactory | null> | null = null;
 
-const loadHtml2Pdf = async () => {
+type WindowWithHtml2Pdf = typeof window & { html2pdf?: Html2PdfFactory };
+
+const loadHtml2Pdf = async (): Promise<Html2PdfFactory | null> => {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const cached = (window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf;
-  if (cached) {
-    return cached;
+  const win = window as WindowWithHtml2Pdf;
+
+  // Already loaded and cached on window
+  if (win.html2pdf) {
+    return win.html2pdf;
   }
 
   if (!html2pdfPromise) {
@@ -160,29 +164,39 @@ const loadHtml2Pdf = async () => {
       const existing = document.querySelector<HTMLScriptElement>(
         'script[data-html2pdf="true"]',
       );
+
       if (existing) {
+        // Script tag exists — check if it already loaded
+        if (win.html2pdf) {
+          resolve(win.html2pdf);
+          return;
+        }
+        // Not loaded yet — wait for it
         existing.addEventListener("load", () => {
-          resolve((window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf ?? null);
+          resolve(win.html2pdf ?? null);
         });
         existing.addEventListener("error", () => resolve(null));
+        // Fallback: if the script already completed loading but html2pdf
+        // wasn't available yet (race), poll briefly
+        setTimeout(() => {
+          if (win.html2pdf) resolve(win.html2pdf);
+        }, 500);
         return;
       }
 
+      // No script tag — create it
       const script = document.createElement("script");
       script.src = "/html2pdf.min.js";
       script.async = true;
       script.dataset.html2pdf = "true";
-      script.onload = () =>
-        resolve((window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf ?? null);
-      script.onerror = () => resolve(null);
+      script.onload = () => resolve(win.html2pdf ?? null);
+      script.onerror = () => {
+        console.error("Failed to load html2pdf.min.js from /public");
+        resolve(null);
+      };
       document.head.appendChild(script);
     });
   }
 
-  const html2pdf = await html2pdfPromise;
-  if (html2pdf) {
-    (window as typeof window & { html2pdf?: Html2PdfFactory }).html2pdf = html2pdf;
-  }
-
-  return html2pdf;
+  return html2pdfPromise;
 };

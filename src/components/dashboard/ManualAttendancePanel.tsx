@@ -531,17 +531,23 @@ export function ManualAttendancePanel({ employees }: Props) {
                         </button>
                         <button
                             onClick={async () => {
-                                const { exportAttendanceToPDF } = await import("@/lib/pdf-export");
-                                await exportAttendanceToPDF(
-                                    selectedEmp?.nombreCompleto ?? "",
-                                    meses[month - 1],
-                                    year,
-                                    rangeLabel,
-                                    selectedEmp?.sueldoMensual ?? 0,
-                                    filteredCalendar,
-                                    resumen,
-                                    firstDayOfMonth
-                                );
+                                try {
+                                    const { exportAttendanceToPDF } = await import("@/lib/pdf-export");
+                                    await exportAttendanceToPDF(
+                                        selectedEmp?.nombreCompleto ?? "",
+                                        meses[month - 1],
+                                        year,
+                                        rangeLabel,
+                                        selectedEmp?.sueldoMensual ?? 0,
+                                        filteredCalendar,
+                                        resumen,
+                                        firstDayOfMonth
+                                    );
+                                } catch (err) {
+                                    console.error("Error al generar PDF:", err);
+                                    setError("Error al generar PDF. Intenta de nuevo.");
+                                    setTimeout(() => setError(null), 5000);
+                                }
                             }}
                             className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500"
                         >
