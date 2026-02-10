@@ -96,7 +96,11 @@ export function BulkWorkerImport({ onSuccess }: { onSuccess: () => void }) {
 
             if (!res.ok) throw new Error("Error en servidor");
             const result = await res.json();
-            alert(`Proceso finalizado exitosamente.\n\nregistros actualizados: ${result.updated}\nregistros omitidos: ${result.skipped}`);
+            let msg = `Proceso finalizado exitosamente.\n\n✅ Creados: ${result.created ?? 0}\n📝 Actualizados: ${result.updated}\n⏭️ Omitidos: ${result.skipped}`;
+            if (result.errors && result.errors.length > 0) {
+                msg += `\n\n⚠️ Errores:\n${result.errors.join("\n")}`;
+            }
+            alert(msg);
             onSuccess();
 
         } catch (err) {
