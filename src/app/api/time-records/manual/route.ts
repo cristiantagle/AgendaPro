@@ -70,6 +70,13 @@ export async function POST(request: Request) {
                 );
             }
 
+            if (!employee.isActive) {
+                return NextResponse.json(
+                    { error: "No se puede registrar asistencia manual a un trabajador inactivo" },
+                    { status: 409 }
+                );
+            }
+
             const results = [];
             for (const fechaStr of data.fechas) {
                 const fecha = parseDateLabel(fechaStr);
@@ -95,6 +102,13 @@ export async function POST(request: Request) {
                 return NextResponse.json(
                     { error: "Empleado no encontrado" },
                     { status: 404 }
+                );
+            }
+
+            if (!employee.isActive) {
+                return NextResponse.json(
+                    { error: "No se puede registrar asistencia manual a un trabajador inactivo" },
+                    { status: 409 }
                 );
             }
 

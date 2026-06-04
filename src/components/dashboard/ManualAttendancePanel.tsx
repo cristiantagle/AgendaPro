@@ -28,6 +28,7 @@ type Employee = {
     id: string;
     nombreCompleto: string;
     sueldoMensual?: number | null;
+    isActive?: boolean;
 };
 
 type Payment = {
@@ -96,7 +97,19 @@ export function ManualAttendancePanel({ employees }: Props) {
     // Payments state
     const [payments, setPayments] = useState<Payment[]>([]);
 
-    const selectedEmp = employees.find(e => e.id === selectedEmployee);
+    const activeEmployees = useMemo(
+        () => employees.filter((employee) => employee.isActive !== false),
+        [employees],
+    );
+    const selectedEmp = activeEmployees.find(e => e.id === selectedEmployee);
+
+    useEffect(() => {
+        if (selectedEmployee && !activeEmployees.some((employee) => employee.id === selectedEmployee)) {
+            setSelectedEmployee("");
+            setCalendar([]);
+            setPayments([]);
+        }
+    }, [activeEmployees, selectedEmployee]);
 
     const fetchCalendar = useCallback(async () => {
         if (!selectedEmployee) return;
@@ -511,7 +524,7 @@ export function ManualAttendancePanel({ employees }: Props) {
                     className="flex-1 min-w-[200px] rounded-lg bg-white/10 border border-white/20 px-3 py-2 text-sm text-white"
                 >
                     <option value="" className="bg-gray-900">Seleccionar trabajador...</option>
-                    {employees.map((emp) => (
+                    {activeEmployees.map((emp) => (
                         <option key={emp.id} value={emp.id} className="bg-gray-900">{emp.nombreCompleto}</option>
                     ))}
                 </select>

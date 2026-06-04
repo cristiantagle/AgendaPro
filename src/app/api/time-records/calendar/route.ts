@@ -29,6 +29,13 @@ export async function GET(request: Request) {
         );
     }
 
+    if (!employee.isActive) {
+        return NextResponse.json(
+            { error: "El trabajador está inactivo" },
+            { status: 409 }
+        );
+    }
+
     const calendar = await getMonthlyCalendar(
         employeeId,
         parseInt(year),
